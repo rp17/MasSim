@@ -1,0 +1,14 @@
+<RavenMap>
+  <walls/>
+  <triggerSystem/>
+  <spawnPoints/>
+  <doors/>
+  <navGraph>
+    <nodes/>
+    <edges/>
+    <isDigraph>false</isDigraph>
+    <nextNodeIndex>0</nextNodeIndex>
+  </navGraph>
+  <sizeX>1282</sizeX>
+  <sizeY>567</sizeY>
+</RavenMap>
