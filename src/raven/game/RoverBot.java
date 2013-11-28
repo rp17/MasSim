@@ -11,22 +11,29 @@ import raven.game.Waypoints;
 import raven.game.navigation.NavGraphEdge;
 import raven.game.navigation.PathEdge;
 import raven.goals.Goal;
-import raven.goals.Goal_FollowPath;
+import raven.goals.GoalComposite;
+import raven.goals.Goal_PIDFollowPath;
 import raven.goals.GoalRoverThink;
 import raven.math.Vector2D;
 import raven.math.RandUtils;
 import raven.ui.GameCanvas;
 
+import raven.utils.PIDcontroller;
+
 public class RoverBot extends RavenBot {
 	//protected GoalRoverThink reason;
-	private double steeringDrift = 0.01;
+	private final double brakingRate = 20; // pixel/sec^2
+	private final double accelRate = 30; // pixel/sec^2
+	
+	private double steeringDrift = 0.05;
 	private double steeringNoise = 0.01;
 	private double distanceNoise = 0.001;
 	private double frictCoeff = 0.5;
 	private double weight = mass*9.81;
 	private double frictForceMag = weight*frictCoeff;
-	private double speed = 50;
-	
+	private double speed = 0;
+	private boolean doPID = false;
+	protected PIDcontroller pid = new PIDcontroller(0.7f, 0.8f, 0.1f);
 	
 	public RoverBot(RavenGame world, Vector2D pos, Goal.GoalType mode) {
 		super(world, pos, mode);
@@ -51,49 +58,101 @@ public class RoverBot extends RavenBot {
 				System.out.println("Edge " + i + " src: " + src.toString() + " dest: " + dest.toString());
 				src = dest;
 			}
-			brain.AddSubgoal(new Goal_FollowPath(this, m_Path));
+			Goal_PIDFollowPath g = new Goal_PIDFollowPath(this, m_Path);
+			brain.AddSubgoal(g);
+		}
+	}
+	
+	public void startPid(){doPID = true;}
+	public void stopPid(){doPID = false;}
+	
+	/*
+	 * Calculation of Cross Track Error as a difference between desired course and current bearing (in degrees)
+	 * 
+	 */
+	private float getCTE(){
+		Vector2D tgt = steering.target();
+		if(tgt == null) return 0;
+		else {
+			float bearing = (float)Math.atan2(tgt.y - position.y, tgt.x - position.x);
+			float error = bearing - steering.course;
+			error = (float)Math.toDegrees((float)error);
+			System.out.println("Course " + Math.toDegrees(steering.course) + ", bearing " + Math.toDegrees(bearing) + ", error " + error);
+			return error;
 		}
 	}
 	
 	/**
 	 * this method is called from the update method. It calculates and applies
 	 * the steering force for this time-step.
+	 * delta is in seconds
 	 */
-	
 	@Override
-	protected void updateMovement(double delta) {
-		double steerAngle = Math.atan2(heading.y, heading.x);
+	protected void updateMovement(double delta) { // delta in seconds
+		
+		
+		// (2do) pid control, acceleration, deceleration depending on doPID value
+		
+		if(!doPID && speed == 0) return;
+		// apply steering noise and drift
+		double steerAngle = Math.atan2(velocity.y, velocity.x);
 		double steerAngleDeg = Math.toDegrees(steerAngle);
 		double noiseSteerAngleDeg = RandUtils.nextGaussian(steerAngleDeg, steeringNoise);
 		noiseSteerAngleDeg += steeringDrift;
-		double noiseSteerAngle = Math.toRadians(noiseSteerAngleDeg);
-		System.out.println("Old steer angle: " + steerAngleDeg);
-		System.out.println("New steer angle: " + noiseSteerAngleDeg);
-		double velX = Math.cos(noiseSteerAngle)*speed;
-		double velY = Math.sin(noiseSteerAngle)*speed;
 		
-		double distNoise = RandUtils.nextGaussian(0, distanceNoise);
-		double distNoiseX = distNoise*Math.cos(noiseSteerAngle);
-		double distNoiseY = distNoise*Math.sin(noiseSteerAngle);
-		if (steering.force().isZero())
-		{
-			final double BrakingRate = 0.8; 
-			velX *= BrakingRate;
-			velY *= BrakingRate;
+		//System.out.println("Old steer angle: " + steerAngleDeg);
+		//System.out.println("New steer angle: " + noiseSteerAngleDeg);
+		
+		if (doPID) {
+			if(speed < maxSpeed*1.0) {
+				speed += accelRate*delta;
+				System.out.println("Accelerating to " + speed);
+				}
+			
+			float error = getCTE();
+			float out = pid.pidCycle(error, (float)delta);
+			float turnRate = out*2.0f; //  deg/sec
+			noiseSteerAngleDeg += turnRate*delta;
 		}
-		Vector2D vel = new Vector2D(velX, velY);
-		velocity = vel;
-		position.x += (velX + distNoiseX)*delta;
-		position.y += (velY + distNoiseY)*delta;
+		else {
+			System.out.println("No PID");
+			if( speed > 1){speed -= brakingRate*delta;}
+			else {
+				speed = 0;
+				return;
+			}
+		}
+		double noiseSteerAngle = Math.toRadians(noiseSteerAngleDeg);
+		heading.x = Math.cos(noiseSteerAngle);
+		heading.y = Math.sin(noiseSteerAngle);
+		side = heading.perp();
+		//double velX = Math.cos(noiseSteerAngle)*speed;
+		//double velY = Math.sin(noiseSteerAngle)*speed;
+		
+		double velX = heading.x*speed;
+		double velY = heading.y*speed;
+		
+		// calculate delta distance due to distance noise
+		double distNoise = RandUtils.nextGaussian(0, distanceNoise);
+		//double distNoiseX = distNoise*Math.cos(noiseSteerAngle);
+		//double distNoiseY = distNoise*Math.sin(noiseSteerAngle);
+				
+		velocity.x = velX;
+		velocity.y = velY;
+		position.x += velX*delta + distNoise*heading.x;
+		position.y += velY*delta + distNoise*heading.y;
 		
 		//if the vehicle has a non zero velocity the heading and side vectors must 
 		//be updated
-		if (!velocity.isZero())
+		/*
+		if (speed > 1)
 		{    
-			heading = new Vector2D(velocity);
+			heading.x = velocity.x;
+			heading.y = velocity.y;
 			heading.normalize();
 			side = heading.perp();
 		}
+		*/
 	}
 	
 	/*

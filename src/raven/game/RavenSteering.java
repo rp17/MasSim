@@ -62,7 +62,7 @@ public class RavenSteering {
 	
 	/** the current target */
 	private Vector2D target;
-
+	float course = 0;
 
 	/** a vertex buffer to contain the feelers rqd for wall avoidance */  
 	private Vector<Vector2D> feelers;
@@ -183,12 +183,30 @@ public class RavenSteering {
 		double ratio = ravenBot.maxForce()/desiredVelocity.length();
 		desiredVelocity = desiredVelocity.mul(ratio);
 		//desiredVelocity = desiredVelocity.sub(ravenBot.velocity());
+		//System.out.println("seek(): going to x = " + target.x + ", y = " + target.y);
+		//System.out.println("seek(): force vec: x = " + desiredVelocity.x + ", y = " + desiredVelocity.y);
+		return desiredVelocity;
+
+	}
+
+	/** this behavior moves the agent towards a target position */
+	private Vector2D seekPID(final Vector2D target) {
+
+		//Vector2D desiredVelocity = target.sub(ravenBot.pos());
+		//desiredVelocity.normalize();
+		//desiredVelocity = desiredVelocity.mul(ravenBot.maxForce());
+
+		Vector2D desiredVelocity = target.sub(ravenBot.pos());
+		double ratio = ravenBot.maxForce()/desiredVelocity.length();
+		desiredVelocity = desiredVelocity.mul(ratio);
+		//desiredVelocity = desiredVelocity.sub(ravenBot.velocity());
 		System.out.println("seek(): going to x = " + target.x + ", y = " + target.y);
 		System.out.println("seek(): force vec: x = " + desiredVelocity.x + ", y = " + desiredVelocity.y);
 		return desiredVelocity;
 
 	}
-
+	
+	
 	/** this behavior is similar to seek but it attempts to arrive at the
 	 * target with a zero velocity */
 	private Vector2D arrive(final Vector2D target, final Deceleration deceleration){
@@ -468,10 +486,11 @@ public class RavenSteering {
 	}
 
 	public void setTarget(Vector2D t) { target = t; }
+	public void setTarget(Vector2D t, float course) { target = t; this.course = course;}
 	public final Vector2D target() { return target; }
 
 	public void setTargetAgent1(RavenBot Agent) { targetAgent1 = Agent; }
-	public void SetTargetAgent2(RavenBot Agent) { }
+	//public void SetTargetAgent2(RavenBot Agent) { }
 
 	public final Vector2D force() { return steeringForce; }
 

@@ -69,7 +69,7 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 		float course = (float)Math.atan2(dest.y - source.y, dest.x - source.x);
 		m_pOwner.getSteering().setTarget(dest, course);
 		
-		System.out.println("Steering to: " + dest.toString());
+		System.out.println("Steering to: " + dest.toString() + " course = " + course);
 		
 	}
 

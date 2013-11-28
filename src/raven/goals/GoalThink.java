@@ -145,7 +145,7 @@ public class GoalThink extends GoalComposite<RavenBot> {
 		
 		return true;
 	}
-
+	
 	public void queueGoal_moveToPosition(Vector2D pos) {
 		m_SubGoals.add(new Goal_MoveToPosition(m_pOwner, pos));
 		Log.debug("GoalThink", "Queued new Goal_MoveToPosition to bot " + m_pOwner.ID());

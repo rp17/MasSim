@@ -64,7 +64,7 @@ public class RavenGame {
 	GraveMarkers graveMarkers = new GraveMarkers(RavenScript.getDouble("GraveLifetime"));
 	
 	Waypoints wpts = new Waypoints();
-	private Regulator botUpdateRegulator = new Regulator(50); // 50Hz updates
+	private Regulator botUpdateRegulator = new Regulator(200); // 200Hz updates
 	
 	/** Holds a request to load a new map. This is set from another thread */
 	private String newMapPath;

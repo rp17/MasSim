@@ -11,10 +11,10 @@ import raven.ui.GameCanvas;
 
 abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 	
-	protected ArrayList <Goal<T> > m_SubGoals;
+	protected ArrayList <Goal> m_SubGoals;
 	public GoalComposite(T PE, raven.goals.Goal.GoalType type) {
 		super(PE, type);
-		m_SubGoals = new ArrayList<Goal<T>>();
+		m_SubGoals = new ArrayList<Goal>();
 	}
 	public CurrentStatus ProcessSubgoals(double delta){ 
 		//remove all completed and failed goals from the front of the subgoal list
@@ -30,7 +30,7 @@ abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 		{ 
 			//grab the status of the front-most subgoal
 			raven.goals.Goal.CurrentStatus StatusOfSubGoals = m_SubGoals.get(0).process(delta);
-
+			
 			//we have to test for the special case where the front-most subgoal
 			//reports 'completed' *and* the subgoal list contains additional goals.When
 			//this is the case, to ensure the parent keeps processing its subgoal list
@@ -57,7 +57,7 @@ abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 		m_SubGoals.clear();
 	}
 
-	public void AddSubgoal(Goal<T> g)
+	public void AddSubgoal(Goal g)
 	{   
 		//add the new goal to the front of the list
 		//m_SubGoals.add(0, g);
@@ -83,7 +83,7 @@ abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 
 		pos.x += 10;
 		
-		ListIterator<Goal<T>> iter = m_SubGoals.listIterator(m_SubGoals.size());
+		ListIterator<Goal> iter = m_SubGoals.listIterator(m_SubGoals.size());
 		while (iter.hasPrevious()) {
 			iter.previous().renderAtPos(pos);
 		}

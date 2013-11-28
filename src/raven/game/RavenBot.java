@@ -253,6 +253,7 @@ public class RavenBot extends MovingEntity implements IRavenBot {
 				new Vector2D(RavenScript.getDouble("Bot_Scale"), RavenScript.getDouble("Bot_Scale")),
 				RavenScript.getDouble("Bot_MaxHeadTurnRate"),
 				RavenScript.getDouble("Bot_MaxForce"));
+		
 		maxHealth = RavenScript.getInt("Bot_MaxHealth");
 		health = RavenScript.getInt("Bot_MaxHealth");
 		this.world = world;
