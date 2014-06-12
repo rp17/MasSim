@@ -5,24 +5,39 @@ import raven.ui.GameCanvas;
 import raven.ui.RavenUI;
 import raven.utils.Log;
 import raven.utils.Log.Level;
+
 import javax.swing.SwingUtilities;
+
+import masSim.world.SimWorld;
+import masSim.world.WorldEventListener;
+
 
 public class Main {
 	private static RavenUI ui;
 	private static RavenGame game;
+	private static boolean debug = true;
+	
+	public static void Message(String message)
+	{
+		if (debug) System.out.println(message);
+	}
 	
     public static void main(String args[]) {
-    	Log.setLevel(Level.DEBUG);
     	
+    	Log.setLevel(Level.DEBUG);
     	game = new RavenGame();
+    	ui = new RavenUI(game);
     	SwingUtilities.invokeLater(new Runnable() {
   	      public void run() {
-  	    	ui = new RavenUI(game);
   	    	GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
   	      }
   	    });
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
+		SimWorld world = new SimWorld((WorldEventListener) ui);
+		Thread MasSimThread = new Thread(world);
+		MasSimThread.start();
+		game.togglePause();
     	gameLoop();
 	}
     
@@ -66,7 +81,8 @@ public class Main {
     			}
     		//}
     		//}
-    		
+    		//TestTaemsScheduler();
+
     		long millisToNextUpdate = (long) Math.max(0, 16.66667 - (System.nanoTime() - currentTime)*1.0e-6);
 			
 			try {

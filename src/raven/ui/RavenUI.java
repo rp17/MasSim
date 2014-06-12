@@ -12,12 +12,15 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
+
 import javax.swing.event.MouseInputListener;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -34,18 +37,24 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
+import masSim.world.WorldEvent;
+import masSim.world.WorldEvent.TaskType;
+import masSim.world.WorldEventListener;
+import raven.Main;
 import raven.edit.editor.EditorViewController;
 import raven.game.RavenGame;
 import raven.game.RavenObject;
 import raven.game.RoverBot;
 import raven.game.RavenUserOptions;
+import raven.game.Waypoints.Wpt;
 import raven.game.interfaces.IRavenBot;
 import raven.game.Waypoints;
 import raven.math.Vector2D;
 import raven.utils.Log;
 import raven.utils.Log.Level;
 
-public class RavenUI extends JFrame implements KeyListener, MouseInputListener, ComponentListener {
+public class RavenUI extends JFrame implements KeyListener, MouseInputListener, ComponentListener, WorldEventListener
+{
 	/**
 	 * 
 	 */
@@ -437,5 +446,34 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void HandleWorldEvent(WorldEvent event) {
+		if (event.taskType==TaskType.AGENTCREATED)
+		{
+			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
+			game.addRoverBotAt(popupLoc, event.agentId);
+			System.out.println("Added bot at " + popupLoc.x + " " + popupLoc.y);
+		}
+		if (event.taskType==TaskType.METHODCREATED)
+		{
+			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
+			game.addWpt(popupLoc, event.methodId);
+			System.out.println("Added WayPoint at " + popupLoc.x + " " + popupLoc.y);
+		}
+		if (event.taskType==TaskType.EXECUTEMETHOD)
+		{
+			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
+			Main.Message("HandleWorldEvent: Handling execute method event for agent " + event.agentId + " at " + event.xCoordinate + " " + event.yCoordinate);
+			IRavenBot bot = game.getBotByName(event.agentId);
+			
+			if(bot != null && bot instanceof RoverBot) {
+				RoverBot rbot = (RoverBot)bot;
+				Waypoints matchedWaypoints = game.getWptsForMethodExecution(event.methodId, rbot.pos());
+				Main.Message("HandleWorldEvent: " + matchedWaypoints.size() + " Waypoints matched to Task Method " + event.methodId);
+				rbot.addWptsGoal(matchedWaypoints);
+			}
+			System.out.println("Executing Task at " + popupLoc.x + " " + popupLoc.y);
+		}
 	}
 }

@@ -13,6 +13,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.JPanel;
 
+import raven.game.Waypoints.Wpt;
 import raven.game.armory.Bolt;
 import raven.game.armory.Pellet;
 import raven.game.armory.RavenProjectile;
@@ -300,7 +301,7 @@ public class RavenGame {
 		botUpdateRegulator.update(delta);
 		if(botUpdateRegulator.isReady()) {
 			double itsDelta = botUpdateRegulator.getItsDelta();
-			System.out.println("Bot Delta = " + itsDelta);
+			//System.out.println("Bot Delta = " + itsDelta);
 			for (IRavenBot bot : bots) {
 				bot.update(itsDelta);
 			}
@@ -592,12 +593,27 @@ public class RavenGame {
 		
 		return null;
 	}
+	
+	public IRavenBot getBotByName(String label) {
+		for (IRavenBot bot : bots) {
+			if (((RoverBot)bot).name == label) {
+				return bot;
+			}
+		}	
+		return null;
+	}
 
 	public boolean togglePause() {
 		paused = !paused;
 		Log.info("game", paused ? "Paused" : "Unpaused");
 		
-		return paused;
+		//TODO ASIFCODE Move this code to a proper location (Controller) from where tasks can be updated and invoked for display in the game
+		/*Agent helicopter1 = new Agent("Helicopter1");
+		addRoverBotAt(new Vector2D(100,100));
+		addWpt(new Vector2D(150, 150));
+		Agent helicopter2 = new Agent("Helicopter2");
+		addRoverBotAt(new Vector2D(200,100));
+		*/return paused;
 	}
 	public boolean getPaused() {
 		return paused;
@@ -754,11 +770,35 @@ public class RavenGame {
 	public void addWpt(Vector2D pos){
 		wpts.addWpt(pos);
 	}
+	public void addWpt(Vector2D pos, String name){
+		wpts.addWpt(pos, name);
+	}
 	public void clearWpts(){
 		wpts.clearWpts();
 	}
 	public Waypoints getWpts() {return wpts;}
+	public Waypoints getWptsForMethodExecution(String methodName, Vector2D currentPosition)
+	{
+		Waypoints local = new Waypoints();
+		for(int i=0;i<wpts.size();i++)
+		{
+			Waypoints.Wpt wp = wpts.get(i);
+			if (wp.name==methodName)
+			{
+				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
+				local.addWpt(new Vector2D(wp.x, wp.y));
+				break;
+			}
+		}
+		return local;
+	}
 	public boolean addRoverBotAt(Vector2D pos) {
+		return addRoverBotAt(pos, "default");
+	}
+	public boolean addRoverBotAt(Vector2D pos, String name) {
+		return addRoverBotAt(pos, name, true);
+	}
+	public boolean addRoverBotAt(Vector2D pos, String name, boolean start) {
 		boolean available = true;
 		for (IRavenBot other : bots) {
 			if (pos.distance(other.pos()) < other.getBRadius()) {
@@ -767,6 +807,7 @@ public class RavenGame {
 			}
 		}
 		IRavenBot bot = new RoverBot(this, pos, Goal.GoalType.goal_roverthink);
+		((RoverBot)bot).name = name;
 		// switch the default steering behaviors on
 		bot.getSteering().wallAvoidanceOn();
 		bot.getSteering().separationOn();
