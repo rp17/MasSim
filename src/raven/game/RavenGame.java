@@ -13,6 +13,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.JPanel;
 
+import masSim.taems.IAgent;
 import raven.game.Waypoints.Wpt;
 import raven.game.armory.Bolt;
 import raven.game.armory.Pellet;
@@ -793,12 +794,12 @@ public class RavenGame {
 		return local;
 	}
 	public boolean addRoverBotAt(Vector2D pos) {
-		return addRoverBotAt(pos, "default");
+		return addRoverBotAt(pos, "default",null);
 	}
-	public boolean addRoverBotAt(Vector2D pos, String name) {
-		return addRoverBotAt(pos, name, true);
+	public boolean addRoverBotAt(Vector2D pos, String name, IAgent agent) {
+		return addRoverBotAt(pos, name, true, agent);
 	}
-	public boolean addRoverBotAt(Vector2D pos, String name, boolean start) {
+	public boolean addRoverBotAt(Vector2D pos, String name, boolean start, IAgent agent) {
 		boolean available = true;
 		for (IRavenBot other : bots) {
 			if (pos.distance(other.pos()) < other.getBRadius()) {
@@ -807,6 +808,7 @@ public class RavenGame {
 			}
 		}
 		IRavenBot bot = new RoverBot(this, pos, Goal.GoalType.goal_roverthink);
+		bot.setAgent(agent);
 		((RoverBot)bot).name = name;
 		// switch the default steering behaviors on
 		bot.getSteering().wallAvoidanceOn();

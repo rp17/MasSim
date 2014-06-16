@@ -32,12 +32,27 @@ public class Scheduler implements Runnable {
 	{
 		listeners.add(listener);
 	}
+	
+	public int GetScheduleCostSync(Task task)
+	{
+		//Make a copy
+		Task tempTask = new Task("Task Group",new SumAllQAF(), null);
+		Iterator<Node> copyTasks = taskGroup.getSubtasks();
+		while(copyTasks.hasNext())
+		{
+			tempTask.addTask(copyTasks.next());
+		}
+		taskGroup.addTask(task);
+		taskGroup.Cleanup();
+		schedule = CalculateScheduleFromTaems(taskGroup);
+		return schedule.TotalQuality;
+	}
 		
 	//A public method to feed new tasks to the scheduler
-	public void AddTasks(ArrayList<Task> pendingTasks)
+	public void AddTask(Task pendingTask)
 	{
 		PendingTasks.clear();
-		PendingTasks.addAll(pendingTasks);
+		PendingTasks.add(pendingTask);
 	}
 	
 	//This is the main method of the scheduler, which implements runnable interface of java thread

@@ -452,7 +452,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		if (event.taskType==TaskType.AGENTCREATED)
 		{
 			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
-			game.addRoverBotAt(popupLoc, event.agentId);
+			game.addRoverBotAt(popupLoc, event.agentId, event.agent);
 			System.out.println("Added bot at " + popupLoc.x + " " + popupLoc.y);
 		}
 		if (event.taskType==TaskType.METHODCREATED)

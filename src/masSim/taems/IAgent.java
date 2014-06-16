@@ -2,9 +2,14 @@ package masSim.taems;
 
 import java.util.ArrayList;
 
+import raven.math.Vector2D;
+import masSim.schedule.Scheduler;
+
 public interface IAgent {
 	public int getCode();
-	public void assignTasks(ArrayList<Task> tasks);
-	public void addTaskAbility(Task task);
+	public void AddChildAgent(IAgent agent);
+	public void assignTask(Task task);
 	public void update(int tick);
+	public int getExpectedScheduleQuality(Task task);
+	public void setPosition(Vector2D pos);
 }

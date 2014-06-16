@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import masSim.taems.IAgent;
 import raven.game.Waypoints;
 import raven.game.navigation.NavGraphEdge;
 import raven.game.navigation.PathEdge;
@@ -14,17 +15,18 @@ import raven.goals.Goal;
 import raven.goals.GoalComposite;
 import raven.goals.Goal_PIDFollowPath;
 import raven.goals.GoalRoverThink;
+import raven.goals.Goal_PidTraverseEdge;
+import raven.goals.Goal_SeekToPosition;
 import raven.math.Vector2D;
 import raven.math.RandUtils;
 import raven.ui.GameCanvas;
-
 import raven.utils.PIDcontroller;
 
 public class RoverBot extends RavenBot {
 	//protected GoalRoverThink reason;
 	private final double brakingRate = 20; // pixel/sec^2
 	private final double accelRate = 30; // pixel/sec^2
-	
+	private IAgent agent;
 	private double steeringDrift = 0.05;
 	private double steeringNoise = 0.01;
 	private double distanceNoise = 0.001;
@@ -35,6 +37,8 @@ public class RoverBot extends RavenBot {
 	private boolean doPID = false;
 	protected PIDcontroller pid = new PIDcontroller(0.7f, 0.8f, 0.1f);
 	
+	public void setAgent(IAgent agent){this.agent = agent;}
+	public IAgent getAgent(){return this.agent;}
 	public RoverBot(RavenGame world, Vector2D pos, Goal.GoalType mode) {
 		super(world, pos, mode);
 		steering.wallAvoidanceOff();
@@ -59,7 +63,16 @@ public class RoverBot extends RavenBot {
 				src = dest;
 			}
 			Goal_PIDFollowPath g = new Goal_PIDFollowPath(this, m_Path);
+			//Goal_SeekToPosition g = new Goal_SeekToPosition(this,new Vector2D(m_Path.get(0).Destination()));
 			brain.AddSubgoal(g);
+			while(!g.isComplete())//Wait for completion
+			{
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 	
@@ -141,7 +154,7 @@ public class RoverBot extends RavenBot {
 		velocity.y = velY;
 		position.x += velX*delta + distNoise*heading.x;
 		position.y += velY*delta + distNoise*heading.y;
-		
+		this.agent.setPosition(position);
 		//if the vehicle has a non zero velocity the heading and side vectors must 
 		//be updated
 		/*

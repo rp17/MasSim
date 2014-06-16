@@ -27,7 +27,7 @@ public class Task extends Node {
 	}
 		
 	// Constructor
-	public Task(String label, QAF qaf, Date earliest_start, Date deadline, Method m){
+	public Task(String label, QAF qaf, Date earliest_start, Date deadline, Method m, IAgent agent){
 		this.label = label;
 		children = new ArrayList<Node>();
 		this.qaf = qaf;
@@ -35,10 +35,15 @@ public class Task extends Node {
 		this.deadline = deadline;
 		if (m!=null)
 			this.children.add(m);
+		this.agent = agent;
+	}
+	
+	public Task(String name, QAF qaf, Method m, IAgent agent){
+		this(name, qaf, new Date(), new Date(2015,1,1), m, agent);
 	}
 	
 	public Task(String name, QAF qaf, Method m){
-		this(name, qaf, new Date(), new Date(2015,1,1), m);
+		this(name, qaf, new Date(), new Date(2015,1,1), m, null);
 	}
 	
 	public void addTask(Node task){

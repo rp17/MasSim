@@ -8,6 +8,7 @@ import java.util.Iterator;
 
 public class Schedule {
 	private Queue<ScheduleElement> items;
+	public int TotalQuality = 0;
 	public Schedule() {
 		items = new ConcurrentLinkedQueue<ScheduleElement>();
 	}
@@ -25,5 +26,10 @@ public class Schedule {
 	}
 	public Iterator<ScheduleElement> getItems() {
 		return items.iterator();
+	}
+	public void Merge(Schedule sch)
+	{
+		items.clear();
+		items.addAll(sch.items);
 	}
 }

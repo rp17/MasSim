@@ -1,5 +1,6 @@
 package raven.game.interfaces;
 
+import masSim.taems.IAgent;
 import raven.game.RavenGame;
 import raven.game.RavenObject;
 import raven.game.RavenSensoryMemory;
@@ -50,5 +51,6 @@ public interface IRavenBot {
 	public RavenTargetingSystem getTargetSys();
 	public boolean hasLOSto(Vector2D aimingPos);
 	public Vector2D heading();
-	
+	public IAgent getAgent();
+	public void setAgent(IAgent agent);
 }

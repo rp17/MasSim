@@ -12,19 +12,20 @@ import masSim.taems.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import raven.math.Vector2D;
+
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
 
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Scheduler scheduler = new Scheduler();
 	private final AtomicReference<Schedule> schedule = new AtomicReference<Schedule>();
-	private List<Task> taskAbilities;
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
-	private Agent managingAgent = null;
-	
-	public ArrayList<WorldEventListener> listeners;//Possibly refactor to AgentEventListeners, if we want to differentiate world and agent events
-	public int x, y;
+	private ArrayList<IAgent> agentsUnderManagement = null;
+	public ArrayList<WorldEventListener> listeners;
+	public double x;
+	public double y;
 	
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY
@@ -34,48 +35,38 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Status status;
 	
 	public Agent(int newCode){
-		this(newCode,"Agent"+newCode,null);
+		this(newCode,"Agent"+newCode,false,0,0,null);
 	}
 	
-	public Agent(String name, Agent managingAgent){
-		this(GloballyUniqueAgentId++,name, managingAgent);
+	public Agent(String name, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners){
+		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, listeners);
 	}
 	
-	public Agent(int newCode, String label, Agent managingAgent){
+	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners){
 		this.code = newCode;
 		this.label = label;
-		//taskGroup = new Task(label + " Tasks", new ExactlyOneQAF(), new Method("Default",0,0,0));
-		taskAbilities = new ArrayList<Task>();
 		taskInd = 0;
 		status = Status.EMPTY;
-		listeners = new ArrayList<WorldEventListener>();
+		if (listeners==null)
+			this.listeners = new ArrayList<WorldEventListener>();
+		else
+			this.listeners = listeners;
 		this.scheduler.AddScheduleUpdateEventListener(this);
-		x = 20;
-		y = 20;
-		this.managingAgent = managingAgent;
+		this.x = x;
+		this.y = y;
+		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
+		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y);
 		System.out.println("Agent " + label + " created with code" + code);
 	}
 	
 	public void Execute(Method m)
 	{
-		//int xDistanceToTarget = m.x - this.x;
-		//int yDistanceToTarget = m.y - this.y;
-		//int absoluteDistanceIntervals = (int) Math.sqrt(Math.pow(xDistanceToTarget, 2) + Math.pow(yDistanceToTarget, 2));
-		//for(int i=0;i<absoluteDistanceIntervals;i++)
-		//{
-		//	this.x += (int)Math.ceil(i * ((double)xDistanceToTarget/absoluteDistanceIntervals));
-		//	this.y += (int)Math.ceil(i * ((double)yDistanceToTarget/absoluteDistanceIntervals));
-		fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y);
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		//}
+		if (m.x!=0 && m.y!=0)
+			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y);
 	}
 	
 	public synchronized void fireAgentMovedEvent(TaskType type, String agentId, String methodId, int x2, int y2) {
-        WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2);
+        WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
         Iterator it = listeners.iterator();
         WorldEventListener listener;
         while(it.hasNext())
@@ -107,16 +98,51 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 	
-	public void addTaskAbility(Task task){
-		taskAbilities.add(task);
-	}
-	
 	/**
 	 * this method handles the assignment goals
 	 */
-	public void assignTasks(ArrayList<Task> tasks){
-		System.out.println("Agent: " + code + " - " + tasks.size() + " Tasks Assigned");
-		this.scheduler.AddTasks(tasks);
+	public void assignTask(Task task){
+		if (task.agent!=null)
+		{
+			if (this.equals(task.agent))
+			{
+				System.out.println("Agent: " + label + " - Assigned " + task.label);
+				Iterator<Node> it = task.getSubtasks();
+				while(it.hasNext())
+				{
+					Node node = it.next();
+					if (!node.IsTask())
+					{
+						Method method = (Method)node;
+						this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y);
+					}
+				}
+				this.scheduler.AddTask(task);
+			}
+			else if (this.agentsUnderManagement.contains(task.agent)) 
+			{
+				task.agent.assignTask(task);
+			}
+			else
+			{
+				System.out.println(task.agent.getCode() + " is not a child of " + this.label);
+			}
+		}
+		else
+		{
+			//Calculate which agent is best to assign
+			int highestQuality = 0;
+			IAgent selectedAgent;
+			for(IAgent ag : this.agentsUnderManagement)
+			{
+				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task);
+				if (qualityWithThisAgent>highestQuality)
+				{
+					highestQuality = qualityWithThisAgent;
+					selectedAgent = ag;
+				}
+			}
+		}
 	}
 	
 	public void update(int tick) {
@@ -147,7 +173,40 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public void HandleScheduleEvent(ScheduleUpdateEvent scheduleUpdateEvent) {
-		//Schedule newLocalSchedule = scheduleUpdateEvent.Schedule;
-		schedule.set(scheduleUpdateEvent.Schedule);
+		Schedule currentSchedule = schedule.get();
+		if (currentSchedule!=null)
+			schedule.get().Merge(scheduleUpdateEvent.Schedule);
+		else
+			schedule.set(scheduleUpdateEvent.Schedule);
+	}
+
+	@Override
+	public void AddChildAgent(IAgent agent){
+		if (agentsUnderManagement==null)
+			System.out.println("Child Agent being added to non-managing agent");
+		this.agentsUnderManagement.add(agent);
+	}
+	
+	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, int x, int y) {
+        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x, y, this);
+        WorldEventListener listener;
+        for(int i=0;i<listeners.size();i++)
+        {
+        	Object o = listeners.get(i);
+        	listener = (WorldEventListener) o;
+        	listener.HandleWorldEvent(worldEvent);
+        }
+    }
+
+	@Override
+	public int getExpectedScheduleQuality(Task task) {
+		return this.scheduler.GetScheduleCostSync(task);
+	}
+
+	@Override
+	public void setPosition(Vector2D pos) {
+		this.x = pos.x;
+		this.y = pos.y;
+		
 	}
 }

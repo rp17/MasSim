@@ -2,6 +2,7 @@ package raven.game;
 
 import java.util.ArrayList;
 
+import masSim.taems.IAgent;
 import raven.game.interfaces.IRavenBot;
 import raven.game.messaging.Dispatcher;
 import raven.game.messaging.RavenMessage;
@@ -785,5 +786,17 @@ public class RavenBot extends MovingEntity implements IRavenBot {
 
 	public RavenSensoryMemory getSensoryMem() {
 		return sensoryMem;
+	}
+
+	@Override
+	public IAgent getAgent() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setAgent(IAgent agent) {
+		// TODO Auto-generated method stub
+		
 	}
 }
