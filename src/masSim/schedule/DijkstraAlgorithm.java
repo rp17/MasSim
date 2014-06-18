@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import raven.math.Vector2D;
+
 public class DijkstraAlgorithm {
 
   private final List<Method> nodes;
@@ -30,7 +32,7 @@ public class DijkstraAlgorithm {
     unSettledNodes = new HashSet<Method>();
     distance = new HashMap<Method, DijkstraDistance>();
     predecessors = new HashMap<Method, Method>();
-    distance.put(source, new DijkstraDistance(0,0));
+    distance.put(source, new DijkstraDistance(0,0, source.x, source.y));
     unSettledNodes.add(source);
     while (unSettledNodes.size() > 0) {
     	Method node = getMinimum(unSettledNodes);
@@ -98,7 +100,7 @@ public class DijkstraAlgorithm {
   private DijkstraDistance getShortestDistance(Method destination) {
     DijkstraDistance d = distance.get(destination);
     if (d == null) {
-      return new DijkstraDistance(Long.MAX_VALUE,0);
+      return new DijkstraDistance(Long.MAX_VALUE,0,destination.x, destination.y);
     } else {
       return d;
     }

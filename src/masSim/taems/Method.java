@@ -12,19 +12,20 @@ public class Method extends Node implements IMethod {
 	private int index;
 	private Outcome outcome;//Change to Vector
 	public int deadline = 0;
-	public int x, y;
+	public double x;
+	public double y;
 	
 	// Constructor
-	public Method(String nm, double outcomeQuality, int x, int y){
-		this(nm,outcomeQuality, x, y, 0);
+	public Method(String nm, double outcomeQuality, double x2, double y2){
+		this(nm,outcomeQuality, x2, y2, 0);
 	}
-	public Method(String nm, double outcomeQuality, int x, int y, int dl){
+	public Method(String nm, double outcomeQuality, double x2, double y2, int dl){
 		label = nm;
 		outcome = new Outcome(outcomeQuality, -1, 0);
 		index = Index++;
 		deadline = dl;
-		this.x = x;
-		this.y = y;
+		this.x = x2;
+		this.y = y2;
 	}
 	public Method(Method m){
 		this(m.label,m.outcome.getQuality(), m.x, m.y, m.deadline);
@@ -40,15 +41,10 @@ public class Method extends Node implements IMethod {
 		this.NotifyAll();
 	}
 	
-	public DijkstraDistance getPathUtilityRepresentedAsDistance()
-	{
-		DijkstraDistance previous = new DijkstraDistance(0,0);
-		return getPathUtilityRepresentedAsDistance(previous);
-	}
 	public DijkstraDistance getPathUtilityRepresentedAsDistance(DijkstraDistance distanceTillPreviousNode)
 	{
 		//This is distance calculation for this step only. Previous distance used for calculation, but not appended
-		DijkstraDistance d = new DijkstraDistance(0,0);
+		DijkstraDistance d = new DijkstraDistance(0,0,this.x, this.y);
 		//If task can be performed, return utility value through the function. But if its deadline has passed
 		//then return an abnormally large negative utility value to force Dijkstra to reject it.
 		if ((distanceTillPreviousNode.duration+this.outcome.duration)>deadline && deadline!=0) 
@@ -56,11 +52,10 @@ public class Method extends Node implements IMethod {
 		else
 		{
 			//This can be any formula combining different outcomes and objectively comparing them
-			double maxUtility = 0;
-			if (outcome.quality!=0) maxUtility = 10*(1/outcome.quality);
-			d.distance = maxUtility;
+			d.distance = Math.sqrt(Math.abs(distanceTillPreviousNode.vector.x-this.x)*Math.abs(distanceTillPreviousNode.vector.y-this.y));
+			d.duration = d.distance;
 		}
-		d.duration = outcome.duration;
+		this.outcome.quality = (10000-d.distance);
 		return d;
 	}
 	

@@ -10,6 +10,7 @@ public interface IAgent {
 	public void AddChildAgent(IAgent agent);
 	public void assignTask(Task task);
 	public void update(int tick);
-	public int getExpectedScheduleQuality(Task task);
+	public int getExpectedScheduleQuality(Task task, IAgent agent);
 	public void setPosition(Vector2D pos);
+	public Vector2D getPosition();
 }

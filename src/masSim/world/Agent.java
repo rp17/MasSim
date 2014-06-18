@@ -18,7 +18,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
-	private Scheduler scheduler = new Scheduler();
+	private Scheduler scheduler;
 	private final AtomicReference<Schedule> schedule = new AtomicReference<Schedule>();
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
@@ -51,6 +51,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			this.listeners = new ArrayList<WorldEventListener>();
 		else
 			this.listeners = listeners;
+		scheduler = new Scheduler(this);
 		this.scheduler.AddScheduleUpdateEventListener(this);
 		this.x = x;
 		this.y = y;
@@ -65,7 +66,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y);
 	}
 	
-	public synchronized void fireAgentMovedEvent(TaskType type, String agentId, String methodId, int x2, int y2) {
+	public synchronized void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
         WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
         Iterator it = listeners.iterator();
         WorldEventListener listener;
@@ -131,17 +132,19 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		else
 		{
 			//Calculate which agent is best to assign
-			int highestQuality = 0;
-			IAgent selectedAgent;
+			int highestQuality = this.getExpectedScheduleQuality(task, this);
+			IAgent selectedAgent = this;
 			for(IAgent ag : this.agentsUnderManagement)
 			{
-				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task);
+				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
 				if (qualityWithThisAgent>highestQuality)
 				{
 					highestQuality = qualityWithThisAgent;
 					selectedAgent = ag;
 				}
 			}
+			task.agent = selectedAgent;
+			assignTask(task);
 		}
 	}
 	
@@ -187,8 +190,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.agentsUnderManagement.add(agent);
 	}
 	
-	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, int x, int y) {
-        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x, y, this);
+	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
+        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x2, y2, this);
         WorldEventListener listener;
         for(int i=0;i<listeners.size();i++)
         {
@@ -199,14 +202,22 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
     }
 
 	@Override
-	public int getExpectedScheduleQuality(Task task) {
-		return this.scheduler.GetScheduleCostSync(task);
+	public int getExpectedScheduleQuality(Task task, IAgent agent) {
+		IAgent previousAgent = task.agent;
+		task.agent = agent;
+		int cost = this.scheduler.GetScheduleCostSync(task);
+		task.agent = previousAgent;
+		return cost;
 	}
 
 	@Override
 	public void setPosition(Vector2D pos) {
 		this.x = pos.x;
 		this.y = pos.y;
-		
+	}
+	
+	@Override
+	public Vector2D getPosition() {
+		return new Vector2D(x,y);
 	}
 }

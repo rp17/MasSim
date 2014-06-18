@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Observable;
+import java.util.concurrent.locks.Lock;
 
 public class Task extends Node {
 
@@ -13,7 +14,8 @@ public class Task extends Node {
 	public Date earliest_start_time;
 	public Date deadline;
 	public boolean isComplete = false;
-		
+	private Lock lock;
+	
 	public int GetUtility()
 	{
 		return 0;
@@ -42,9 +44,6 @@ public class Task extends Node {
 		this(name, qaf, new Date(), new Date(2015,1,1), m, agent);
 	}
 	
-	public Task(String name, QAF qaf, Method m){
-		this(name, qaf, new Date(), new Date(2015,1,1), m, null);
-	}
 	
 	public void addTask(Node task){
 		this.children.add(task);
@@ -63,7 +62,7 @@ public class Task extends Node {
 	}
 	
 	@Override
-	public void Cleanup()
+	public synchronized void Cleanup()
 	{
 		if (this.hasChildren())
 			for(Node n : children)
@@ -87,9 +86,5 @@ public class Task extends Node {
 					}
 				}
 			}
-	}
-
-
-
-	
+		}
 }

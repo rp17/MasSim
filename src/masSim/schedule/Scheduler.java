@@ -19,13 +19,18 @@ public class Scheduler implements Runnable {
 	public ArrayList<Task> PendingTasks = new ArrayList<Task>();
 	
 	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled
-	private Task taskGroup = new Task("Task Group",new SumAllQAF(), null);
+	private Task taskGroup;
 	
 	//Represents the current final optimum schedule calculated for the taskGroup member
 	private Schedule schedule;
 	
 	//Collection of schedule event listeners, who will be notified when the schedule changes
 	private ArrayList<IScheduleUpdateEventListener> listeners = new ArrayList<IScheduleUpdateEventListener>();
+	
+	public Scheduler(IAgent agent)
+	{
+		taskGroup = new Task("Task Group",new SumAllQAF(), null, agent);
+	}
 	
 	//A public method to feed new tasks to the scheduler
 	public void AddScheduleUpdateEventListener(IScheduleUpdateEventListener listener)
@@ -36,7 +41,7 @@ public class Scheduler implements Runnable {
 	public int GetScheduleCostSync(Task task)
 	{
 		//Make a copy
-		Task tempTask = new Task("Task Group",new SumAllQAF(), null);
+		Task tempTask = new Task("Task Group",new SumAllQAF(), null, task.agent);
 		Iterator<Node> copyTasks = taskGroup.getSubtasks();
 		while(copyTasks.hasNext())
 		{
@@ -105,7 +110,7 @@ public class Scheduler implements Runnable {
 		//pass through a possible schedule
 		ArrayList<MethodTransition> edges = new ArrayList<MethodTransition>();
 		//Add an initial node, which will act as our starting point
-		Method initialMethod = new Method("Dummy Starting Point",0,0,0);
+		Method initialMethod = new Method("Dummy Starting Point",0,topLevelTask.agent.getPosition().x,topLevelTask.agent.getPosition().y);
 		nodes.add(initialMethod);
 		Method finalMethod = new Method("Dummy Final Point",0,0,0);
 		nodes.add(finalMethod);
@@ -131,6 +136,7 @@ public class Scheduler implements Runnable {
 	        totalquality += vertex.getOutcome().getQuality();
 	        schedule.addItem(new masSim.taems.ScheduleElement(vertex));
 	    }
+	    schedule.TotalQuality = totalquality;
 		return schedule;
 	}
 	
