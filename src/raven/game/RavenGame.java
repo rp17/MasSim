@@ -774,6 +774,9 @@ public class RavenGame {
 	public void addWpt(Vector2D pos, String name){
 		wpts.addWpt(pos, name);
 	}
+	public void removeWpt(Vector2D pos, String name){
+		wpts.removeWpt(pos, name);
+	}
 	public void clearWpts(){
 		wpts.clearWpts();
 	}

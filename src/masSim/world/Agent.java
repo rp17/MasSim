@@ -1,6 +1,5 @@
 package masSim.world;
 
-import masSim.main.MasSim;
 import masSim.world.WorldEvent;
 import masSim.world.WorldEventListener;
 import masSim.world.WorldEvent.TaskType;
@@ -12,10 +11,12 @@ import masSim.taems.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import raven.Main;
 import raven.math.Vector2D;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
 
+	private boolean debugFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Scheduler scheduler;
@@ -29,6 +30,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY
+	}
+	
+	@Override
+	public String getName()
+	{
+		return this.label;
 	}
 	
 	/** alive, dead or spawning? */
@@ -57,17 +64,19 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y);
-		System.out.println("Agent " + label + " created with code" + code);
 	}
 	
 	public void Execute(Method m)
 	{
 		if (m.x!=0 && m.y!=0)
+		{
 			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y);
+		}
 	}
 	
-	public synchronized void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
-        WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
+	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
+        Main.Message(debugFlag, "[Agent 78] Firing Execute Method for " + methodId);
+		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
         Iterator it = listeners.iterator();
         WorldEventListener listener;
         while(it.hasNext())
@@ -85,15 +94,32 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private void executeSchedule() {
 		while(true)
 		{
+			Schedule newSchedule = this.scheduler.RunStatic();
+			if (newSchedule!=null) {
+				schedule.set(newSchedule);
+				Main.Message(debugFlag, "[Agent 100] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
+			}
 			if (schedule.get()!=null)
 			{
+				
 				Iterator<ScheduleElement> el = schedule.get().getItems();
 				while(el.hasNext())
 				{
 					ScheduleElement e = el.next();
 					Method m = e.getMethod();
+					Main.Message(debugFlag, "[Agent 109] Next method to be executed from schedule " + m.label);
 					Execute(m);
+					schedule.get().RemoveElement(e);
 					m.MarkCompleted();
+					this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y);
+					Main.Message(debugFlag, "[Agent 112] " + m.label + " completed");
+					//Move this to thread later
+					Schedule dynamicNewSchedule = this.scheduler.RunStatic();
+					if (dynamicNewSchedule!=null) {
+						schedule.set(dynamicNewSchedule);
+						Main.Message(debugFlag, "[Agent 116] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
+						el = schedule.get().getItems();
+					}
 				}
 			}
 		}
@@ -107,7 +133,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			if (this.equals(task.agent))
 			{
-				System.out.println("Agent: " + label + " - Assigned " + task.label);
+				Main.Message(debugFlag, "[Agent] " + label + " assigned " + task.label);
 				Iterator<Node> it = task.getSubtasks();
 				while(it.hasNext())
 				{
@@ -122,21 +148,24 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 			else if (this.agentsUnderManagement.contains(task.agent)) 
 			{
+				Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
 				task.agent.assignTask(task);
 			}
 			else
 			{
-				System.out.println(task.agent.getCode() + " is not a child of " + this.label);
+				Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.label);
 			}
 		}
 		else
 		{
 			//Calculate which agent is best to assign
 			int highestQuality = this.getExpectedScheduleQuality(task, this);
+			Main.Message(debugFlag, "[Agent 162] Quality with agent " + this.getName() + " " + highestQuality);
 			IAgent selectedAgent = this;
 			for(IAgent ag : this.agentsUnderManagement)
 			{
 				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
+				Main.Message(debugFlag, "[Agent 166] Quality with agent " + ag.getName() + " " + qualityWithThisAgent);
 				if (qualityWithThisAgent>highestQuality)
 				{
 					highestQuality = qualityWithThisAgent;
@@ -144,6 +173,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 			}
 			task.agent = selectedAgent;
+			Main.Message(debugFlag, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
 			assignTask(task);
 		}
 	}

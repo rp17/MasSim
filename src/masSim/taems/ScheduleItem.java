@@ -25,7 +25,7 @@ public class ScheduleItem {
 			  throw new NullMethod("ScheduleItem.Constructor: Null method passed");
 		  }
 
-		  this.name = mt.generateName();
+		  this.name = mt.label;
 		  this.method = mt;
 		  //duration = mt.getDuration();
 		  elapsedTime = 0;

@@ -32,6 +32,17 @@ public class Waypoints {
 	public void addWpt(Vector2D pos, String name) {
 		wpts.add(new Wpt(pos, name));
 	}
+	public void removeWpt(Vector2D pos, String name) {
+		Wpt selectedWp = null;
+		for(Wpt wp: wpts)
+		{
+			if (wp.name.equals(name))
+			{
+				selectedWp = wp;
+			}
+		}
+		wpts.remove(selectedWp);
+	}
 	public void clearWpts(){
 		wpts.clear();
 	}

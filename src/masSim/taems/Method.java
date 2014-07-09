@@ -4,10 +4,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Observable;
 
+import raven.Main;
 import masSim.schedule.Scheduler;
 
 public class Method extends Node implements IMethod {
 
+	private boolean debugFlag = false;
 	private static int Index = 1;
 	private int index;
 	private Outcome outcome;//Change to Vector
@@ -37,7 +39,6 @@ public class Method extends Node implements IMethod {
 	{
 		super.MarkCompleted();
 		//Only print if its an actual task, and not an FSM connective created by the scheduler
-		if (outcome.quality>0) System.out.println("Method " + label + " completed in duration " + outcome.duration + " with quality " + outcome.quality);
 		this.NotifyAll();
 	}
 	
@@ -52,8 +53,11 @@ public class Method extends Node implements IMethod {
 		else
 		{
 			//This can be any formula combining different outcomes and objectively comparing them
-			d.distance = Math.sqrt(Math.abs(distanceTillPreviousNode.vector.x-this.x)*Math.abs(distanceTillPreviousNode.vector.y-this.y));
+			double one = distanceTillPreviousNode.vector.x-this.x;
+			double two = distanceTillPreviousNode.vector.y-this.y;
+			d.distance = Math.sqrt(Math.pow(one, 2)+Math.pow(two,2));
 			d.duration = d.distance;
+			Main.Message(debugFlag, "[Method 57] Distance from ("+this.x+","+this.y+") to (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+")");
 		}
 		this.outcome.quality = (10000-d.distance);
 		return d;
@@ -64,18 +68,12 @@ public class Method extends Node implements IMethod {
 	public Outcome getOutcome(){return outcome;}
 	public int getDeadline(){return deadline;}
 	
-	public String generateName(){
-		String resName = label + Integer.toString(index);
-		index++;
-		return resName;
-	}
-	
 	  @Override
 	  public int hashCode() {
 	    final int prime = 31;
 	    int result = 1;
 	    result = prime * result + index;
-	    return result;
+	    return result;//this.label.hashCode();//overriding
 	  }
 	  
 	  @Override
@@ -86,18 +84,25 @@ public class Method extends Node implements IMethod {
 	      return false;
 	    if (getClass() != obj.getClass())
 	      return false;
-	    Method other = (Method) obj;
-	    if (index == 0) {
-	      if (other.index != 0)
-	        return false;
-	    } else if (!(index == other.index))
-	      return false;
-	    return true;
+	    Node other = (Node) obj;
+	    if (this.hashCode()==other.hashCode()){
+	    //if (this.label.equals(other.label)){
+	    	//Main.Message("[Method 85] " + this.label + " found to be equal to " + other.label);
+	    	return true;
+	    }
+	    else{
+	    	//Main.Message("[Method 89] " + this.label + " not found to be equal to " + other.label);
+	    	return false;
+	    }
 	  }
 
 	  @Override
 	  public String toString() {
 	    return label;
+	  }
+	  
+	  public String toStringLong() {
+		return label + "(" + hashCode() + ")";
 	  }
 	  
 	@Override

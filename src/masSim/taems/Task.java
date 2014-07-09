@@ -87,4 +87,9 @@ public class Task extends Node {
 				}
 			}
 		}
+	
+	public static Task CreateDefaultTask(int counter, double x, double y)
+	{
+		return new Task("Station " + counter,new SumAllQAF(), new Method("Visit Station " + counter,1,x,y), null);
+	}
 }

@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import raven.Main;
 import raven.math.Vector2D;
 
 public class DijkstraAlgorithm {
 
+  private boolean debugFlag = false;
   private final List<Method> nodes;
   private final List<MethodTransition> edges;
   private Set<Method> settledNodes;
@@ -49,8 +51,9 @@ public class DijkstraAlgorithm {
       DijkstraDistance shortestDistanceToNode = getShortestDistance(node);
       DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, shortestDistanceToNode);
       DijkstraDistance currentShortestDistanceFromNodeToTarget = getShortestDistance(target);
-      DijkstraDistance newDistanceFromNodeToTargetFromCurrentRoute = shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
+      DijkstraDistance newDistanceFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
       if (currentShortestDistanceFromNodeToTarget.IsGreaterThen(newDistanceFromNodeToTargetFromCurrentRoute)) {
+    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newDistanceFromNodeToTargetFromCurrentRoute.distance + " old:" + currentShortestDistanceFromNodeToTarget.distance);
         distance.put(target, newDistanceFromNodeToTargetFromCurrentRoute);
         predecessors.put(target, node);
         unSettledNodes.add(target);
@@ -118,8 +121,10 @@ public class DijkstraAlgorithm {
       return null;
     }
     path.add(step);
+    Main.Message(debugFlag, "[DijkstraAlgorithm 123] Added to Path " + step.label);
     while (predecessors.get(step) != null) {
       step = predecessors.get(step);
+      Main.Message(debugFlag, "[DijkstraAlgorithm 126] Added to Path " + step.label);
       path.add(step);
     }
     // Put it into the correct order

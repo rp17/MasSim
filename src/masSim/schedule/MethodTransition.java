@@ -28,7 +28,11 @@ public class MethodTransition  {
 	  
 	  @Override
 	  public String toString() {
-	    return source + " " + destination;
+	    return source + " to " + destination;
+	  }
+	  
+	  public String toStringLong() {
+		    return source.toStringLong() + " to " + destination.toStringLong();
 	  }
 	  
 	  

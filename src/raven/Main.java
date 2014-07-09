@@ -17,9 +17,9 @@ public class Main {
 	private static RavenGame game;
 	private static boolean debug = true;
 	
-	public static void Message(String message)
+	public static void Message(boolean flag, String message)
 	{
-		if (debug) System.out.println(message);
+		if (debug && flag) System.out.println(message);
 	}
 	
     public static void main(String args[]) {

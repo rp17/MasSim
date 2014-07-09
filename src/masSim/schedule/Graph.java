@@ -22,14 +22,16 @@ public class Graph {
   
   public void Print()
   {
+	  System.out.println("[Graph] Printing Graph");
 	  System.out.println("Nodes:");
 	  for (Method m : methods) {
-		  System.out.println(m.label+m.hashCode());
+	    System.out.println(">"+m.toStringLong());
 	  }
 	  System.out.println("Edges:");
 	  for (MethodTransition t : transitions) {
-		  System.out.println(t.toString());
+		  System.out.println(">"+t.toStringLong());
 	  }
+	  System.out.println("");
   }
   
 } 

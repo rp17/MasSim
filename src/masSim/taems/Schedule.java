@@ -6,6 +6,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
 
+import raven.Main;
+
 public class Schedule {
 	private Queue<ScheduleElement> items;
 	public int TotalQuality = 0;
@@ -13,7 +15,12 @@ public class Schedule {
 		items = new ConcurrentLinkedQueue<ScheduleElement>();
 	}
 	public void addItem(ScheduleElement item){
+		//Main.Message("[Schedule] Added to schedule task " + item.getName());
 		items.add(item);
+	}
+	public void RemoveElement(ScheduleElement item)
+	{
+		items.remove(item);
 	}
 	public ScheduleElement poll(){
 		return items.poll();
@@ -31,5 +38,17 @@ public class Schedule {
 	{
 		items.clear();
 		items.addAll(sch.items);
+	}
+	@Override
+	public String toString()
+	{
+		String val = "";
+		Iterator<ScheduleElement> it = items.iterator();
+		while(it.hasNext())
+		{
+			ScheduleElement el = (ScheduleElement)it.next();
+			val += " > " + el.toString();
+		}
+		return val;
 	}
 }

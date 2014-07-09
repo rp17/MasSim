@@ -69,7 +69,7 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 		float course = (float)Math.atan2(dest.y - source.y, dest.x - source.x);
 		m_pOwner.getSteering().setTarget(dest, course);
 		
-		System.out.println("Steering to: " + dest.toString() + " course = " + course);
+		//System.out.println("Steering to: " + dest.toString() + " course = " + course);
 		
 	}
 
@@ -94,9 +94,9 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 			}
 		*/
 		if(m_iStatus != Goal.CurrentStatus.active) return m_iStatus;
-		System.out.println("Going to x = " + m_Edge.Destination().x + " y = " + m_Edge.Destination().y);
+		//System.out.println("Going to x = " + m_Edge.Destination().x + " y = " + m_Edge.Destination().y);
 		double dist = m_pOwner.pos().distanceSq(m_Edge.Destination());
-		System.out.println("Distance from destination: " + dist);
+		//System.out.println("Distance from destination: " + dist);
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
 			}

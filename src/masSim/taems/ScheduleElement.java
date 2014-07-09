@@ -26,7 +26,7 @@ public class ScheduleElement {
 			  throw new NullMethod("ScheduleElement.Constructor: Null method passed");
 		  }
 
-		  this.name = mt.generateName();
+		  this.name = mt.label;
 		  this.method = mt;
 		  elapsedTime = 0;
 		  status = Status.ACTIVE;
@@ -36,7 +36,12 @@ public class ScheduleElement {
 
 	  public String getName(){
 		  return name;
-	  }	  
+	  }
+	  
+	  @Override
+	  public String toString(){
+		  return getName();
+	  }
 	  
 	  public Status update(int dt){
 		  double expectedTime = elapsedTime + dt;

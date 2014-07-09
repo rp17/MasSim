@@ -13,6 +13,7 @@ public class SimWorld implements Runnable {
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
 	private ArrayList<WorldEventListener> listeners;
+	private IAgent mainAgent;
 	
 	public SimWorld(WorldEventListener eventListener)
 	{
@@ -20,29 +21,32 @@ public class SimWorld implements Runnable {
 		tasks = new ArrayList<Task>();
 		listeners = new ArrayList<WorldEventListener>();
 		listeners.add(eventListener);
+		
+		//Initialize two agents, and specify their initial positions
+		Agent agentOne = new Agent("Helicopter1", true, 20, 100, listeners);
+		Agent agentTwo = new Agent("Helicopter2", false, 20, 200, listeners);
+		mainAgent = agentOne;
+		agentOne.AddChildAgent(agentTwo);
+		agents.add(agentOne);
+		agents.add(agentTwo);
+				
+		eventListener.RegisterMainAgent(agentOne);
 	}
 	
 	@Override
 	public void run()
 	{
-		//Initialize two agents, and specify their initial positions
-		Agent agentOne = new Agent("Helicopter1", true, 20, 100, listeners);
-		Agent agentTwo = new Agent("Helicopter2", false, 20, 300, listeners);
-		agentOne.AddChildAgent(agentTwo);
-		agents.add(agentOne);
-		agents.add(agentTwo);
-		
-		
+				
 		//Initialize a bunch of tasks
-		agentOne.assignTask(new Task("Station 1",new SumAllQAF(), new Method("1",1,100,100), agentOne));
-		agentOne.assignTask(new Task("Station 2",new SumAllQAF(), new Method("2",1,300,100), agentOne));
-		//agentOne.assignTask(new Task("Station 3",new SumAllQAF(), new Method("3",1,300,150), agentOne));
-		//agentOne.assignTask(new Task("Station 4",new SumAllQAF(), new Method("4",1,100,150), agentOne));
+		//mainAgent.assignTask(new Task("Station 1",new SumAllQAF(), new Method("Visit Station 1",1,100,100), mainAgent));
+		//mainAgent.assignTask(new Task("Station 2",new SumAllQAF(), new Method("Visit Station 2",1,100,200), null));
+		//mainAgent.assignTask(new Task("Station 3",new SumAllQAF(), new Method("Visit Station 3",1,250,200), null));
+		//mainAgent.assignTask(new Task("Station 4",new SumAllQAF(), new Method("Visit Station 4",1,100,200), mainAgent));
 		
-		agentTwo.assignTask(new Task("Station 5",new SumAllQAF(), new Method("5",1,100,300), agentTwo));
-		agentTwo.assignTask(new Task("Station 6",new SumAllQAF(), new Method("6",1,300,300), agentTwo));
-		//agentTwo.assignTask(new Task("Station 7",new SumAllQAF(), new Method("7",1,300,350), agentTwo));
-		//agentTwo.assignTask(new Task("Station 8",new SumAllQAF(), new Method("8",1,100,350), agentTwo));
+		//mainAgent.assignTask(new Task("Station 5",new SumAllQAF(), new Method("Visit Station 5",1,100,250), mainAgent));
+		//mainAgent.assignTask(new Task("Station 6",new SumAllQAF(), new Method("Visit Station 6",1,300,250), mainAgent));
+		//mainAgent.assignTask(new Task("Station 7",new SumAllQAF(), new Method("Visit Station 7",1,300,350), mainAgent));
+		//mainAgent.assignTask(new Task("Station 8",new SumAllQAF(), new Method("Visit Station 8",1,100,350), mainAgent));
 		
 		//Start Agents
 		Iterator it = agents.iterator();
@@ -52,12 +56,15 @@ public class SimWorld implements Runnable {
 			Thread agentThread = new Thread(agent,agent.label);
 			agentThread.start();
 		}
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		while(true)
+		{
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		agentOne.assignTask(new Task("Emergency",new SumAllQAF(), new Method("Emergency",1,200,200), null));
+		//agentOne.assignTask(new Task("Emergency Station",new SumAllQAF(), new Method("Emergency Method",1,300,90), null));
 	}
 	
 	public synchronized void addListener(WorldEventListener sl) {

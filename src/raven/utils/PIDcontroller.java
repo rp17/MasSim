@@ -53,7 +53,7 @@ public class PIDcontroller {
 			}
 		}
 		else out *= scaler;
-		System.out.println("Output control = " + out);
+		//System.out.println("Output control = " + out);
 		out = constrain(out, 90);
 		return out;
 	}

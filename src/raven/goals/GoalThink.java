@@ -18,7 +18,6 @@ public class GoalThink extends GoalComposite<RavenBot> {
 
 	public GoalThink(RavenBot ravenBot) {
 		super(ravenBot, Goal.GoalType.goal_think);
-		Log.debug("GoalThink", "created new brain attached to bot " + ravenBot.ID());
 
 		// random values are between 0.5 and 1.5
 		HealthBias = Math.random() + 0.5;

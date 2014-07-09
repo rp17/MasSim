@@ -59,7 +59,6 @@ public class RoverBot extends RavenBot {
 				dest = wpt.pos;
 				PathEdge edge = new PathEdge(src, dest, NavGraphEdge.NORMAL, 0);
 				m_Path.add(edge);
-				System.out.println("Edge " + i + " src: " + src.toString() + " dest: " + dest.toString());
 				src = dest;
 			}
 			Goal_PIDFollowPath g = new Goal_PIDFollowPath(this, m_Path);
@@ -90,7 +89,7 @@ public class RoverBot extends RavenBot {
 			float bearing = (float)Math.atan2(tgt.y - position.y, tgt.x - position.x);
 			float error = bearing - steering.course;
 			error = (float)Math.toDegrees((float)error);
-			System.out.println("Course " + Math.toDegrees(steering.course) + ", bearing " + Math.toDegrees(bearing) + ", error " + error);
+			//System.out.println("Course " + Math.toDegrees(steering.course) + ", bearing " + Math.toDegrees(bearing) + ", error " + error);
 			return error;
 		}
 	}
@@ -119,7 +118,7 @@ public class RoverBot extends RavenBot {
 		if (doPID) {
 			if(speed < maxSpeed*1.0) {
 				speed += accelRate*delta;
-				System.out.println("Accelerating to " + speed);
+				//System.out.println("Accelerating to " + speed);
 				}
 			
 			float error = getCTE();
@@ -128,7 +127,7 @@ public class RoverBot extends RavenBot {
 			noiseSteerAngleDeg += turnRate*delta;
 		}
 		else {
-			System.out.println("No PID");
+			//System.out.println("No PID");
 			if( speed > 1){speed -= brakingRate*delta;}
 			else {
 				speed = 0;

@@ -9,7 +9,7 @@ public class WorldEvent extends EventObject {
 	public double xCoordinate;
 	public double yCoordinate;
 	public TaskType taskType; 
-	public enum TaskType {METHODCREATED, AGENTCREATED, EXECUTEMETHOD}
+	public enum TaskType {METHODCREATED, AGENTCREATED, EXECUTEMETHOD, METHODCOMPLETED}
 	public String agentId;
 	public String methodId;
 	public IAgent agent;
