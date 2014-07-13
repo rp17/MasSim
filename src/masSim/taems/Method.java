@@ -9,7 +9,7 @@ import masSim.schedule.Scheduler;
 
 public class Method extends Node implements IMethod {
 
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	private static int Index = 1;
 	private int index;
 	private Outcome outcome;//Change to Vector
@@ -49,7 +49,10 @@ public class Method extends Node implements IMethod {
 		//If task can be performed, return utility value through the function. But if its deadline has passed
 		//then return an abnormally large negative utility value to force Dijkstra to reject it.
 		if ((distanceTillPreviousNode.duration+this.outcome.duration)>deadline && deadline!=0) 
+		{
 			d.distance = 10000;
+			Main.Message(debugFlag, "[Method 54] Using infinite distance because of deadline breakage");
+		}
 		else
 		{
 			//This can be any formula combining different outcomes and objectively comparing them
@@ -57,9 +60,10 @@ public class Method extends Node implements IMethod {
 			double two = distanceTillPreviousNode.vector.y-this.y;
 			d.distance = Math.sqrt(Math.pow(one, 2)+Math.pow(two,2));
 			d.duration = d.distance;
-			Main.Message(debugFlag, "[Method 57] Distance from ("+this.x+","+this.y+") to (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+")");
+			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}
 		this.outcome.quality = (10000-d.distance);
+		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + this.outcome.quality );
 		return d;
 	}
 	

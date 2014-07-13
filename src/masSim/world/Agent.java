@@ -74,6 +74,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 	
+	public void MarkMethodCompleted(String methodId)
+	{
+		
+	}
+	
 	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
         Main.Message(debugFlag, "[Agent 78] Firing Execute Method for " + methodId);
 		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
@@ -112,7 +117,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					schedule.get().RemoveElement(e);
 					m.MarkCompleted();
 					this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y);
-					Main.Message(debugFlag, "[Agent 112] " + m.label + " completed");
+					Main.Message(true, "[Agent 112] " + m.label + " completed");
 					//Move this to thread later
 					Schedule dynamicNewSchedule = this.scheduler.RunStatic();
 					if (dynamicNewSchedule!=null) {
@@ -159,6 +164,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		else
 		{
 			//Calculate which agent is best to assign
+			int baseQuality = this.getExpectedScheduleQuality(null, this);
 			int highestQuality = this.getExpectedScheduleQuality(task, this);
 			Main.Message(debugFlag, "[Agent 162] Quality with agent " + this.getName() + " " + highestQuality);
 			IAgent selectedAgent = this;
@@ -166,14 +172,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			{
 				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
 				Main.Message(debugFlag, "[Agent 166] Quality with agent " + ag.getName() + " " + qualityWithThisAgent);
-				if (qualityWithThisAgent>highestQuality)
+				if ((baseQuality + qualityWithThisAgent)>highestQuality)
 				{
 					highestQuality = qualityWithThisAgent;
 					selectedAgent = ag;
 				}
 			}
 			task.agent = selectedAgent;
-			Main.Message(debugFlag, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
+			Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
 			assignTask(task);
 		}
 	}
@@ -233,10 +239,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public int getExpectedScheduleQuality(Task task, IAgent agent) {
-		IAgent previousAgent = task.agent;
-		task.agent = agent;
-		int cost = this.scheduler.GetScheduleCostSync(task);
-		task.agent = previousAgent;
+		int cost = 0;
+		if (task!=null)
+		{
+			IAgent previousAgent = task.agent;
+			task.agent = agent;
+			cost = this.scheduler.GetScheduleCostSync(task, agent);
+			task.agent = previousAgent;
+		}
+		else
+			cost = this.scheduler.GetScheduleCostSync(null, agent); 
 		return cost;
 	}
 

@@ -1,9 +1,10 @@
 package masSim.schedule;
 import masSim.taems.*;
-
+import raven.Main;
 import java.util.List;
 
 public class Graph {
+  private boolean debugFlag = true;
   private final List<Method> methods;
   private final List<MethodTransition> transitions;
 
@@ -22,16 +23,12 @@ public class Graph {
   
   public void Print()
   {
-	  System.out.println("[Graph] Printing Graph");
-	  System.out.println("Nodes:");
+	  Main.Message(debugFlag,"[Graph 26] Printing Graph:");
 	  for (Method m : methods) {
-	    System.out.println(">"+m.toStringLong());
 	  }
-	  System.out.println("Edges:");
 	  for (MethodTransition t : transitions) {
-		  System.out.println(">"+t.toStringLong());
+		  Main.Message(debugFlag,"[Graph] 28] >"+t.toStringLong());
 	  }
-	  System.out.println("");
   }
   
 } 

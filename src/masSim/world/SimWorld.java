@@ -23,8 +23,8 @@ public class SimWorld implements Runnable {
 		listeners.add(eventListener);
 		
 		//Initialize two agents, and specify their initial positions
-		Agent agentOne = new Agent("Helicopter1", true, 20, 100, listeners);
-		Agent agentTwo = new Agent("Helicopter2", false, 20, 200, listeners);
+		Agent agentOne = new Agent("Helicopter0", true, 20, 100, listeners);
+		Agent agentTwo = new Agent("Helicopter1", false, 100, 300, listeners);
 		mainAgent = agentOne;
 		agentOne.AddChildAgent(agentTwo);
 		agents.add(agentOne);

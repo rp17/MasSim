@@ -8,8 +8,11 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.concurrent.locks.Lock;
 
+import raven.Main;
+
 public class Task extends Node {
 
+	private boolean debugFlag = false;
 	private QAF qaf;
 	public Date earliest_start_time;
 	public Date deadline;
@@ -57,7 +60,7 @@ public class Task extends Node {
 	public void MarkCompleted()
 	{
 		super.MarkCompleted();
-		System.out.println("Task " + label + " completed.");
+		Main.Message(debugFlag, "[Task 63] Task " + label + " completed.");
 		this.NotifyAll();
 	}
 	

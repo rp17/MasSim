@@ -72,6 +72,7 @@ public class RoverBot extends RavenBot {
 					e.printStackTrace();
 				}
 			}
+			this.agent.MarkMethodCompleted(wpts.get(1).name);
 		}
 	}
 	

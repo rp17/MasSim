@@ -461,19 +461,18 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		{
 			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
 			game.addRoverBotAt(popupLoc, event.agentId, event.agent);
-			System.out.println("Added bot " + event.agentId);
+			Main.Message(debugFlag, "[RavenUI 464] Added bot " + event.agentId);
 		}
 		if (event.taskType==TaskType.METHODCOMPLETED)
 		{
 			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
 			game.removeWpt(popupLoc, event.methodId);
-			System.out.println("Completed and Removed Method " + event.methodId);
 		}
 		if (event.taskType==TaskType.METHODCREATED)
 		{
 			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
 			game.addWpt(popupLoc, event.methodId);
-			System.out.println("Added Method " + event.methodId);
+			Main.Message(debugFlag, "[RavenUI 475] Added Method " + event.methodId);
 		}
 		if (event.taskType==TaskType.EXECUTEMETHOD)
 		{
@@ -486,7 +485,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 				Main.Message(debugFlag, "[RavenUI 472] Handling Method " + event.methodId + ". Going to " + event.xCoordinate + ", " + event.yCoordinate);
 				rbot.addWptsGoal(matchedWaypoints);
 			}
-			//System.out.println("Executing Task at " + popupLoc.x + " " + popupLoc.y);
+			Main.Message(debugFlag, "[RavenUI 488] Executing Task at " + popupLoc.x + " " + popupLoc.y);
 		}
 	}
 	@Override

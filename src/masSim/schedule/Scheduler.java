@@ -12,7 +12,7 @@ import raven.math.Vector2D;
 
 public class Scheduler implements Runnable {
 	
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
@@ -43,17 +43,24 @@ public class Scheduler implements Runnable {
 		listeners.add(listener);
 	}
 	
-	public int GetScheduleCostSync(Task task)
+	public int GetScheduleCostSync(Task task, IAgent taskAgent)
 	{
 		//Make a copy
-		Task tempTaskGroup = new Task("Task Group",new SumAllQAF(), null, task.agent);
+		if (task!=null) taskAgent = task.agent;
+		Task tempTaskGroup = new Task("Task Group",new SumAllQAF(), null, taskAgent);
 		Iterator<Node> copyTasks = taskGroup.getSubtasks();
 		while(copyTasks.hasNext())
 		{
 			tempTaskGroup.addTask(copyTasks.next());
 		}
-		tempTaskGroup.addTask(task);
-		Main.Message(debugFlag, "[Scheduler 56] task added to tempTaskGroup " + task.label + " in " + agent.getName());
+		//Sometimes we want to calculate base cost of executing existing tasks, without assiging a new one, where this
+		//method will be called with a null value. So this check is necessary
+		if (task!=null)
+		{
+			tempTaskGroup.addTask(task);
+			Main.Message(debugFlag, "[Scheduler 56] task added to tempTaskGroup " + task.label + " in " + agent.getName());
+		} else
+			Main.Message(debugFlag, "[Scheduler 56] no new task added. Just calculating base cost");
 		tempTaskGroup.Cleanup();
 		schedule = CalculateScheduleFromTaems(tempTaskGroup);
 		return schedule.TotalQuality;
@@ -161,10 +168,15 @@ public class Scheduler implements Runnable {
 	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
 	    //Print the determined schedule
 	    int totalquality = 0;
-	    for (Method vertex : path) {
-	        totalquality += vertex.getOutcome().getQuality();
-	        schedule.addItem(new masSim.taems.ScheduleElement(vertex));
-	    }
+	    if (path!=null)
+		    for (Method vertex : path) {
+		    	if (!vertex.label.equals("Final Point"))//Ignore final point as its only necessary to complete graph for dijkstra, but we don't need to visit it
+		        {
+		    		totalquality += vertex.getOutcome().getQuality();
+		    		schedule.addItem(new masSim.taems.ScheduleElement(vertex));
+		    		Main.Message(true, "[Scheduler 167] " + vertex.label + " " + vertex.getOutcome().getQuality());
+		        }
+		    }
 	    schedule.TotalQuality = totalquality;
 		return schedule;
 	}
