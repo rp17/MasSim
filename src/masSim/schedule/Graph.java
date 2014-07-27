@@ -4,7 +4,7 @@ import raven.Main;
 import java.util.List;
 
 public class Graph {
-  private boolean debugFlag = true;
+  private boolean debugFlag = false;
   private final List<Method> methods;
   private final List<MethodTransition> transitions;
 

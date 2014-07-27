@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 import masSim.taems.IAgent;
+import raven.Main;
 import raven.game.Waypoints;
 import raven.game.navigation.NavGraphEdge;
 import raven.game.navigation.PathEdge;
@@ -49,7 +50,7 @@ public class RoverBot extends RavenBot {
 		steeringNoise = steerNoise;
 		distanceNoise = distNoise;
 	}
-	public void addWptsGoal(Waypoints wpts){
+	public GoalComposite<RoverBot> addWptsGoal(Waypoints wpts){
 		if(wpts.size() > 1) {
 			List<PathEdge>  m_Path = new ArrayList<PathEdge>();
 			Vector2D src = wpts.get(0).pos;
@@ -64,16 +65,10 @@ public class RoverBot extends RavenBot {
 			Goal_PIDFollowPath g = new Goal_PIDFollowPath(this, m_Path);
 			//Goal_SeekToPosition g = new Goal_SeekToPosition(this,new Vector2D(m_Path.get(0).Destination()));
 			brain.AddSubgoal(g);
-			while(!g.isComplete())//Wait for completion
-			{
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			this.agent.MarkMethodCompleted(wpts.get(1).name);
+			return g;
 		}
+		Main.Message(true, "[RoverBot 70] Waypoints size is zero or one");
+		return null;
 	}
 	
 	public void startPid(){doPID = true;}

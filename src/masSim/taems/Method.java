@@ -9,14 +9,16 @@ import masSim.schedule.Scheduler;
 
 public class Method extends Node implements IMethod {
 
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	private static int Index = 1;
 	private int index;
 	private Outcome outcome;//Change to Vector
 	public int deadline = 0;
 	public double x;
 	public double y;
-	
+	private double heuristicDistance = 400;
+	public static String FinalPoint = "Final Point";
+	public static String StartingPoint = "Starting Point";
 	// Constructor
 	public Method(String nm, double outcomeQuality, double x2, double y2){
 		this(nm,outcomeQuality, x2, y2, 0);
@@ -46,6 +48,10 @@ public class Method extends Node implements IMethod {
 	{
 		//This is distance calculation for this step only. Previous distance used for calculation, but not appended
 		DijkstraDistance d = new DijkstraDistance(0,0,this.x, this.y);
+		if (this.label==Method.FinalPoint)
+		{
+			return d;
+		}
 		//If task can be performed, return utility value through the function. But if its deadline has passed
 		//then return an abnormally large negative utility value to force Dijkstra to reject it.
 		if ((distanceTillPreviousNode.duration+this.outcome.duration)>deadline && deadline!=0) 
@@ -59,6 +65,10 @@ public class Method extends Node implements IMethod {
 			double one = distanceTillPreviousNode.vector.x-this.x;
 			double two = distanceTillPreviousNode.vector.y-this.y;
 			d.distance = Math.sqrt(Math.pow(one, 2)+Math.pow(two,2));
+			if (d.distance>heuristicDistance)
+			{
+				d.distance = 10000;
+			}
 			d.duration = d.distance;
 			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}

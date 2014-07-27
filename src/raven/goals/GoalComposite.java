@@ -3,6 +3,7 @@ package raven.goals;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
+import raven.Main;
 import raven.game.BaseGameEntity;
 import raven.game.RavenBot;
 import raven.game.messaging.Telegram;
@@ -39,13 +40,13 @@ abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 			{
 				return Goal.CurrentStatus.active;
 			}
-
 			return StatusOfSubGoals;
 		}
 
 		//no more subgoals to process - return 'completed'
 		else
 		{
+			this.m_iStatus = Goal.CurrentStatus.completed;
 			return Goal.CurrentStatus.completed;
 		}
 	}

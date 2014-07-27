@@ -10,7 +10,7 @@ import java.util.*;
 import raven.Main;
 import raven.math.Vector2D;
 
-public class Scheduler implements Runnable {
+public class Scheduler {// implements Runnable {
 	
 	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
@@ -77,13 +77,13 @@ public class Scheduler implements Runnable {
 	//It will run continuously when the scheduler thread is started. It will initially calculate the schedule
 	//for current taskGroup, and then subsequently keep checking for arrival of new pending tasks, so that
 	//the schedule is updated whenever they arrive
-	@Override
-	public void run() {
-		while(true)
-		{
+	//@Override
+	//public void run() {
+	//	while(true)
+	//	{
 			//Do nothing for now. Calling this statically.
-		}
-	}
+	//	}
+	//}
 	
 	public Schedule RunStatic()
 	{
@@ -103,13 +103,13 @@ public class Scheduler implements Runnable {
 					
 				}
 			}
-			Main.Message(debugFlag, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
+			Main.Message(true, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
 			//Remove completed tasks
 			taskGroup.Cleanup();
 			if(taskGroup.hasChildren())
 			{
 				schedule = CalculateScheduleFromTaems(taskGroup);
-				Main.Message(debugFlag, "[Scheduler 94] " + schedule.toString());
+				Main.Message(true, "[Scheduler 94] " + schedule.toString());
 				return schedule;
 				/*for(IScheduleUpdateEventListener listener: listeners)
 				{
@@ -145,9 +145,9 @@ public class Scheduler implements Runnable {
 		ArrayList<MethodTransition> edges = new ArrayList<MethodTransition>();
 		//Add an initial node, which will act as our starting point
 		Vector2D agentPos = topLevelTask.agent.getPosition();
-		Method initialMethod = new Method("Starting Point",0,agentPos.x,agentPos.y);
+		Method initialMethod = new Method(Method.StartingPoint,0,agentPos.x,agentPos.y);
 		nodes.add(initialMethod);
-		Method finalMethod = new Method("Final Point",0,agentPos.x,agentPos.y);
+		Method finalMethod = new Method(Method.FinalPoint,0,agentPos.x,agentPos.y);
 		nodes.add(finalMethod);
 		//Append all possible schedule options to this set, after parsing the input Taems structure
 		Method[] finalMethodList = AppendAllMethodExecutionRoutes(nodes, edges, topLevelTask, new Method[]{initialMethod}, null);

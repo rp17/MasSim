@@ -16,7 +16,7 @@ import raven.math.Vector2D;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
 
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Scheduler scheduler;
@@ -27,6 +27,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public ArrayList<WorldEventListener> listeners;
 	public double x;
 	public double y;
+	public boolean flagScheduleRecalculateRequired;
 	
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY
@@ -54,6 +55,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.label = label;
 		taskInd = 0;
 		status = Status.EMPTY;
+		flagScheduleRecalculateRequired = true;
 		if (listeners==null)
 			this.listeners = new ArrayList<WorldEventListener>();
 		else
@@ -63,25 +65,32 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
-		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y);
+		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
 	}
 	
 	public void Execute(Method m)
 	{
 		if (m.x!=0 && m.y!=0)
 		{
-			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y);
+			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y, this, m);
+			Main.Message(true, "[Agent 76] Agent " + this.label + " executing " + m.label);
+			this.flagScheduleRecalculateRequired = false;
 		}
 	}
 	
-	public void MarkMethodCompleted(String methodId)
+	@Override
+	public void MarkMethodCompleted(Method m)
 	{
-		
+		//schedule.get().RemoveElement(e);Does this need to be done?
+		m.MarkCompleted();
+		this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y, m);
+		flagScheduleRecalculateRequired = true;
+		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 	}
 	
-	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
+	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2, IAgent agent, Method method) {
         Main.Message(debugFlag, "[Agent 78] Firing Execute Method for " + methodId);
-		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2,null);
+		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2, agent, method);
         Iterator it = listeners.iterator();
         WorldEventListener listener;
         while(it.hasNext())
@@ -97,8 +106,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	private void executeSchedule() {
-		while(true)
+		while(flagScheduleRecalculateRequired)
 		{
+			Main.Message(debugFlag, "[Agent 111] Executing Schedule");
+			flagScheduleRecalculateRequired = false;
+			Main.Message(debugFlag, "[Agent 111] Running again");
 			Schedule newSchedule = this.scheduler.RunStatic();
 			if (newSchedule!=null) {
 				schedule.set(newSchedule);
@@ -106,24 +118,26 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 			if (schedule.get()!=null)
 			{
-				
 				Iterator<ScheduleElement> el = schedule.get().getItems();
-				while(el.hasNext())
+				if(el.hasNext())
 				{
 					ScheduleElement e = el.next();
+					if (e.getMethod().label.equals("Starting Point") && el.hasNext())
+						e = el.next();
+					else
+						continue;
 					Method m = e.getMethod();
 					Main.Message(debugFlag, "[Agent 109] Next method to be executed from schedule " + m.label);
 					Execute(m);
 					schedule.get().RemoveElement(e);
-					m.MarkCompleted();
-					this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y);
-					Main.Message(true, "[Agent 112] " + m.label + " completed");
-					//Move this to thread later
-					Schedule dynamicNewSchedule = this.scheduler.RunStatic();
-					if (dynamicNewSchedule!=null) {
-						schedule.set(dynamicNewSchedule);
-						Main.Message(debugFlag, "[Agent 116] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
-						el = schedule.get().getItems();
+					while(!flagScheduleRecalculateRequired)
+					{
+						try {
+							Main.Message(debugFlag, "[Agent 126] Waiting completion of " + m.label + " with flag " + flagScheduleRecalculateRequired);
+							Thread.sleep(1000);
+						} catch (InterruptedException ex) {
+							ex.printStackTrace();
+						}
 					}
 				}
 			}
@@ -146,10 +160,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					if (!node.IsTask())
 					{
 						Method method = (Method)node;
-						this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y);
+						this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y, method);
 					}
 				}
 				this.scheduler.AddTask(task);
+				flagScheduleRecalculateRequired = true;
 			}
 			else if (this.agentsUnderManagement.contains(task.agent)) 
 			{
@@ -165,21 +180,25 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			//Calculate which agent is best to assign
 			int baseQuality = this.getExpectedScheduleQuality(null, this);
-			int highestQuality = this.getExpectedScheduleQuality(task, this);
-			Main.Message(debugFlag, "[Agent 162] Quality with agent " + this.getName() + " " + highestQuality);
+			int qualityWithThisAgent = this.getExpectedScheduleQuality(task, this);
+			int addedQuality = qualityWithThisAgent - baseQuality;
+			Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + addedQuality);
 			IAgent selectedAgent = this;
 			for(IAgent ag : this.agentsUnderManagement)
 			{
-				int qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
-				Main.Message(debugFlag, "[Agent 166] Quality with agent " + ag.getName() + " " + qualityWithThisAgent);
-				if ((baseQuality + qualityWithThisAgent)>highestQuality)
+				baseQuality = this.getExpectedScheduleQuality(null, ag);
+				qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
+				int newAddedQuality = qualityWithThisAgent-baseQuality;
+				Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + newAddedQuality);
+				if (newAddedQuality>addedQuality)
 				{
-					highestQuality = qualityWithThisAgent;
+					addedQuality = newAddedQuality;
 					selectedAgent = ag;
 				}
 			}
 			task.agent = selectedAgent;
 			Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
+			flagScheduleRecalculateRequired = true;
 			assignTask(task);
 		}
 	}
@@ -204,10 +223,18 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//Running the agent means that the agent starts doing two things, and does them indefinitely unless it is killed or suspended.
 		//First, it creates a background thread to keep checking for new tasks, and to calculate an optimum schedule for those.
 		//Second, it executes those tasks whose schedule had already been created.
-		Thread agentScheduler = new Thread(this.scheduler,"Scheduler " + this.label);
-		agentScheduler.start();
-		executeSchedule();
-		//negotiate();
+		//Thread agentScheduler = new Thread(this.scheduler,"Scheduler " + this.label);
+		//agentScheduler.start();
+		while(true)
+		{
+			executeSchedule();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 
 	@Override
@@ -226,8 +253,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.agentsUnderManagement.add(agent);
 	}
 	
-	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, double x2, double y2) {
-        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x2, y2, this);
+	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, double x2, double y2, Method method) {
+        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x2, y2, this, method);
         WorldEventListener listener;
         for(int i=0;i<listeners.size();i++)
         {

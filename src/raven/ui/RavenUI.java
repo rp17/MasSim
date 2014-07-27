@@ -52,6 +52,7 @@ import raven.game.RavenUserOptions;
 import raven.game.Waypoints.Wpt;
 import raven.game.interfaces.IRavenBot;
 import raven.game.Waypoints;
+import raven.goals.GoalComposite;
 import raven.math.Vector2D;
 import raven.utils.Log;
 import raven.utils.Log.Level;
@@ -483,7 +484,17 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 				RoverBot rbot = (RoverBot)bot;
 				Waypoints matchedWaypoints = game.getWptsForMethodExecution(event.methodId, rbot.pos());
 				Main.Message(debugFlag, "[RavenUI 472] Handling Method " + event.methodId + ". Going to " + event.xCoordinate + ", " + event.yCoordinate);
-				rbot.addWptsGoal(matchedWaypoints);
+				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints);
+				if (g!=null){
+					Main.Message(true, "[RavenUI 488] Agent is" + event.agent.getName());
+					GoalCompletionWatcher w = new GoalCompletionWatcher(g,event.agent,event.method);
+					Thread agentThread = new Thread(w,"Watcher"+event.methodId);
+					agentThread.start();
+				}
+				else
+				{
+					event.agent.MarkMethodCompleted(event.method);
+				}
 			}
 			Main.Message(debugFlag, "[RavenUI 488] Executing Task at " + popupLoc.x + " " + popupLoc.y);
 		}

@@ -34,6 +34,11 @@ public abstract class Goal<T extends BaseGameEntity> {
 		}
 	}
 	
+	public void SetCompleted()
+	{
+		m_iStatus = Goal.CurrentStatus.completed;
+	}
+	
 	protected void activateIfInactive()
 	{
 		if (isInactive())
