@@ -8,7 +8,7 @@ import raven.utils.Log.Level;
 
 import javax.swing.SwingUtilities;
 
-import masSim.world.SimWorld;
+import masSim.world.*;
 import masSim.world.WorldEventListener;
 
 
@@ -34,7 +34,7 @@ public class Main {
   	    });
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
-		SimWorld world = new SimWorld((WorldEventListener) ui);
+		SimWorld2 world = new SimWorld2((WorldEventListener) ui);
 		Thread MasSimThread = new Thread(world);
 		MasSimThread.start();
 		game.togglePause();
@@ -70,14 +70,13 @@ public class Main {
     			  	    	game.render();
     			  	      }
     			  	    });
-    				
+
     			} finally {
     				SwingUtilities.invokeLater(new Runnable() {
   			  	      public void run() {
   			  	    	GameCanvas.stopDrawing();
   			  	      }
   			  	    });
-    				
     			}
     		//}
     		//}

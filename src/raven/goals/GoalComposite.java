@@ -64,6 +64,12 @@ abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 		//m_SubGoals.add(0, g);
 		m_SubGoals.add(g);
 	}
+	
+	public synchronized void ClearAndAddSubgoal(Goal g)
+	{   
+		m_SubGoals.clear();
+		m_SubGoals.add(g);
+	}
 
 	@Override
 	public boolean handleMessage(Telegram msg) {

@@ -64,7 +64,8 @@ public class RoverBot extends RavenBot {
 			}
 			Goal_PIDFollowPath g = new Goal_PIDFollowPath(this, m_Path);
 			//Goal_SeekToPosition g = new Goal_SeekToPosition(this,new Vector2D(m_Path.get(0).Destination()));
-			brain.AddSubgoal(g);
+			//brain.AddSubgoal(g);
+			brain.ClearAndAddSubgoal(g);
 			return g;
 		}
 		Main.Message(true, "[RoverBot 70] Waypoints size is zero or one");

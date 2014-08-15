@@ -9,14 +9,14 @@ import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld implements Runnable {
+public class SimWorld2 implements Runnable {
 
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
 	private ArrayList<WorldEventListener> listeners;
 	private IAgent mainAgent;
 	
-	public SimWorld(WorldEventListener eventListener)
+	public SimWorld2(WorldEventListener eventListener)
 	{
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();

@@ -783,12 +783,12 @@ public class RavenGame {
 	public Waypoints getWpts() {return wpts;}
 	public Waypoints getWptsForMethodExecution(String methodName, Vector2D currentPosition)
 	{
-		Main.Message(true, "[RavenGame 790] getting waypoints for " + methodName );
+		//Main.Message(true, "[RavenGame 790] getting waypoints for " + methodName );
 		Waypoints local = new Waypoints();
 		for(int i=0;i<wpts.size();i++)
 		{
 			Waypoints.Wpt wp = wpts.get(i);
-			Main.Message(true, "[RavenGame 790] Testing waypoint " + wp.name );
+			//Main.Message(true, "[RavenGame 790] Testing waypoint " + wp.name );
 			if (wp.name==methodName)
 			{
 				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import raven.math.Vector2D;
 import masSim.schedule.Scheduler;
+import masSim.world.AgentMode;
 
 public interface IAgent {
 	public int getCode();
@@ -15,4 +16,6 @@ public interface IAgent {
 	public Vector2D getPosition();
 	public String getName();
 	public void MarkMethodCompleted(Method method);
+	public AgentMode getMode();
+	public void setMode(AgentMode mode);
 }

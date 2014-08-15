@@ -16,7 +16,7 @@ import raven.math.Vector2D;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
 
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Scheduler scheduler;
@@ -24,10 +24,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
 	private ArrayList<IAgent> agentsUnderManagement = null;
+	private AgentMode mode;
 	public ArrayList<WorldEventListener> listeners;
 	public double x;
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
+	
 	
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY
@@ -133,7 +135,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					while(!flagScheduleRecalculateRequired)
 					{
 						try {
-							Main.Message(debugFlag, "[Agent 126] Waiting completion of " + m.label + " with flag " + flagScheduleRecalculateRequired);
+							//Main.Message(debugFlag, "[Agent 126] Waiting completion of " + m.label + " with flag " + flagScheduleRecalculateRequired);
 							Thread.sleep(1000);
 						} catch (InterruptedException ex) {
 							ex.printStackTrace();
@@ -178,6 +180,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		else
 		{
+			//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
 			//Calculate which agent is best to assign
 			int baseQuality = this.getExpectedScheduleQuality(null, this);
 			int qualityWithThisAgent = this.getExpectedScheduleQuality(task, this);
@@ -288,5 +291,15 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public Vector2D getPosition() {
 		return new Vector2D(x,y);
+	}
+
+	@Override
+	public AgentMode getMode() {
+		return mode;
+	}
+
+	@Override
+	public void setMode(AgentMode mode) {
+		this.mode = mode;
 	}
 }
