@@ -85,6 +85,21 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		//schedule.get().RemoveElement(e);Does this need to be done?
 		m.MarkCompleted();
+		if (schedule.get()!=null)
+		{
+			Iterator<ScheduleElement> el = schedule.get().getItems();
+			if(el.hasNext())
+			{
+				ScheduleElement e = el.next();
+				if (e.getMethod().label.equals("Starting Point") && el.hasNext())
+					e = el.next();
+				if (m.equals(e.getMethod()))
+				{
+					schedule.get().RemoveElement(e);
+					Main.Message(true, "[Agent 135] Removed " + e.getName() + " from schedule");
+				}
+			}
+		}
 		this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y, m);
 		flagScheduleRecalculateRequired = true;
 		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
@@ -116,7 +131,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Schedule newSchedule = this.scheduler.RunStatic();
 			if (newSchedule!=null) {
 				schedule.set(newSchedule);
-				Main.Message(debugFlag, "[Agent 100] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
+				Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
 			}
 			if (schedule.get()!=null)
 			{
@@ -129,9 +144,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					else
 						continue;
 					Method m = e.getMethod();
-					Main.Message(debugFlag, "[Agent 109] Next method to be executed from schedule " + m.label);
+					Main.Message(debugFlag, "[Agent 132] Next method to be executed from schedule " + m.label);
 					Execute(m);
-					schedule.get().RemoveElement(e);
 					while(!flagScheduleRecalculateRequired)
 					{
 						try {

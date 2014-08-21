@@ -74,7 +74,6 @@ public class Method extends Node implements IMethod {
 			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}
 		this.outcome.quality = 10000-d.distance;
-		if (this.agent.getMode()==AgentMode.ELEVATED)
 		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + this.outcome.quality );
 		return d;
 	}

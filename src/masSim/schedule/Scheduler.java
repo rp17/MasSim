@@ -126,7 +126,7 @@ public class Scheduler {// implements Runnable {
 	//Method takes a Teams structure as input and outputs all the possible schedules resulting from that
 	//task structure. This output is then fed to a generic Dijkstra's algorithm to calculate the optimum schedule
 	//corresponding to the optimum path from the starting task to the ending task
-	private Schedule CalculateScheduleFromTaems(Task topLevelTask)
+	public Schedule CalculateScheduleFromTaems(Task topLevelTask)
 	{
 		Iterator ii = topLevelTask.getSubtasks();
 		while(ii.hasNext())

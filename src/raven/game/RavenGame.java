@@ -139,7 +139,7 @@ public class RavenGame {
 	}
 
 	/** The usual suspects */
-	public void render() {
+	public synchronized void render() {
 		Log.trace("game", "Rendering game");
 		// render the map
 		map.render();
