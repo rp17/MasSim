@@ -1,5 +1,6 @@
 package masSim.taems;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Observable;
@@ -7,6 +8,7 @@ import java.util.Observable;
 import raven.Main;
 import masSim.schedule.Scheduler;
 import masSim.world.AgentMode;
+import masSim.world.WorldState;
 
 public class Method extends Node implements IMethod {
 
@@ -20,27 +22,40 @@ public class Method extends Node implements IMethod {
 	private double heuristicDistance = 400;
 	public static String FinalPoint = "Final Point";
 	public static String StartingPoint = "Starting Point";
+	public ArrayList<Interrelationship> Interrelationships;
 	// Constructor
 	public Method(String nm, double outcomeQuality, double x2, double y2){
-		this(nm,outcomeQuality, x2, y2, 0);
+		this(nm,outcomeQuality, x2, y2, 0, null);
 	}
-	public Method(String nm, double outcomeQuality, double x2, double y2, int dl){
+	public Method(String nm, double outcomeQuality, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
 		outcome = new Outcome(outcomeQuality, -1, 0);
 		index = Index++;
 		deadline = dl;
 		this.x = x2;
 		this.y = y2;
+		this.Interrelationships = new ArrayList<Interrelationship>();
+		if (ir!=null) this.Interrelationships = ir;
+	}
+	public Method(String nm, double outcomeQuality, double x2, double y2, int dl)
+	{
+		this(nm,outcomeQuality, x2, y2, 0, null);
 	}
 	public Method(Method m){
-		this(m.label,m.outcome.getQuality(), m.x, m.y, m.deadline);
+		this(m.label,m.outcome.getQuality(), m.x, m.y, m.deadline, m.Interrelationships);
 	}
 	public boolean IsTask(){return false;}
+	@Override
+	public void AddInterrelationship(Interrelationship relationship)
+	{
+		this.Interrelationships.add(relationship);
+	}
 	
 	@Override
-	public void MarkCompleted()
+	public synchronized void MarkCompleted()
 	{
 		super.MarkCompleted();
+		WorldState.CompletedMethods.add(this);
 		//Only print if its an actual task, and not an FSM connective created by the scheduler
 		this.NotifyAll();
 	}

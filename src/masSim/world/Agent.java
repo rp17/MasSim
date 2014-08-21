@@ -29,6 +29,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public double x;
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
+	public Queue<Method> queue = new LinkedList<Method>();
 	
 	
 	private enum Status {
@@ -70,8 +71,36 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
 	}
 	
-	public void Execute(Method m)
+	public synchronized boolean AreEnablersInPlace(Method m)
 	{
+		boolean methodEnablersCompleted = false;
+		if (m.Interrelationships.size()>0)
+		{
+			for(Interrelationship ir: m.Interrelationships)
+			{
+				Method from = ir.from;
+				for(Method mc : WorldState.CompletedMethods)
+				{
+					if (mc.label==from.label)
+						methodEnablersCompleted = true;
+				}
+			}	
+		}
+		else
+		{
+			methodEnablersCompleted = true;
+		}
+		return methodEnablersCompleted;
+	}
+	
+	public void Execute(Method m) throws InterruptedException
+	{
+		
+		while (!AreEnablersInPlace(m))
+		{
+			Main.Message(true, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
+			Thread.sleep(1000);
+		}
 		if (m.x!=0 && m.y!=0)
 		{
 			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y, this, m);
@@ -85,6 +114,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		//schedule.get().RemoveElement(e);Does this need to be done?
 		m.MarkCompleted();
+		WorldState.CompletedMethods.add(m);
+		Main.Message(true, "[Agent 130] " + m.label + " added to completed queue");
 		if (schedule.get()!=null)
 		{
 			Iterator<ScheduleElement> el = schedule.get().getItems();
@@ -138,22 +169,22 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				Iterator<ScheduleElement> el = schedule.get().getItems();
 				if(el.hasNext())
 				{
-					ScheduleElement e = el.next();
-					if (e.getMethod().label.equals("Starting Point") && el.hasNext())
-						e = el.next();
-					else
-						continue;
-					Method m = e.getMethod();
-					Main.Message(debugFlag, "[Agent 132] Next method to be executed from schedule " + m.label);
-					Execute(m);
-					while(!flagScheduleRecalculateRequired)
-					{
-						try {
+					try {
+						ScheduleElement e = el.next();
+						if (e.getMethod().label.equals("Starting Point") && el.hasNext())
+							e = el.next();
+						else
+							continue;
+						Method m = e.getMethod();
+						Main.Message(debugFlag, "[Agent 132] Next method to be executed from schedule " + m.label);
+						Execute(m);
+						while(!flagScheduleRecalculateRequired)
+						{	
 							//Main.Message(debugFlag, "[Agent 126] Waiting completion of " + m.label + " with flag " + flagScheduleRecalculateRequired);
 							Thread.sleep(1000);
-						} catch (InterruptedException ex) {
-							ex.printStackTrace();
 						}
+					} catch (InterruptedException ex) {
+						ex.printStackTrace();
 					}
 				}
 			}

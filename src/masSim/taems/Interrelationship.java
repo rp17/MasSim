@@ -1,11 +1,11 @@
 package masSim.taems;
 
 public class Interrelationship extends Element {
-	Task from;
-	Task to;
-	Outcome from_outcome;
+	public Method from;
+	public Method to;
+	public Outcome from_outcome;
 	
-	public Interrelationship(Task from, Task to, Outcome from_outcome)
+	public Interrelationship(Method from, Method to, Outcome from_outcome)
 	{
 		this.from = from;
 		this.to = to;
