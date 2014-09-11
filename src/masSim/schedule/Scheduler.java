@@ -34,7 +34,7 @@ public class Scheduler {// implements Runnable {
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
-		taskGroup = new Task("Task Group",new SumAllQAF(), null, agent);
+		taskGroup = new Task("Task Group",new SumAllQAF(), agent);
 	}
 	
 	//A public method to feed new tasks to the scheduler
@@ -47,7 +47,7 @@ public class Scheduler {// implements Runnable {
 	{
 		//Make a copy
 		if (task!=null) taskAgent = task.agent;
-		Task tempTaskGroup = new Task("Task Group",new SumAllQAF(), null, taskAgent);
+		Task tempTaskGroup = new Task("Task Group",new SumAllQAF(), taskAgent);
 		Iterator<Node> copyTasks = taskGroup.getSubtasks();
 		while(copyTasks.hasNext())
 		{
@@ -100,7 +100,6 @@ public class Scheduler {// implements Runnable {
 				if (newTask.agent.equals(agent)){
 					taskGroup.addTask(newTask);
 					Main.Message(debugFlag, "[Scheduler 95] task added " + newTask.label + " in " + agent.getName());
-					
 				}
 			}
 			Main.Message(true, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());

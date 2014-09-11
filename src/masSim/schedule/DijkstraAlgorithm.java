@@ -13,15 +13,21 @@ import java.util.Set;
 import raven.Main;
 import raven.math.Vector2D;
 
+
 public class DijkstraAlgorithm {
 
-  private boolean debugFlag = false;
+	public enum OptimizationMode {
+	    QUALITY,  DURATION
+	}
+	
+  private boolean debugFlag = true;
   private final List<Method> nodes;
   private final List<MethodTransition> edges;
   private Set<Method> settledNodes;
   private Set<Method> unSettledNodes;
   private Map<Method, Method> predecessors;
   private Map<Method, DijkstraDistance> distance;
+  private final OptimizationMode optimizationMode = OptimizationMode.QUALITY;
 
   public DijkstraAlgorithm(Graph graph) {
     // create a copy of the array so that we can operate on this array
@@ -37,24 +43,24 @@ public class DijkstraAlgorithm {
     distance.put(source, new DijkstraDistance(0,0, source.x, source.y));
     unSettledNodes.add(source);
     while (unSettledNodes.size() > 0) {
-    	Method node = getMinimum(unSettledNodes);
+    	Method node = getMaximumUtility(unSettledNodes);
       settledNodes.add(node);
       unSettledNodes.remove(node);
-      findMinimalDistances(node);
+      findMaximumUtilities(node);
     }
   }
 
-  private void findMinimalDistances(Method node) {
+  private void findMaximumUtilities(Method node) {
 	long accumulatedDuration = 0;
     List<Method> adjacentNodes = getNeighbors(node);
     for (Method target : adjacentNodes) {
-      DijkstraDistance shortestDistanceToNode = getShortestDistance(node);
-      DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, shortestDistanceToNode);
-      DijkstraDistance currentShortestDistanceFromNodeToTarget = getShortestDistance(target);
-      DijkstraDistance newDistanceFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
-      if (currentShortestDistanceFromNodeToTarget.IsGreaterThen(newDistanceFromNodeToTargetFromCurrentRoute)) {
-    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newDistanceFromNodeToTargetFromCurrentRoute.distance + " old:" + currentShortestDistanceFromNodeToTarget.distance);
-        distance.put(target, newDistanceFromNodeToTargetFromCurrentRoute);
+      DijkstraDistance highestUtilityToNode = getHighestUtility(node);
+      DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, highestUtilityToNode);
+      DijkstraDistance currentHighestUtilityFromNodeToTarget = getHighestUtility(target);
+      DijkstraDistance newUtilityFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
+      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget)) {
+    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + newUtilityFromNodeToTargetFromCurrentRoute.quality);
+        distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
         predecessors.put(target, node);
         unSettledNodes.add(target);
       }
@@ -74,33 +80,43 @@ public class DijkstraAlgorithm {
   private List<Method> getNeighbors(Method node) {
     List<Method> neighbors = new ArrayList<Method>();
     for (MethodTransition edge : edges) {
-      if (edge.getSource().equals(node)
-          && !isSettled(edge.getDestination())) {
-        neighbors.add(edge.getDestination());
+      Method source = edge.getSource();
+      if (debugFlag) System.out.println("Checking if edge " + source.label + " belongs to node " + node.label);
+      if (source.equals(node)){
+    	  if (debugFlag) System.out.println("Source: " + edge.getSource().label);
+    	  Method dest = edge.getDestination();
+    	  if (debugFlag) System.out.println("Destination: " + dest.label);
+          if (!isSettled(dest)) {
+        	  neighbors.add(edge.getDestination());
+          }
+          else
+          {
+        	  if (debugFlag) System.out.println("Node found to be settled already");
+          }
       }
     }
     return neighbors;
   }
 
-  private Method getMinimum(Set<Method> vertexes) {
-	  Method minimum = null;
+  private Method getMaximumUtility(Set<Method> vertexes) {
+	  Method maximum = null;
     for (Method vertex : vertexes) {
-      if (minimum == null) {
-        minimum = vertex;
+      if (maximum == null) {
+        maximum = vertex;
       } else {
-        if (getShortestDistance(minimum).IsGreaterThen(getShortestDistance(vertex))) {
-          minimum = vertex;
+        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum))) {
+          maximum = vertex;
         }
       }
     }
-    return minimum;
+    return maximum;
   }
 
   private boolean isSettled(Method vertex) {
     return settledNodes.contains(vertex);
   }
 
-  private DijkstraDistance getShortestDistance(Method destination) {
+  private DijkstraDistance getHighestUtility(Method destination) {
     DijkstraDistance d = distance.get(destination);
     if (d == null) {
       return new DijkstraDistance(Long.MAX_VALUE,0,destination.x, destination.y);

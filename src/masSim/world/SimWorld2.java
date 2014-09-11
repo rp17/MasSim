@@ -45,23 +45,23 @@ public class SimWorld2 implements Runnable {
 						{
 							int interval = 5000;
 							int sinterval = 2000;
-							mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), new Method("Visit Station A1",10,100,110), mainAgent));
-							mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), new Method("Visit Station A2",10,200,90), mainAgent));
-							mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), new Method("Visit Station A3",10,300,110), mainAgent));
-							mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), new Method("Visit Station A4",10,400,90), mainAgent));
-							mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), new Method("Visit Station A5",10,500,110), mainAgent));
-							mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), new Method("Visit Station A6",10,600,90), mainAgent));
+							mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), mainAgent, new Method("Visit Station A1",10,100,110)));
+							mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
+							mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
+							mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
+							mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
+							mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
 							
 							Thread.sleep(interval);
-							mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), new Method("Visit Station B1",1,100,210), agents.get(1)));
-							mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), new Method("Visit Station B2",1,200,190), agents.get(1)));
-							mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), new Method("Visit Station B3",1,300,210), agents.get(1)));
-							mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), new Method("Visit Station B4",1,400,190), agents.get(1)));
-							mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), new Method("Visit Station B5",1,500,210), agents.get(1)));
-							mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), new Method("Visit Station B6",1,600,190), agents.get(1)));
+							mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), agents.get(1), new Method("Visit Station B1",1,100,210)));
+							mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
+							mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
+							mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
+							mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
+							mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
 							Thread.sleep(2*interval);
 							//mainAgent.assignTask(new Task("EMG1",new SumAllQAF(), new Method("EMG1",1,350,120), null));
-							mainAgent.assignTask(new Task("EMG2",new SumAllQAF(), new Method("EMG2",1,240,220), null));
+							mainAgent.assignTask(new Task("EMG2",new SumAllQAF(), null, new Method("EMG2",1,240,220)));
 							Thread.sleep(7*interval);
 						}
 					} catch (InterruptedException e) {

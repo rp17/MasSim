@@ -54,8 +54,7 @@ import raven.game.interfaces.IRavenBot;
 import raven.game.Waypoints;
 import raven.goals.GoalComposite;
 import raven.math.Vector2D;
-import raven.utils.Log;
-import raven.utils.Log.Level;
+import raven.utils.*;
 
 public class RavenUI extends JFrame implements KeyListener, MouseInputListener, ComponentListener, WorldEventListener
 {

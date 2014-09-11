@@ -42,13 +42,16 @@ public class Schedule {
 	@Override
 	public String toString()
 	{
+		int quality = 0;
 		String val = "";
 		Iterator<ScheduleElement> it = items.iterator();
 		while(it.hasNext())
 		{
 			ScheduleElement el = (ScheduleElement)it.next();
 			val += " > " + el.toString();
+			quality += el.getMethod().getOutcome().quality;
 		}
+		val += " | Quality = " + quality;
 		return val;
 	}
 }

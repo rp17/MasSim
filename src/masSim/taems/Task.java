@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.concurrent.locks.Lock;
 
+import masSim.world.WorldState;
 import raven.Main;
 
 public class Task extends Node {
@@ -32,19 +33,35 @@ public class Task extends Node {
 	}
 		
 	// Constructor
-	public Task(String label, QAF qaf, Date earliest_start, Date deadline, Method m, IAgent agent){
+	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent, Node[] m){
 		this.label = label;
 		children = new ArrayList<Node>();
 		this.qaf = qaf;
 		this.earliest_start_time = earliest_start;
 		this.deadline = deadline;
 		if (m!=null)
-			this.children.add(m);
+		{
+			for(Node mm : m){
+				this.children.add(mm);
+			}
+		}
 		this.agent = agent;
 	}
 	
-	public Task(String name, QAF qaf, Method m, IAgent agent){
-		this(name, qaf, new Date(), new Date(2015,1,1), m, agent);
+	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent ,Node m){
+		this(label, qaf, earliest_start, deadline, agent, new Node[]{m});
+	}
+	
+	public Task(String name, QAF qaf, IAgent agent){
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, new Method[]{});
+	}
+	
+	public Task(String name, QAF qaf, IAgent agent, Node m){
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, m);
+	}
+	
+	public Task(String name, QAF qaf, IAgent agent, Node[] m){
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, m);
 	}
 	
 	
@@ -62,6 +79,7 @@ public class Task extends Node {
 	{
 		super.MarkCompleted();
 		Main.Message(debugFlag, "[Task 63] Task " + label + " completed.");
+		WorldState.CompletedTasks.add(this);
 		this.NotifyAll();
 	}
 	
@@ -94,6 +112,6 @@ public class Task extends Node {
 	
 	public static Task CreateDefaultTask(int counter, double x, double y)
 	{
-		return new Task("Station " + counter,new SumAllQAF(), new Method("Visit Station " + counter,1,x,y), null);
+		return new Task("Station " + counter,new SumAllQAF(), null, new Method("Visit Station " + counter,1,x,y));
 	}
 }

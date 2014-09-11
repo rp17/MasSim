@@ -11,20 +11,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
 /**
  * @author Chet
  * @author Logan Lowell
  *
  */
-public class Log {
-	
+public class SchedulingLog {
 	// Singleton Dispatcher, just like the original.
 	private static class LogHolder {
-		public static final Log INSTANCE = new Log("raven.log");
+		public static final SchedulingLog INSTANCE = new SchedulingLog("scheduling.log");
 	}
 
-	public static Log getInstance() {
+	public static SchedulingLog getInstance() {
 		return LogHolder.INSTANCE;
 	}
 	
@@ -32,7 +30,7 @@ public class Log {
 	private Level logLevel;
 	private DateFormat time;
 	
-	private Log(Level level, String path) {
+	private SchedulingLog(Level level, String path) {
 		logLevel = level;
 		logFile = new File(path);
 		time = new SimpleDateFormat("HH:mm:ss> ");
@@ -47,7 +45,7 @@ public class Log {
 	}
 	
 
-	private Log(String path) { this(Level.INFO, path); }
+	private SchedulingLog(String path) { this(Level.INFO, path); }
 	
 	/**
 	 * Write the given string to the log
@@ -71,7 +69,7 @@ public class Log {
 	public static void info(String zone, String message) { info("[" + zone + "] " + message); }
 	public static void info(String toWrite) {
 		if (Level.INFO.compareTo(getInstance().logLevel) <= 0) {
-			System.out.print(getInstance().write(" INFO: " + toWrite));
+			System.out.print(getInstance().write(toWrite));
 		}
 	}
 

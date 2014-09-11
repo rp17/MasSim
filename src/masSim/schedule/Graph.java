@@ -1,6 +1,10 @@
 package masSim.schedule;
 import masSim.taems.*;
 import raven.Main;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 public class Graph {
@@ -23,12 +27,29 @@ public class Graph {
   
   public void Print()
   {
-	  Main.Message(debugFlag,"[Graph 26] Printing Graph:");
+	  String o = "digraph finite_state_machine {" + System.lineSeparator();
+	  o += "rankdir=LR;" + System.lineSeparator();
+	  o += "size=\"" + (6*this.getMethods().size()) + "," + (4*this.getMethods().size()) + "\"" + System.lineSeparator();
+	  o += "node [shape = doublecircle]; S;" + System.lineSeparator();
+	  o += "node [shape = point ]; qi" + System.lineSeparator();
+	  o += "node [shape = circle];" + System.lineSeparator();
 	  for (Method m : methods) {
 	  }
 	  for (MethodTransition t : transitions) {
-		  Main.Message(debugFlag,"[Graph] 28] >"+t.toStringLong());
+		  Method s = t.getSource();
+		  Method d = t.getDestination();
+		  o += s.label.replaceAll(" ", "_") + s.getIndex() + "->" + d.label.replaceAll(" ", "_") + d.getIndex() + " [ label = \"\" ];";
 	  }
+	  o += "}";
+	  File graphFile = new File("graph.gv");
+	  try {
+		  graphFile.createNewFile();
+		  FileWriter writer = new FileWriter(graphFile, true);
+			writer.write(o);
+			writer.close();
+		} catch (IOException ex) {
+			System.err.println("Failed to write to log!");
+		}
   }
   
 } 

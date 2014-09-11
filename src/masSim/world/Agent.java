@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import raven.Main;
 import raven.math.Vector2D;
+import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
 
@@ -78,11 +79,23 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			for(Interrelationship ir: m.Interrelationships)
 			{
-				Method from = ir.from;
-				for(Method mc : WorldState.CompletedMethods)
+				if (!ir.from.IsTask())
 				{
-					if (mc.label==from.label)
-						methodEnablersCompleted = true;
+					Method from = (Method)ir.from;
+					for(Method mc : WorldState.CompletedMethods)
+					{
+						if (mc.label==from.label)
+							methodEnablersCompleted = true;
+					}
+				}
+				else
+				{
+					Task from = (Task)ir.from;
+					for(Task mc : WorldState.CompletedTasks)
+					{
+						if (mc.label==from.label)
+							methodEnablersCompleted = true;
+					}
 				}
 			}	
 		}
@@ -160,6 +173,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			flagScheduleRecalculateRequired = false;
 			Main.Message(debugFlag, "[Agent 111] Running again");
 			Schedule newSchedule = this.scheduler.RunStatic();
+			if (newSchedule!=null)
+				SchedulingLog.info(this.getName() + " Schedule: " + newSchedule.toString());
 			if (newSchedule!=null) {
 				schedule.set(newSchedule);
 				Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);

@@ -19,17 +19,17 @@ public class Method extends Node implements IMethod {
 	public int deadline = 0;
 	public double x;
 	public double y;
-	private double heuristicDistance = 400;
+	private double heuristicQuality = 40000;
 	public static String FinalPoint = "Final Point";
 	public static String StartingPoint = "Starting Point";
 	public ArrayList<Interrelationship> Interrelationships;
 	// Constructor
 	public Method(String nm, double outcomeQuality, double x2, double y2){
-		this(nm,outcomeQuality, x2, y2, 0, null);
+		this(nm,outcomeQuality, -1, x2, y2, 0, null);
 	}
-	public Method(String nm, double outcomeQuality, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
+	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
-		outcome = new Outcome(outcomeQuality, -1, 0);
+		outcome = new Outcome(outcomeQuality, outcomeDuration, 0);
 		index = Index++;
 		deadline = dl;
 		this.x = x2;
@@ -37,12 +37,12 @@ public class Method extends Node implements IMethod {
 		this.Interrelationships = new ArrayList<Interrelationship>();
 		if (ir!=null) this.Interrelationships = ir;
 	}
-	public Method(String nm, double outcomeQuality, double x2, double y2, int dl)
+	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl)
 	{
-		this(nm,outcomeQuality, x2, y2, 0, null);
+		this(nm,outcomeQuality, outcomeDuration, x2, y2, 0, null);
 	}
 	public Method(Method m){
-		this(m.label,m.outcome.getQuality(), m.x, m.y, m.deadline, m.Interrelationships);
+		this(m.label,m.outcome.getQuality(), m.outcome.getDuration(), m.x, m.y, m.deadline, m.Interrelationships);
 	}
 	public boolean IsTask(){return false;}
 	@Override
@@ -70,26 +70,25 @@ public class Method extends Node implements IMethod {
 		}
 		//If task can be performed, return utility value through the function. But if its deadline has passed
 		//then return an abnormally large negative utility value to force Dijkstra to reject it.
-		if ((distanceTillPreviousNode.duration+this.outcome.duration)>deadline && deadline!=0) 
+		double totalDurationTillNow = distanceTillPreviousNode.duration+this.outcome.duration;
+		if ((totalDurationTillNow)>deadline && deadline!=0) 
 		{
-			d.distance = 10000;
-			Main.Message(debugFlag, "[Method 54] Using infinite distance because of deadline breakage");
+			d.quality = Long.MIN_VALUE;
+			Main.Message(true, "[Method 54] Using infinitely negative utility because of " + deadline + " deadline breakage by duration " + totalDurationTillNow);
 		}
 		else
 		{
-			//This can be any formula combining different outcomes and objectively comparing them
-			double one = distanceTillPreviousNode.vector.x-this.x;
-			double two = distanceTillPreviousNode.vector.y-this.y;
-			d.distance = Math.sqrt(Math.pow(one, 2)+Math.pow(two,2));
-			if (d.distance>heuristicDistance)
+			Main.Message(true, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
+			d.quality = this.outcome.quality;
+			if (d.quality>heuristicQuality)
 			{
-				d.distance = 10000;
+				//Revisit heuristic logic
+				d.quality = Long.MIN_VALUE;
 			}
-			d.duration = d.distance;
+			d.duration = this.outcome.duration;
 			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}
-		this.outcome.quality = 10000-d.distance;
-		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + this.outcome.quality );
+		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + d.quality );
 		return d;
 	}
 	

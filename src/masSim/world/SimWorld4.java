@@ -1,27 +1,30 @@
 package masSim.world;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
 import raven.Main;
+import raven.math.Vector2D;
 import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld3 implements Runnable {
+public class SimWorld4 implements Runnable, WorldEventListener {
 
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
 	private ArrayList<WorldEventListener> listeners;
 	private IAgent mainAgent;
 	
-	public SimWorld3(WorldEventListener eventListener)
+	public SimWorld4(WorldEventListener eventListener)
 	{
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
 		listeners = new ArrayList<WorldEventListener>();
 		listeners.add(eventListener);
+		listeners.add(this);
 		
 		//Initialize two agents, and specify their initial positions
 		Agent agentOne = new Agent("Helicopter0", true, 40, 100, listeners);
@@ -29,7 +32,7 @@ public class SimWorld3 implements Runnable {
 		mainAgent = agentOne;
 		agentOne.AddChildAgent(agentTwo);
 		agents.add(agentOne);
-		agents.add(agentTwo);
+		//agents.add(agentTwo);
 				
 		eventListener.RegisterMainAgent(agentOne);
 	}
@@ -45,25 +48,24 @@ public class SimWorld3 implements Runnable {
 						{
 							int interval = 5000;
 							int sinterval = 2000;
-							Method m_from = new Method("Visit Station A1",10,100,110);
-							mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), mainAgent, m_from));
-							mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
-							mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
-							mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
-							mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
-							mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
 							
-							//Thread.sleep(interval);
-							Method m_to = new Method("Visit Station B1",1,100,210);
-							m_to.AddInterrelationship(new Interrelationship(m_from, m_to, new Outcome(100,1,1)));
-							mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), agents.get(1), m_to));
-							mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
-							mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
-							mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
-							mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
-							mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
-							Thread.sleep(2*interval);
+							Task task1 = new Task("Task1",new SumAllQAF(), mainAgent, new Method[]{
+								new Method("M1",10,5,100,100,0,null),
+								new Method("M2",10,10,200,100,0,null),
+								new Method("M3",10,7,300,100,0,null)
+							});
 							
+							Task task2 = new Task("Task2",new ExactlyOneQAF(), mainAgent, new Method[]{
+								new Method("M4",70,-1,400,50,0,null),
+								new Method("M5",10,-1,400,150,0,null)
+							});
+							
+							mainAgent.assignTask(task1);
+							mainAgent.assignTask(task2);
+							
+							
+							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);
+							//destination1.AddInterrelationship(new Interrelationship(gasStation, destination1, new Outcome(100,1,1)));
 							
 							Thread.sleep(7*interval);
 						}
@@ -100,6 +102,22 @@ public class SimWorld3 implements Runnable {
     public synchronized void removeListener(WorldEventListener sl) {
         listeners.remove(sl);
     }
+
+	@Override
+	public void HandleWorldEvent(WorldEvent event) {
+		if (event.taskType==TaskType.METHODCOMPLETED)
+		{
+			Main.Message(true, "[SimWorld4] " + event.methodId + " completed");
+			//mainAgent.assignTask(new Task(event.methodId + " Task",new SumAllQAF(), new Method(event.methodId + " Method",1,1,event.xCoordinate,event.yCoordinate, 4, null), mainAgent));
+		}
+	
+	}
+
+	@Override
+	public void RegisterMainAgent(IAgent agent) {
+		// TODO Auto-generated method stub
+		
+	}
     
     
 

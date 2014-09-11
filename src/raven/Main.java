@@ -4,13 +4,12 @@ import raven.game.RavenGame;
 import raven.ui.GameCanvas;
 import raven.ui.RavenUI;
 import raven.utils.Log;
-import raven.utils.Log.Level;
+import raven.utils.SchedulingLog;
+import raven.utils.*;
 
 import javax.swing.SwingUtilities;
 
 import masSim.world.*;
-import masSim.world.WorldEventListener;
-
 
 public class Main {
 	private static RavenUI ui;
@@ -25,6 +24,7 @@ public class Main {
     public static void main(String args[]) {
     	
     	Log.setLevel(Level.DEBUG);
+    	SchedulingLog.setLevel(Level.INFO);
     	game = new RavenGame();
     	ui = new RavenUI(game);
     	SwingUtilities.invokeLater(new Runnable() {
@@ -34,7 +34,7 @@ public class Main {
   	    });
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
-		SimWorld3 world = new SimWorld3((WorldEventListener) ui);
+		SimWorld4 world = new SimWorld4((WorldEventListener) ui);
 		Thread MasSimThread = new Thread(world);
 		MasSimThread.start();
 		game.togglePause();
