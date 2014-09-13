@@ -9,7 +9,7 @@ public class DijkstraDistance {
 	
 	public DijkstraDistance(double qual, double dur, double x, double y)
 	{
-		quality = quality;
+		quality = qual;
 		duration = dur;
 		vector = new Vector2D(x,y);
 	}

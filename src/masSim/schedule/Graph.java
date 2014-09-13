@@ -30,8 +30,8 @@ public class Graph {
 	  String o = "digraph finite_state_machine {" + System.lineSeparator();
 	  o += "rankdir=LR;" + System.lineSeparator();
 	  o += "size=\"" + (6*this.getMethods().size()) + "," + (4*this.getMethods().size()) + "\"" + System.lineSeparator();
-	  o += "node [shape = doublecircle]; S;" + System.lineSeparator();
-	  o += "node [shape = point ]; qi" + System.lineSeparator();
+	  o += "node [shape = doublecircle]; " + Method.FinalPoint + "2;" + System.lineSeparator();
+	  o += "node [shape = point ]; "+Method.StartingPoint + "1" + System.lineSeparator();
 	  o += "node [shape = circle];" + System.lineSeparator();
 	  for (Method m : methods) {
 	  }
@@ -41,7 +41,10 @@ public class Graph {
 		  o += s.label.replaceAll(" ", "_") + s.getIndex() + "->" + d.label.replaceAll(" ", "_") + d.getIndex() + " [ label = \"\" ];";
 	  }
 	  o += "}";
-	  File graphFile = new File("graph.gv");
+	  File dir = new File("graphs");
+	  if (!dir.exists()) dir.mkdir();
+	  int suffix = dir.listFiles().length;
+	  File graphFile = new File("graphs\\graph" + suffix + ".gv");
 	  try {
 		  graphFile.createNewFile();
 		  FileWriter writer = new FileWriter(graphFile, true);

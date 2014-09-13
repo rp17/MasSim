@@ -119,7 +119,7 @@ public class DijkstraAlgorithm {
   private DijkstraDistance getHighestUtility(Method destination) {
     DijkstraDistance d = distance.get(destination);
     if (d == null) {
-      return new DijkstraDistance(Long.MAX_VALUE,0,destination.x, destination.y);
+      return new DijkstraDistance(Long.MIN_VALUE,0,destination.x, destination.y);
     } else {
       return d;
     }

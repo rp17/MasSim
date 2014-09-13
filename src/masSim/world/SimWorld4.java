@@ -51,7 +51,7 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							
 							Task task1 = new Task("Task1",new SumAllQAF(), mainAgent, new Method[]{
 								new Method("M1",10,5,100,100,0,null),
-								new Method("M2",10,10,200,100,0,null),
+								//new Method("M2",10,10,200,100,0,null),
 								new Method("M3",10,7,300,100,0,null)
 							});
 							
@@ -61,7 +61,7 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							});
 							
 							mainAgent.assignTask(task1);
-							mainAgent.assignTask(task2);
+							//mainAgent.assignTask(task2);
 							
 							
 							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);

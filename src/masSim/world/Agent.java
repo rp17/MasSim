@@ -135,7 +135,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if(el.hasNext())
 			{
 				ScheduleElement e = el.next();
-				if (e.getMethod().label.equals("Starting Point") && el.hasNext())
+				if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
 					e = el.next();
 				if (m.equals(e.getMethod()))
 				{
@@ -186,7 +186,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				{
 					try {
 						ScheduleElement e = el.next();
-						if (e.getMethod().label.equals("Starting Point") && el.hasNext())
+						if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
 							e = el.next();
 						else
 							continue;

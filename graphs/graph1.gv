@@ -1,0 +1,7 @@
+digraph finite_state_machine {
+rankdir=LR;
+size="36,24"
+node [shape = doublecircle]; Finish2;
+node [shape = point ]; Start1
+node [shape = circle];
+Start1->M16 [ label = "" ];M16->M37 [ label = "" ];Start1->M38 [ label = "" ];M38->M19 [ label = "" ];M37->Finish2 [ label = "" ];M19->Finish2 [ label = "" ];}

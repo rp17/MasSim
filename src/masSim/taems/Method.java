@@ -13,15 +13,15 @@ import masSim.world.WorldState;
 public class Method extends Node implements IMethod {
 
 	private boolean debugFlag = false;
-	private static int Index = 1;
+	private static int Index = 2;
 	private int index;
 	private Outcome outcome;//Change to Vector
 	public int deadline = 0;
 	public double x;
 	public double y;
 	private double heuristicQuality = 40000;
-	public static String FinalPoint = "Final Point";
-	public static String StartingPoint = "Starting Point";
+	public static String FinalPoint = "Finish";
+	public static String StartingPoint = "Start";
 	public ArrayList<Interrelationship> Interrelationships;
 	// Constructor
 	public Method(String nm, double outcomeQuality, double x2, double y2){
@@ -30,8 +30,11 @@ public class Method extends Node implements IMethod {
 	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
 		outcome = new Outcome(outcomeQuality, outcomeDuration, 0);
-		index = Index++;
+		if (nm == StartingPoint) index = 1;
+		else if (nm == FinalPoint) index = 2;
+		else index = Index++;
 		deadline = dl;
+		Main.Message(true, "[Method 35] " + this.label + this.index + " created");
 		this.x = x2;
 		this.y = y2;
 		this.Interrelationships = new ArrayList<Interrelationship>();
