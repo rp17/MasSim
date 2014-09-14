@@ -49,20 +49,23 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							int interval = 5000;
 							int sinterval = 2000;
 							
-							Task task1 = new Task("Task1",new SumAllQAF(), mainAgent, new Method[]{
-								new Method("M1",10,5,100,100,0,null),
-								//new Method("M2",10,10,200,100,0,null),
-								new Method("M3",10,7,300,100,0,null)
+							Task taskHierarchy = new Task("TaskTree", new SeqSumQAF(), mainAgent);
+							
+							Task task1 = new Task("Task2",new SumAllQAF(), mainAgent, new Method[]{
+								new Method("M1",8,5,100,100,0,null),
+								new Method("M2",10,10,200,100,0,null),
+								new Method("M3",12,7,300,100,0,null)
 							});
 							
-							Task task2 = new Task("Task2",new ExactlyOneQAF(), mainAgent, new Method[]{
-								new Method("M4",70,-1,400,50,0,null),
-								new Method("M5",10,-1,400,150,0,null)
-							});
+							Task task2 = new Task("Task1",new ExactlyOneQAF(), mainAgent, new Method[]{
+								new Method("M4",10,0,400,50,0,null),
+								new Method("M5",70,0,400,150,0,null)
+							});		
 							
-							mainAgent.assignTask(task1);
-							//mainAgent.assignTask(task2);
+							taskHierarchy.addTask(task1);
+							taskHierarchy.addTask(task2);
 							
+							mainAgent.assignTask(taskHierarchy);						
 							
 							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);
 							//destination1.AddInterrelationship(new Interrelationship(gasStation, destination1, new Outcome(100,1,1)));

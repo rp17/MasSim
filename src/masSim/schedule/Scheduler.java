@@ -149,7 +149,7 @@ public class Scheduler {// implements Runnable {
 		Method finalMethod = new Method(Method.FinalPoint,0,agentPos.x,agentPos.y);
 		nodes.add(finalMethod);
 		//Append all possible schedule options to this set, after parsing the input Taems structure
-		Method[] finalMethodList = AppendAllMethodExecutionRoutes(nodes, edges, topLevelTask, new Method[]{initialMethod}, null);
+		Method[] finalMethodList = AppendAllMethodExecutionRoutes(nodes, edges, topLevelTask, new Method[]{initialMethod}, null, true);
 		for(int i=0;i<finalMethodList.length;i++)
 		{
 			MethodTransition t = new MethodTransition(
@@ -214,7 +214,7 @@ public class Scheduler {// implements Runnable {
 	
 	//A helper method used internally by CalculateScheduleFromTaems method
 	private Method[] AppendAllMethodExecutionRoutes(ArrayList<Method> nodes, ArrayList<MethodTransition> edges, Node task,
-			Method[] appendTo, Node Parent)
+			Method[] appendTo, Node Parent, boolean makeMethodsUnique)
 	{
 		Main.Message(debugFlag, "[Scheduler 185] Calculating subroutes for " + task.label + " " + nodes.size());
 		ArrayList<Method> lastMethodList = new ArrayList<Method>();
@@ -225,7 +225,11 @@ public class Scheduler {// implements Runnable {
 			Main.Message(debugFlag, "[Scheduler 189] Routes to append to " + lastMethod.label);
 			if (!task.IsTask())
 			{
-				Method m = new Method((Method)task);
+				Method m;
+				if (makeMethodsUnique)
+					m = new Method((Method)task);
+				else
+					m = (Method)task;
 				m.AddObserver(Parent);
 				nodes.add(m);
 				MethodTransition t = new MethodTransition("From " + lastMethod.label + " to " + m.label, lastMethod, m);
@@ -247,7 +251,7 @@ public class Scheduler {// implements Runnable {
 					//TODO We can cater for earliest start time introducing wait
 					for(Iterator<Node> subtasks = tk.getSubtasks(); subtasks.hasNext(); ) {
 						Node subtask = subtasks.next();
-						localLastMethodList = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk);
+						localLastMethodList = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk, false);
 					}
 					for(int i=0;i<localLastMethodList.length;i++)
 					{
@@ -287,9 +291,13 @@ public class Scheduler {// implements Runnable {
 							Main.Message(debugFlag, debugMessage);
 						}
 						Method[] m = new Method[]{lastMethod};
+						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
+						//only one, then for aesthetic purposes, we can have the same object repeated
+						boolean multiplePermutationRequringUniqueMethodsForGraph = true;
+						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
 						for(int i=0;i<s.length;i++)
 						{
-							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk);
+							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk, multiplePermutationRequringUniqueMethodsForGraph);
 						}
 						for(int y=0;y<permutationLinkMethodsList.length;y++)
 						{
@@ -306,10 +314,10 @@ public class Scheduler {// implements Runnable {
 					//after only "only one" of them has executed
 					for(Iterator<Node> subtasks = task.getSubtasks(); subtasks.hasNext(); ) {
 						Node subtask = (Node) subtasks.next();
-						localLastMethodList = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk);
-						for(int i=0;i<localLastMethodList.length;i++)
+						Method[] m = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk, false);
+						for(int i=0;i<m.length;i++)
 						{
-							lastMethodList.add(localLastMethodList[i]);
+							lastMethodList.add(m[i]);
 						}
 					}
 				}

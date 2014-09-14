@@ -206,6 +206,24 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 	
+	private void RegisterChildrenWithUI(Node node)
+	{
+		if (!node.IsTask())
+		{
+			Method method = (Method)node;
+			this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y, method);
+		}
+		else
+		{
+			Iterator<Node> it = ((Task)node).getSubtasks();
+			while(it.hasNext())
+			{
+				Node nd = it.next();
+				RegisterChildrenWithUI(nd);
+			}
+		}
+	}
+	
 	/**
 	 * this method handles the assignment goals
 	 */
@@ -215,16 +233,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if (this.equals(task.agent))
 			{
 				Main.Message(debugFlag, "[Agent] " + label + " assigned " + task.label);
-				Iterator<Node> it = task.getSubtasks();
-				while(it.hasNext())
-				{
-					Node node = it.next();
-					if (!node.IsTask())
-					{
-						Method method = (Method)node;
-						this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y, method);
-					}
-				}
+				RegisterChildrenWithUI(task);
 				this.scheduler.AddTask(task);
 				flagScheduleRecalculateRequired = true;
 			}

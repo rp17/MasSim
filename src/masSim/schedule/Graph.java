@@ -29,16 +29,17 @@ public class Graph {
   {
 	  String o = "digraph finite_state_machine {" + System.lineSeparator();
 	  o += "rankdir=LR;" + System.lineSeparator();
-	  o += "size=\"" + (6*this.getMethods().size()) + "," + (4*this.getMethods().size()) + "\"" + System.lineSeparator();
-	  o += "node [shape = doublecircle]; " + Method.FinalPoint + "2;" + System.lineSeparator();
-	  o += "node [shape = point ]; "+Method.StartingPoint + "1" + System.lineSeparator();
+	  o += "size=\"" + (6*this.getMethods().size()) + "," + (6*this.getMethods().size()) + "\"" + System.lineSeparator();
+	  o += "node [shape = doublecircle]; " + Method.FinalPoint + "_2;" + System.lineSeparator();
+	  o += "node [shape = point ]; "+Method.StartingPoint + "_1" + System.lineSeparator();
 	  o += "node [shape = circle];" + System.lineSeparator();
 	  for (Method m : methods) {
+		  o += m.label.replaceAll(" ", "_") + "_" + m.getIndex() + " [label=\"" + m.label.replaceAll(" ", "_") + "\"];" + System.lineSeparator();
 	  }
 	  for (MethodTransition t : transitions) {
 		  Method s = t.getSource();
 		  Method d = t.getDestination();
-		  o += s.label.replaceAll(" ", "_") + s.getIndex() + "->" + d.label.replaceAll(" ", "_") + d.getIndex() + " [ label = \"\" ];";
+		  o += s.label.replaceAll(" ", "_") + "_" + s.getIndex() + "->" + d.label.replaceAll(" ", "_") + "_" + d.getIndex() + ";" + System.lineSeparator();
 	  }
 	  o += "}";
 	  File dir = new File("graphs");
