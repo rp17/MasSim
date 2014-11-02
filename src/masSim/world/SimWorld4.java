@@ -16,7 +16,8 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
 	private ArrayList<WorldEventListener> listeners;
-	private IAgent mainAgent;
+	private IAgent agentOne;
+	private IAgent agentTwo;
 	
 	public SimWorld4(WorldEventListener eventListener)
 	{
@@ -27,9 +28,8 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 		listeners.add(this);
 		
 		//Initialize two agents, and specify their initial positions
-		Agent agentOne = new Agent("Helicopter0", true, 40, 100, listeners);
-		Agent agentTwo = new Agent("Helicopter1", false, 40, 200, listeners);
-		mainAgent = agentOne;
+		agentOne = new Agent("AgentOne", true, 40, 100, listeners);
+		agentTwo = new Agent("AgentTwo", false, 40, 300, listeners);
 		agentOne.AddChildAgent(agentTwo);
 		agents.add(agentOne);
 		//agents.add(agentTwo);
@@ -49,28 +49,37 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							int interval = 5000;
 							int sinterval = 2000;
 							
-							Task taskHierarchy = new Task("TaskTree", new SeqSumQAF(), mainAgent);
-							
-							Task task1 = new Task("Task2",new SumAllQAF(), mainAgent, new Method[]{
-								new Method("M1",8,5,100,100,0,null),
+							Task taskGroup1 = new Task("TaskGroup1", new SeqSumQAF(), agentOne);
+							Task task1agent1 = new Task("Task1agent1",new SumAllQAF(), agentOne, new Method[]{
+								new Method("M1",13,7,100,100,0,null),
 								new Method("M2",10,10,200,100,0,null),
-								new Method("M3",12,7,300,100,0,null)
+								new Method("M3",11,7,300,100,0,null)
 							});
-							
-							Task task2 = new Task("Task1",new ExactlyOneQAF(), mainAgent, new Method[]{
+							Task task2agent1 = new Task("Task2agent1",new ExactlyOneQAF(), agentOne, new Method[]{
 								new Method("M4",10,0,400,50,0,null),
 								new Method("M5",70,0,400,150,0,null)
 							});		
+							taskGroup1.addTask(task1agent1);
+							taskGroup1.addTask(task2agent1);
+							agentOne.assignTask(taskGroup1);
 							
-							taskHierarchy.addTask(task1);
-							taskHierarchy.addTask(task2);
-							
-							mainAgent.assignTask(taskHierarchy);						
+							//Task taskGroup2 = new Task("TaskGroup2", new ExactlyOneQAF(), null);
+							//Task task1agent2 = new Task("Task1agent2",new SumAllQAF(), agentTwo, new Method[]{
+							//	new Method("B1",8,5,100,250,0,null),
+							//	new Method("B2",12,7,300,250,0,null)
+							//});
+							//Task task2agent2 = new Task("Task2agent2",new SumAllQAF(), agentTwo, new Method[]{
+							//	new Method("B3",10,0,100,350,0,null),
+							//	new Method("B4",70,0,300,350,0,null)
+							//});		
+							////taskGroup2.addTask(task1agent2);
+							//taskGroup2.addTask(task2agent2);
+							//agentOne.assignTask(taskGroup2);
 							
 							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);
 							//destination1.AddInterrelationship(new Interrelationship(gasStation, destination1, new Outcome(100,1,1)));
 							
-							Thread.sleep(7*interval);
+							Thread.sleep(9*interval);
 						}
 					} catch (InterruptedException e) {
 						e.printStackTrace();

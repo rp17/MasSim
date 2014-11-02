@@ -43,7 +43,7 @@ public class Scheduler {// implements Runnable {
 		listeners.add(listener);
 	}
 	
-	public int GetScheduleCostSync(Task task, IAgent taskAgent)
+	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
 	{
 		//Make a copy
 		if (task!=null) taskAgent = task.agent;
@@ -63,7 +63,7 @@ public class Scheduler {// implements Runnable {
 			Main.Message(debugFlag, "[Scheduler 56] no new task added. Just calculating base cost");
 		tempTaskGroup.Cleanup();
 		schedule = CalculateScheduleFromTaems(tempTaskGroup);
-		return schedule.TotalQuality;
+		return schedule;
 	}
 		
 	//A public method to feed new tasks to the scheduler

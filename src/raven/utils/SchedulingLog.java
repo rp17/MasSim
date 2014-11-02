@@ -34,10 +34,8 @@ public class SchedulingLog {
 		logLevel = level;
 		logFile = new File(path);
 		time = new SimpleDateFormat("HH:mm:ss> ");
-		// Clear old file
-		logFile.delete();
 		try {
-			logFile.createNewFile();
+			if (!logFile.exists())	logFile.createNewFile();
 		} catch (IOException e) {
 			System.err.println("Unable to create log!");
 			System.err.println(e.getLocalizedMessage());			

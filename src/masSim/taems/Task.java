@@ -31,6 +31,17 @@ public class Task extends Node {
 	{
 		return this.children.size()>0;
 	}
+	
+	public boolean IsFullyAssigned()
+	{
+		if (this.agent==null) return false;
+		for(Node n: children)
+		{
+			if (n.agent==null)
+				return false;
+		}
+		return true;
+	}
 		
 	// Constructor
 	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent, Node[] m){

@@ -174,7 +174,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Main.Message(debugFlag, "[Agent 111] Running again");
 			Schedule newSchedule = this.scheduler.RunStatic();
 			if (newSchedule!=null)
-				SchedulingLog.info(this.getName() + " Schedule: " + newSchedule.toString());
+				SchedulingLog.info(this.getName() + " Selected: " + newSchedule.toString() + System.lineSeparator());
 			if (newSchedule!=null) {
 				schedule.set(newSchedule);
 				Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
@@ -228,7 +228,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	 * this method handles the assignment goals
 	 */
 	public void assignTask(Task task){
-		if (task.agent!=null)
+		if (task.IsFullyAssigned())
 		{
 			if (this.equals(task.agent))
 			{
@@ -339,15 +339,20 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public int getExpectedScheduleQuality(Task task, IAgent agent) {
 		int cost = 0;
+		Schedule sc;
 		if (task!=null)
 		{
 			IAgent previousAgent = task.agent;
 			task.agent = agent;
-			cost = this.scheduler.GetScheduleCostSync(task, agent);
+			sc = this.scheduler.GetScheduleCostSync(task, agent);
+			cost = sc.TotalQuality;
 			task.agent = previousAgent;
 		}
-		else
-			cost = this.scheduler.GetScheduleCostSync(null, agent); 
+		else{
+			sc = this.scheduler.GetScheduleCostSync(null, agent);
+			cost = sc.TotalQuality;
+		}
+		SchedulingLog.info(this.getName() + " Negotiated: " + sc.toString() + System.lineSeparator());
 		return cost;
 	}
 
