@@ -32,6 +32,16 @@ public class Task extends Node {
 		return this.children.size()>0;
 	}
 	
+	public void AssignAgent(IAgent ag)
+	{
+		this.agent=ag;
+		for(Node n: children)
+		{
+			if (n.agent==null)
+				n.agent=ag;
+		}
+	}
+	
 	public boolean IsFullyAssigned()
 	{
 		if (this.agent==null) return false;

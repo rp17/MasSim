@@ -269,7 +269,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 						selectedAgent = ag;
 					}
 				}
-				task.agent = selectedAgent;
+			//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
+			task.AssignAgent(selectedAgent);
 				Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
 				flagScheduleRecalculateRequired = true;
 				assignTask(task);
