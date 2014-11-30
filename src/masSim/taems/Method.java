@@ -13,7 +13,7 @@ import masSim.world.WorldState;
 public class Method extends Node implements IMethod {
 
 	private boolean debugFlag = false;
-	private static int Index = 2;
+	private static int Index = 3;
 	private int index;
 	private Outcome outcome;//Change to Vector
 	public int deadline = 0;
@@ -81,7 +81,7 @@ public class Method extends Node implements IMethod {
 		}
 		else
 		{
-			Main.Message(true, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
+			//Main.Message(true, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
 			d.quality = this.outcome.quality;
 			if (d.quality>heuristicQuality)
 			{

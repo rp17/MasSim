@@ -177,7 +177,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				SchedulingLog.info(this.getName() + " Selected: " + newSchedule.toString() + System.lineSeparator());
 			if (newSchedule!=null) {
 				schedule.set(newSchedule);
-				Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
+				//Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
 			}
 			if (schedule.get()!=null)
 			{

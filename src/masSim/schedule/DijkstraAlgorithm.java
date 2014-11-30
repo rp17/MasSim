@@ -59,7 +59,7 @@ public class DijkstraAlgorithm {
       DijkstraDistance currentHighestUtilityFromNodeToTarget = getHighestUtility(target);
       DijkstraDistance newUtilityFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
       if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget)) {
-    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + newUtilityFromNodeToTargetFromCurrentRoute.quality);
+    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] Adding route " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + currentHighestUtilityFromNodeToTarget.quality);
         distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
         predecessors.put(target, node);
         unSettledNodes.add(target);
@@ -81,18 +81,17 @@ public class DijkstraAlgorithm {
     List<Method> neighbors = new ArrayList<Method>();
     for (MethodTransition edge : edges) {
       Method source = edge.getSource();
-      if (debugFlag) System.out.println("Checking if edge " + source.label + " belongs to node " + node.label);
+      //if (debugFlag) System.out.println("Checking if edge " + source.label + " belongs to node " + node.label);
       if (source.equals(node)){
-    	  if (debugFlag) System.out.println("Source: " + edge.getSource().label);
     	  Method dest = edge.getDestination();
-    	  if (debugFlag) System.out.println("Destination: " + dest.label);
           if (!isSettled(dest)) {
-        	  neighbors.add(edge.getDestination());
+        	  if (debugFlag) System.out.println("[DijkstraAlgorithm 87] Adding neighbor: " + edge.getSource().label + " to " + dest.label);
+        	  neighbors.add(dest);
           }
           else
           {
-        	  if (debugFlag) System.out.println("Node found to be settled already");
-          }
+        	  if (debugFlag) System.out.println("[DijkstraAlgorithm 93] neighbor: " + dest.label + " already added");
+    	  }
       }
     }
     return neighbors;
