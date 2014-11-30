@@ -57,7 +57,7 @@ public class Waypoints {
 		}
 		return null;
 	}
-	public void render() {		
+	public synchronized void render() {		
 		GameCanvas.bluePen();
 		for (Wpt wpt : wpts) {
 			GameCanvas.filledCircle(wpt.x, wpt.y, 3);

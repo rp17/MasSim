@@ -11,15 +11,15 @@ import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld4 implements Runnable, WorldEventListener {
+public class SimWorld5 implements Runnable, WorldEventListener {
 
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
 	private ArrayList<WorldEventListener> listeners;
+	private IAgent agentZero;
 	private IAgent agentOne;
-	private IAgent agentTwo;
 	
-	public SimWorld4(WorldEventListener eventListener)
+	public SimWorld5(WorldEventListener eventListener)
 	{
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
@@ -28,13 +28,13 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 		listeners.add(this);
 		
 		//Initialize two agents, and specify their initial positions
-		agentOne = new Agent("AgentOne", true, 40, 100, listeners);
-		agentTwo = new Agent("AgentTwo", false, 40, 300, listeners);
-		agentOne.AddChildAgent(agentTwo);
+		agentZero = new Agent("AgentZero", true, 40, 100, listeners);
+		agentOne = new Agent("AgentOne", false, 40, 300, listeners);
+		agentZero.AddChildAgent(agentOne);
+		agents.add(agentZero);
 		agents.add(agentOne);
-		//agents.add(agentTwo);
 				
-		eventListener.RegisterMainAgent(agentOne);
+		eventListener.RegisterMainAgent(agentZero);
 	}
 	
 	@Override
@@ -49,35 +49,32 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							int interval = 5000;
 							int sinterval = 2000;
 							
-							Task taskGroup1 = new Task("TaskGroup1", new SeqSumQAF(), agentOne);
-							Task task1agent1 = new Task("Task1agent1",new SumAllQAF(), agentOne, new Method[]{
-								new Method("M1",13,7,100,100,8,null),
-								new Method("M2",10,10,200,100,0,null),
-								new Method("M3",11,7,300,100,0,null)
+							Task taskGroup1 = new Task("TaskGroup1", new SeqSumQAF(), null);
+							Task task1agent1 = new Task("Task1agent1",new SumAllQAF(), null, new Method[]{
+								new Method("M1",13,0,100,100,8,null),
+								new Method("M2",10,0,200,100,0,null),
+								new Method("M3",11,0,300,100,0,null)
 							});
-							Task task2agent1 = new Task("Task2agent1",new ExactlyOneQAF(), agentOne, new Method[]{
+							Task task2agent1 = new Task("Task2agent1",new ExactlyOneQAF(), null, new Method[]{
 								new Method("M4",10,0,400,50,0,null),
 								new Method("M5",70,0,400,150,0,null)
 							});		
 							taskGroup1.addTask(task1agent1);
 							taskGroup1.addTask(task2agent1);
-							agentOne.assignTask(taskGroup1);
+							//agentZero.assignTask(taskGroup1);
 							
-							//Task taskGroup2 = new Task("TaskGroup2", new ExactlyOneQAF(), null);
-							//Task task1agent2 = new Task("Task1agent2",new SumAllQAF(), agentTwo, new Method[]{
-							//	new Method("B1",8,5,100,250,0,null),
-							//	new Method("B2",12,7,300,250,0,null)
-							//});
-							//Task task2agent2 = new Task("Task2agent2",new SumAllQAF(), agentTwo, new Method[]{
-							//	new Method("B3",10,0,100,350,0,null),
-							//	new Method("B4",70,0,300,350,0,null)
-							//});		
-							////taskGroup2.addTask(task1agent2);
-							//taskGroup2.addTask(task2agent2);
-							//agentOne.assignTask(taskGroup2);
-							
-							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);
-							//destination1.AddInterrelationship(new Interrelationship(gasStation, destination1, new Outcome(100,1,1)));
+							Task taskGroup2 = new Task("TaskGroup2", new ExactlyOneQAF(), agentOne);
+							Task task1agent2 = new Task("Task1agent2",new SumAllQAF(), agentOne, new Method[]{
+								new Method("B1",8,0,100,250,0,null),
+								new Method("B2",12,0,300,250,0,null)
+							});
+							Task task2agent2 = new Task("Task2agent2",new SumAllQAF(), agentOne, new Method[]{
+								new Method("B3",10,0,100,350,0,null),
+								new Method("B4",70,0,300,350,0,null)
+							});		
+							taskGroup2.addTask(task1agent2);
+							taskGroup2.addTask(task2agent2);
+							agentZero.assignTask(taskGroup2);
 							
 							Thread.sleep(9*interval);
 						}

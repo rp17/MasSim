@@ -20,7 +20,7 @@ public class DijkstraAlgorithm {
 	    QUALITY,  DURATION
 	}
 	
-  private boolean debugFlag = true;
+  private boolean debugFlag = false;
   private final List<Method> nodes;
   private final List<MethodTransition> edges;
   private Set<Method> settledNodes;

@@ -123,6 +123,8 @@ public class Task extends Node {
 	
 	public static Task CreateDefaultTask(int counter, double x, double y)
 	{
-		return new Task("Station " + counter,new SumAllQAF(), null, new Method("Visit Station " + counter,1,x,y));
+		return new Task("Station " + counter,new SumAllQAF(), null, new Method[]{
+			new Method("DM"+counter,10,0,x,y,0,null)
+		});
 	}
 }

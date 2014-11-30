@@ -228,50 +228,56 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	 * this method handles the assignment goals
 	 */
 	public void assignTask(Task task){
-		if (task.IsFullyAssigned())
-		{
-			if (this.equals(task.agent))
+		try{
+			if (task.IsFullyAssigned())
 			{
-				Main.Message(debugFlag, "[Agent] " + label + " assigned " + task.label);
-				RegisterChildrenWithUI(task);
-				this.scheduler.AddTask(task);
-				flagScheduleRecalculateRequired = true;
-			}
-			else if (this.agentsUnderManagement.contains(task.agent)) 
-			{
-				Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
-				task.agent.assignTask(task);
+				if (this.equals(task.agent))
+				{
+					Main.Message(debugFlag, "[Agent] " + label + " assigned " + task.label);
+					RegisterChildrenWithUI(task);
+					this.scheduler.AddTask(task);
+					flagScheduleRecalculateRequired = true;
+				}
+				else if (this.agentsUnderManagement.contains(task.agent)) 
+				{
+					Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
+					task.agent.assignTask(task);
+				}
+				else
+				{
+					Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.label);
+				}
 			}
 			else
 			{
-				Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.label);
+				//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
+				//Calculate which agent is best to assign
+				int baseQuality = this.getExpectedScheduleQuality(null, this);
+				int qualityWithThisAgent = this.getExpectedScheduleQuality(task, this);
+				int addedQuality = qualityWithThisAgent - baseQuality;
+				Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + addedQuality);
+				IAgent selectedAgent = this;
+				for(IAgent ag : this.agentsUnderManagement)
+				{
+					baseQuality = this.getExpectedScheduleQuality(null, ag);
+					qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
+					int newAddedQuality = qualityWithThisAgent-baseQuality;
+					Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + newAddedQuality);
+					if (newAddedQuality>addedQuality)
+					{
+						addedQuality = newAddedQuality;
+						selectedAgent = ag;
+					}
+				}
+				task.agent = selectedAgent;
+				Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
+				flagScheduleRecalculateRequired = true;
+				assignTask(task);
 			}
 		}
-		else
+		catch(Exception ex)
 		{
-			//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
-			//Calculate which agent is best to assign
-			int baseQuality = this.getExpectedScheduleQuality(null, this);
-			int qualityWithThisAgent = this.getExpectedScheduleQuality(task, this);
-			int addedQuality = qualityWithThisAgent - baseQuality;
-			Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + addedQuality);
-			IAgent selectedAgent = this;
-			for(IAgent ag : this.agentsUnderManagement)
-			{
-				baseQuality = this.getExpectedScheduleQuality(null, ag);
-				qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
-				int newAddedQuality = qualityWithThisAgent-baseQuality;
-				Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + newAddedQuality);
-				if (newAddedQuality>addedQuality)
-				{
-					addedQuality = newAddedQuality;
-					selectedAgent = ag;
-				}
-			}
-			task.agent = selectedAgent;
-			Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
-			flagScheduleRecalculateRequired = true;
-			assignTask(task);
+			Main.Message(true, "[Agent 282] Exception: " + ex.toString());
 		}
 	}
 	
