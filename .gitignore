@@ -3,3 +3,4 @@ bin
 *~1
 *.log
 .metadata
+graphs/*
