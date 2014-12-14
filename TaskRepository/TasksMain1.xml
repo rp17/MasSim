@@ -1,0 +1,12 @@
+<Taems>
+	<Task id="T1" name="Task1" qaf="SumAll">
+		<Method id="M1" name="Visit Station 1" Quality="10" Duration="10"></Method>
+	</Task>
+	<Task id="T2" name="Task2" qaf="SumAll">
+		<Method id="M2" name="Visit Station A2" Quality="10" Duration="10"></Method>
+	</Task>
+	<Task id="T3" name="Task3" qaf="ExactlyOne">
+		<Task id="M3a" name="Task3a" qaf="SumAll" />
+		<Task id="M3b" name="Task3b" qaf="SumAll" />
+	</Task>
+</Taems>

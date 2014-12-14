@@ -31,6 +31,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
 	public Queue<Method> queue = new LinkedList<Method>();
+	private TaskRepository = new TaskRepository();
 	
 	
 	private enum Status {
@@ -70,6 +71,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
+	}
+	
+	public void Initialize()
+	{
+		
 	}
 	
 	public synchronized boolean AreEnablersInPlace(Method m)

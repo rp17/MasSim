@@ -23,6 +23,9 @@ public class Main {
 	
     public static void main(String args[]) {
     	
+    	MqttMessagingProvider pvd = new MqttMessagingProvider();
+    	pvd.Test("agent1");
+    	if (true) return;
     	Log.setLevel(Level.DEBUG);
     	SchedulingLog.setLevel(Level.INFO);
     	game = new RavenGame();
