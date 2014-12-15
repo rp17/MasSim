@@ -61,10 +61,10 @@ public class TaskRepository {
 		String taskId;
 		String taskName;
 		String qafStringValue;
-		QAF qaf;
+		QAF qaf = null;
 		taskId = node.getAttributes().getNamedItem("id").getNodeValue();
 		taskName = node.getAttributes().getNamedItem("name").getNodeValue();
-		qafStringValue = node.getAttributes().getNamedItem("qaf").getNodeValue()toString().toLowerCase();
+		qafStringValue = node.getAttributes().getNamedItem("qaf").getNodeValue().toString().toLowerCase();
 		if (qafStringValue=="sumall")
 		{
 			qaf = new SumAllQAF();

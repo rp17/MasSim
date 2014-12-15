@@ -31,7 +31,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
 	public Queue<Method> queue = new LinkedList<Method>();
-	private TaskRepository = new TaskRepository();
+	private TaskRepository taskRepository = new TaskRepository();
 	
 	
 	private enum Status {
