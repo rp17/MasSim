@@ -9,6 +9,9 @@ import masSim.schedule.Scheduler;
 import masSim.taems.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import raven.Main;
@@ -20,8 +23,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean debugFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
-	private Scheduler scheduler;
-	private final AtomicReference<Schedule> schedule = new AtomicReference<Schedule>();
+	ExecutorService schedulerPool;
+	private Schedule currentSchedule = new Schedule();
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
 	private ArrayList<IAgent> agentsUnderManagement = null;
@@ -32,7 +35,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public boolean flagScheduleRecalculateRequired;
 	public Queue<Method> queue = new LinkedList<Method>();
 	private TaskRepository taskRepository = new TaskRepository();
+	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled for this agent
+	private Task currentTaskGroup;
+	public ArrayList<Task> pendingTasks = new ArrayList<Task>();
 	
+	public ArrayList<IAgent> getAgentsUnderManagement()
+	{
+		return agentsUnderManagement;
+	}
 	
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY
@@ -65,17 +75,30 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			this.listeners = new ArrayList<WorldEventListener>();
 		else
 			this.listeners = listeners;
-		scheduler = new Scheduler(this);
-		this.scheduler.AddScheduleUpdateEventListener(this);
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
+		schedulerPool = Executors.newFixedThreadPool(3);
+		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 	}
 	
-	public void Initialize()
+	@Override
+	public Task GetCurrentTasks()
 	{
-		
+		return currentTaskGroup;
+	}
+	
+	public void RunSchedularForAgent(IAgent agent)
+	{
+		Scheduler newLocalSchedularThread = new Scheduler(agent);
+		this.schedulerPool.submit(newLocalSchedularThread);
+	}
+	
+	//TODO This method call will be removed to include an internal loop to check mqtt for new assignments
+	public void AddPendingTask(Task task)
+	{
+		pendingTasks.add(task);
 	}
 	
 	public synchronized boolean AreEnablersInPlace(Method m)
@@ -112,7 +135,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return methodEnablersCompleted;
 	}
 	
-	public void Execute(Method m) throws InterruptedException
+	public void ExecuteTask(Method m) throws InterruptedException
 	{
 		
 		while (!AreEnablersInPlace(m))
@@ -135,9 +158,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		m.MarkCompleted();
 		WorldState.CompletedMethods.add(m);
 		Main.Message(true, "[Agent 130] " + m.label + " added to completed queue");
-		if (schedule.get()!=null)
+		if (currentSchedule!=null)
 		{
-			Iterator<ScheduleElement> el = schedule.get().getItems();
+			Iterator<ScheduleElement> el = currentSchedule.getItems();
 			if(el.hasNext())
 			{
 				ScheduleElement e = el.next();
@@ -145,7 +168,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					e = el.next();
 				if (m.equals(e.getMethod()))
 				{
-					schedule.get().RemoveElement(e);
+					currentSchedule.RemoveElement(e);
 					Main.Message(true, "[Agent 135] Removed " + e.getName() + " from schedule");
 				}
 			}
@@ -172,48 +195,37 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return code;
 	}
 	
-	private void executeSchedule() {
-		while(flagScheduleRecalculateRequired)
-		{
-			Main.Message(debugFlag, "[Agent 111] Executing Schedule");
-			flagScheduleRecalculateRequired = false;
-			Main.Message(debugFlag, "[Agent 111] Running again");
-			Schedule newSchedule = this.scheduler.RunStatic();
-			if (newSchedule!=null)
-				SchedulingLog.info(this.getName() + " Selected: " + newSchedule.toString() + System.lineSeparator());
-			if (newSchedule!=null) {
-				schedule.set(newSchedule);
-				//Main.Message(debugFlag, "[Agent 119] Schedule Updated. New first method " + schedule.get().peek().getMethod().label);
-			}
-			if (schedule.get()!=null)
+	public void UpdateSchedule(Schedule newSchedule)
+	{
+		this.currentSchedule = newSchedule;
+	}
+	
+	private void executeNextTask() {
+		try{	
+			Main.Message(debugFlag, "[Agent 186] Executing Schedule");
+			if (currentSchedule!=null)
 			{
-				Iterator<ScheduleElement> el = schedule.get().getItems();
+				Iterator<ScheduleElement> el = currentSchedule.getItems();
 				if(el.hasNext())
 				{
-					try {
-						ScheduleElement e = el.next();
-						if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
-							e = el.next();
-						else
-							continue;
-						Method m = e.getMethod();
-						Main.Message(debugFlag, "[Agent 132] Next method to be executed from schedule " + m.label);
-						Execute(m);
-						while(!flagScheduleRecalculateRequired)
-						{	
-							//Main.Message(debugFlag, "[Agent 126] Waiting completion of " + m.label + " with flag " + flagScheduleRecalculateRequired);
-							Thread.sleep(1000);
-						}
-					} catch (InterruptedException ex) {
-						ex.printStackTrace();
-					}
+					ScheduleElement e = el.next();
+					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
+						e = el.next();
+					else
+						return;
+					Method m = e.getMethod();
+					Main.Message(debugFlag, "[Agent 197] Next method to be executed from schedule " + m.label);
+					ExecuteTask(m);	
 				}
 			}
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
 		}
 	}
 	
-	private void RegisterChildrenWithUI(Node node)
+	public void RegisterChildrenWithUI(Node node)
 	{
+		//TODO Remove method and do this via mqtt/ui directly. not task or agent's job to do this
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
@@ -230,72 +242,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 	
-	/**
-	 * this method handles the assignment goals
-	 */
-	public void assignTask(Task task){
-		try{
-			if (task.IsFullyAssigned())
-			{
-				if (this.equals(task.agent))
-				{
-					Main.Message(debugFlag, "[Agent] " + label + " assigned " + task.label);
-					RegisterChildrenWithUI(task);
-					this.scheduler.AddTask(task);
-					flagScheduleRecalculateRequired = true;
-				}
-				else if (this.agentsUnderManagement.contains(task.agent)) 
-				{
-					Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
-					task.agent.assignTask(task);
-				}
-				else
-				{
-					Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.label);
-				}
-			}
-			else
-			{
-				//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
-				//Calculate which agent is best to assign
-				int baseQuality = this.getExpectedScheduleQuality(null, this);
-				int qualityWithThisAgent = this.getExpectedScheduleQuality(task, this);
-				int addedQuality = qualityWithThisAgent - baseQuality;
-				Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + addedQuality);
-				IAgent selectedAgent = this;
-				for(IAgent ag : this.agentsUnderManagement)
-				{
-					baseQuality = this.getExpectedScheduleQuality(null, ag);
-					qualityWithThisAgent = ag.getExpectedScheduleQuality(task, ag);
-					int newAddedQuality = qualityWithThisAgent-baseQuality;
-					Main.Message(true, "[Agent 162] Quality with agent " + this.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + newAddedQuality);
-					if (newAddedQuality>addedQuality)
-					{
-						addedQuality = newAddedQuality;
-						selectedAgent = ag;
-					}
-				}
-			//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
-			task.AssignAgent(selectedAgent);
-				Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
-				flagScheduleRecalculateRequired = true;
-				assignTask(task);
-			}
-		}
-		catch(Exception ex)
-		{
-			Main.Message(true, "[Agent 282] Exception: " + ex.toString());
-		}
-	}
+	
 	
 	public void update(int tick) {
 		
-		if(schedule.get().hasNext(taskInd)) {
-			ScheduleElement el = schedule.get().peek();
+		if(currentSchedule.hasNext(taskInd)) {
+			ScheduleElement el = currentSchedule.peek();
 			ScheduleElement.Status status = el.update(tick);
 			if(status == ScheduleElement.Status.COMPLETED) {
 				System.out.println("Agent " + label + " completed item " + el.getName());
-				schedule.get().poll();
+				currentSchedule.poll();
 			}
 		}
 		else {
@@ -310,25 +266,19 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//Second, it executes those tasks whose schedule had already been created.
 		//Thread agentScheduler = new Thread(this.scheduler,"Scheduler " + this.label);
 		//agentScheduler.start();
-		while(true)
-		{
-			executeSchedule();
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
+		RunSchedularForAgent(this);
+		status=Status.PROCESSNG;
+		//TODO Introduce step to fetch commands from mqtt to govern execution and status
+		while(status==Status.PROCESSNG)
+			executeNextTask();
 	}
 
 	@Override
 	public void HandleScheduleEvent(ScheduleUpdateEvent scheduleUpdateEvent) {
-		Schedule currentSchedule = schedule.get();
 		if (currentSchedule!=null)
-			schedule.get().Merge(scheduleUpdateEvent.Schedule);
+			currentSchedule.Merge(scheduleUpdateEvent.Schedule);
 		else
-			schedule.set(scheduleUpdateEvent.Schedule);
+			currentSchedule = scheduleUpdateEvent.Schedule;
 	}
 
 	@Override
@@ -349,25 +299,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
         }
     }
 
-	@Override
-	public int getExpectedScheduleQuality(Task task, IAgent agent) {
-		int cost = 0;
-		Schedule sc;
-		if (task!=null)
-		{
-			IAgent previousAgent = task.agent;
-			task.agent = agent;
-			sc = this.scheduler.GetScheduleCostSync(task, agent);
-			cost = sc.TotalQuality;
-			task.agent = previousAgent;
-		}
-		else{
-			sc = this.scheduler.GetScheduleCostSync(null, agent);
-			cost = sc.TotalQuality;
-		}
-		SchedulingLog.info(this.getName() + " Negotiated: " + sc.toString() + System.lineSeparator());
-		return cost;
-	}
+	
 
 	@Override
 	public void setPosition(Vector2D pos) {

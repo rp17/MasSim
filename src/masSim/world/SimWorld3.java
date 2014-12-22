@@ -46,22 +46,22 @@ public class SimWorld3 implements Runnable {
 							int interval = 5000;
 							int sinterval = 2000;
 							Method m_from = new Method("Visit Station A1",10,100,110);
-							mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), mainAgent, m_from));
-							mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
-							mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
-							mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
-							mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
-							mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
+							mainAgent.AddPendingTask(new Task("Station A1",new SumAllQAF(), mainAgent, m_from));
+							mainAgent.AddPendingTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
+							mainAgent.AddPendingTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
+							mainAgent.AddPendingTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
+							mainAgent.AddPendingTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
+							mainAgent.AddPendingTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
 							
 							//Thread.sleep(interval);
 							Method m_to = new Method("Visit Station B1",1,100,210);
 							m_to.AddInterrelationship(new Interrelationship(m_from, m_to, new Outcome(100,1,1)));
-							mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), agents.get(1), m_to));
-							mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
-							mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
-							mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
-							mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
-							mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
+							mainAgent.AddPendingTask(new Task("Station B1",new SumAllQAF(), agents.get(1), m_to));
+							mainAgent.AddPendingTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
+							mainAgent.AddPendingTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
+							mainAgent.AddPendingTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
+							mainAgent.AddPendingTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
+							mainAgent.AddPendingTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
 							Thread.sleep(2*interval);
 							
 							

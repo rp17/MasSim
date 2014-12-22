@@ -400,7 +400,8 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		if (SwingUtilities.isLeftMouseButton(event)) {
 			//game.clickLeftMouseButton(new Vector2D(event.getPoint().x, event.getPoint().y));
 			//game.addWpt(new Vector2D((double)x, (double)y));
-			mainAgent.assignTask(Task.CreateDefaultTask(masSimTaskCount++, (double)x, (double)y));
+			//TODO Enable mouse clicking tasks addition again
+			//mainAgent.assignTask(Task.CreateDefaultTask(masSimTaskCount++, (double)x, (double)y));
 		}
 		else if (SwingUtilities.isRightMouseButton(event)) {
 			Component comp = event.getComponent();

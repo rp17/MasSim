@@ -74,7 +74,7 @@ public class SimWorld5 implements Runnable, WorldEventListener {
 							});		
 							taskGroup2.addTask(task1agent2);
 							taskGroup2.addTask(task2agent2);
-							agentZero.assignTask(taskGroup2);
+							agentZero.AddPendingTask(taskGroup2);
 							
 							Thread.sleep(9*interval);
 						}

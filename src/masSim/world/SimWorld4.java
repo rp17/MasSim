@@ -61,7 +61,7 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							});		
 							taskGroup1.addTask(task1agent1);
 							taskGroup1.addTask(task2agent1);
-							agentOne.assignTask(taskGroup1);
+							agentOne.AddPendingTask(taskGroup1);
 							
 							//Task taskGroup2 = new Task("TaskGroup2", new ExactlyOneQAF(), null);
 							//Task task1agent2 = new Task("Task1agent2",new SumAllQAF(), agentTwo, new Method[]{
