@@ -34,10 +34,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
 	public Queue<Method> queue = new LinkedList<Method>();
-	private TaskRepository taskRepository = new TaskRepository();
 	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled for this agent
 	private Task currentTaskGroup;
 	public ArrayList<Task> pendingTasks = new ArrayList<Task>();
+	
+	
+	public static void main(String[] args) {
+		//Agent to be run via this method in its own jvm
+	}
 	
 	public ArrayList<IAgent> getAgentsUnderManagement()
 	{
@@ -58,14 +62,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Status status;
 	
 	public Agent(int newCode){
-		this(newCode,"Agent"+newCode,false,0,0,null);
+		this(newCode,"Agent"+newCode,false,0,0,null, null);
 	}
 	
-	public Agent(String name, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners){
-		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, listeners);
+	public Agent(String name, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners,
+			MqttMessagingProvider mq){
+		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, listeners, mq);
 	}
 	
-	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners){
+	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners,
+			MqttMessagingProvider mq){
 		this.code = newCode;
 		this.label = label;
 		taskInd = 0;
@@ -81,6 +87,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
 		schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
+		
 	}
 	
 	@Override
@@ -92,7 +99,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void RunSchedularForAgent(IAgent agent)
 	{
 		Scheduler newLocalSchedularThread = new Scheduler(agent);
-		this.schedulerPool.submit(newLocalSchedularThread);
+		newLocalSchedularThread.run();
+		//this.schedulerPool.execute(newLocalSchedularThread);
 	}
 	
 	//TODO This method call will be removed to include an internal loop to check mqtt for new assignments
@@ -270,7 +278,15 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		status=Status.PROCESSNG;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
 		while(status==Status.PROCESSNG)
+		{
 			executeNextTask();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override

@@ -1,0 +1,10 @@
+<Taems>
+	<Task id="T3" name="PatrolRegionA" qaf="SumAll" >
+		<Method id="M1T3" name="GoToRegionA" Quality="10" Duration="10" XCoord="200" YCoord="250"></Method>
+		<Method id="M2T3" name="DriveAround" Quality="10" Duration="10" XCoord="200" YCoord="300"></Method>
+	</Task>
+	<Task id="T4" name="PatrolRegionB" qaf="SumAll" >
+		<Method id="M4T4" name="GoToRegionA" Quality="10" Duration="10" XCoord="250" YCoord="250"></Method>
+		<Method id="M5T4" name="DriveAround" Quality="10" Duration="10" XCoord="250" YCoord="300"></Method>
+	</Task>
+</Taems>

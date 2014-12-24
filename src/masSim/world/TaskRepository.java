@@ -1,6 +1,13 @@
 package masSim.world;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -13,6 +20,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import masSim.taems.ExactlyOneQAF;
+import masSim.taems.Method;
 import masSim.taems.QAF;
 import masSim.taems.SeqSumQAF;
 import masSim.taems.SumAllQAF;
@@ -20,34 +28,39 @@ import masSim.taems.Task;
 
 public class TaskRepository {
 	
-	public Task ReadTasks()
+	String repositoryFolderPath = "";
+	Map<String,Task> taskDefinitions;
+	
+	public TaskRepository()
 	{
-		
+		this("D:\\EclipseWorkspace\\RoverSim\\TaskRepository");
+	}
+			
+	public TaskRepository(String repositoryFolderPath)
+	{
+		this.repositoryFolderPath = repositoryFolderPath;
+		this.taskDefinitions = new HashMap<String,Task>();
+	}
+	
+	public Task ReadTasks(String fileName)
+	{
 		try {
+			File file = new File(repositoryFolderPath + "\\" + fileName);
+			FileInputStream fis = null;
+			fis = new FileInputStream(file);
 			//Get the DOM Builder Factory
 			DocumentBuilderFactory factory =  DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document document = builder.parse(ClassLoader.getSystemResourceAsStream("xml/employee.xml"));
+			Document document = builder.parse(fis);
 			Task tasks;
 			NodeList nodeList = document.getDocumentElement().getChildNodes();
-			
 			for (int i = 0; i < nodeList.getLength(); i++) {
-				
-				
-				
-				//We have encountered an <employee> tag.
+				//We have encountered a <Taems> tag.
 				Node node = nodeList.item(i);
 				if (node instanceof Element) {
-					
-			NodeList childNodes = node.getChildNodes();
-			for (int j = 0; j < childNodes.getLength(); j++) {
-			  Node cNode = childNodes.item(j);
-			  //Identifying the child tag of employee encountered.
-			  if (cNode instanceof Element) {
-			    Task t = ParseTask(cNode);
-			      }
-			    }
-			  }
+					Task t = ParseTask(node);
+					this.taskDefinitions.put(t.getLabel(), t);
+				}
 			}
 		} 
 		catch (IOException e) {}
@@ -56,27 +69,61 @@ public class TaskRepository {
 		return null;	
 	}
 	
+	public Task GetTask(String name)
+	{
+		return this.taskDefinitions.get(name);
+	}
+	
 	private Task ParseTask(Node node)
 	{
 		String taskId;
 		String taskName;
 		String qafStringValue;
 		QAF qaf = null;
+		boolean isTask = node.getNodeName()=="Task";
 		taskId = node.getAttributes().getNamedItem("id").getNodeValue();
 		taskName = node.getAttributes().getNamedItem("name").getNodeValue();
-		qafStringValue = node.getAttributes().getNamedItem("qaf").getNodeValue().toString().toLowerCase();
-		if (qafStringValue=="sumall")
-		{
-			qaf = new SumAllQAF();
+		if (isTask) {
+			qafStringValue = node.getAttributes().getNamedItem("qaf").getNodeValue().toString().toLowerCase();
+			if (qafStringValue.equalsIgnoreCase("sumall"))
+			{
+				qaf = new SumAllQAF();
+			}
+			else if (qafStringValue.equalsIgnoreCase("exactlyone"))
+			{
+				qaf = new ExactlyOneQAF();
+			} 
+			else if (qafStringValue.equalsIgnoreCase("seqsum"))
+			{
+				qaf = new SeqSumQAF();
+			}
 		}
-		else if (qafStringValue=="exactlyone")
-		{
-			qaf = new ExactlyOneQAF();
-		} 
-		else if (qafStringValue=="seqsum")
-		{
-			qaf = new SeqSumQAF();
+		Task task = new Task(taskName, qaf, null);
+		NodeList children = node.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			Node childNode = children.item(i);
+			if (childNode.getNodeName().equalsIgnoreCase("Method"))
+			{
+				Method childMethod = ParseMethod(childNode);
+				task.addTask(childMethod);
+			}
+			else if (childNode.getNodeName().equalsIgnoreCase("Task"))
+			{
+				Task childTask = ParseTask(childNode);
+				task.addTask(childTask);
+			}
 		}
-		return new Task(taskName, qaf, null);
+		return task;
+	}
+	
+	private Method ParseMethod(Node node)
+	{
+		String methodName = node.getAttributes().getNamedItem("name").getNodeValue();
+		int quality = Integer.parseInt(node.getAttributes().getNamedItem("Quality").getNodeValue());
+		int duration = Integer.parseInt(node.getAttributes().getNamedItem("Duration").getNodeValue());
+		int xCoord = Integer.parseInt(node.getAttributes().getNamedItem("XCoord").getNodeValue());
+		int yCoord = Integer.parseInt(node.getAttributes().getNamedItem("YCoord").getNodeValue());
+		Method method = new Method(methodName,quality,duration,xCoord,yCoord,0,null);
+		return method;
 	}
 }

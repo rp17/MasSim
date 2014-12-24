@@ -4,18 +4,25 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import masSim.taems.*;
+import masSim.world.MqttMessagingProvider;
+import masSim.world.TaskRepository;
 
 import java.util.*;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
 
-public class Scheduler implements Runnable {
+public class Scheduler implements Runnable, MqttCallback {
 	
 	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
+	private MqttMessagingProvider mq;
 	
 	//New pending tasks that need to be added to the taskGroup, whose schedule needs to be calculated, usually
 	//during runtime when a previous schedule has already been calculated and is available, but which needs
@@ -23,6 +30,7 @@ public class Scheduler implements Runnable {
 	public ArrayList<Task> PendingTasks = new ArrayList<Task>();
 	
 	private IAgent agent;
+	private TaskRepository taskRepository = new TaskRepository();
 	
 	//Represents the current final optimum schedule calculated for the taskGroup member
 	private Schedule schedule;
@@ -30,6 +38,8 @@ public class Scheduler implements Runnable {
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
+		this.mq = new MqttMessagingProvider((MqttCallback)this);
+		taskRepository.ReadTasks(agent.getName()+".xml");
 	}
 	
 	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
@@ -69,21 +79,35 @@ public class Scheduler implements Runnable {
 	@Override
 	public void run() 
 	{
-		Schedule schedule = CalculateSchedule(null);
-		if (schedule!=null)
-			this.agent.UpdateSchedule(schedule);
+		while(true)
+		{
+			if (!this.PendingTasks.isEmpty())
+			{
+				Schedule schedule = CalculateSchedule();
+				if (schedule!=null)
+					this.agent.UpdateSchedule(schedule);	
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
 	}
 	
 	
 	
-	public Schedule CalculateSchedule(Task task)
+	public Schedule CalculateSchedule()
 	{
 		try {
-			boolean newTasksAssigned = assignTask(task);
-			if (newTasksAssigned) return null;
+			Main.Message(debugFlag, "[Scheduler 82] Calculate Schedule called");
 			//Read all new tasks
 			int numberOfPendingTasks = this.PendingTasks.size();
 			if (numberOfPendingTasks<=0) return null;
+			boolean newTasksAssigned = assignTask(null);
 			String debugMessage = "";
 			for(int i=0;i<numberOfPendingTasks;i++)
 			{
@@ -106,7 +130,7 @@ public class Scheduler implements Runnable {
 			}
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Main.Message(true, "[Schedular 109]" + e.toString());
 		}
 		return null;
 	}
@@ -391,6 +415,30 @@ public class Scheduler implements Runnable {
 		}
 		Method[] result = lastMethodList.toArray(new Method[lastMethodList.size()]);
 		return result;
+	}
+
+	@Override
+	public void connectionLost(Throwable arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void messageArrived(String topic, MqttMessage message)
+	        throws Exception {
+		String messageContent = message.toString();
+		System.out.println(messageContent);
+		Task task = taskRepository.GetTask(messageContent);
+		if (task!=null)
+		{
+			this.PendingTasks.add(task);
+		}
 	}
 
 }

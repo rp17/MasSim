@@ -1,0 +1,6 @@
+<Taems>
+	<Task id="T1" name="PickPatient" qaf="SumAll" />
+	<Task id="T2" name="DropPatient" qaf="SumAll" />
+	<Task id="T3" name="PatrolRegionA" qaf="SumAll" />
+	<Task id="T4" name="PatrolRegionB" qaf="SumAll" />
+</Taems>

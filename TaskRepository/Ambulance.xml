@@ -1,0 +1,10 @@
+<Taems>
+	<Task id="T1" name="PickPatient" qaf="SumAll" >
+		<Method id="M1T1" name="PickFromHouse" Quality="10" Duration="10" XCoord="100" YCoord="150"></Method>
+		<Method id="M2T1" name="DropToHospital" Quality="10" Duration="10" XCoord="100" YCoord="200"></Method>
+	</Task>
+	<Task id="T2" name="DropPatient" qaf="SumAll" >
+		<Method id="M1T2" name="PickFromHospital" Quality="10" Duration="10" XCoord="150" YCoord="150"></Method>
+		<Method id="M2T2" name="DropToHouse" Quality="10" Duration="10" XCoord="150" YCoord="150"></Method>
+	</Task>
+</Taems>

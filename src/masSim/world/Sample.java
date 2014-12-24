@@ -63,7 +63,7 @@ public class Sample implements MqttCallback {
 		String topic 		= "";
 		String message 		= "Message from blocking Paho MQTTv3 Java client sample";
 		int qos 			= 2;
-		String broker 		= "m2m.eclipse.org";
+		String broker 		= "test.mosquitto.org";
 		int port 			= 1883;
 		String clientId 	= null;
 		String subTopic		= "Sample/#";
@@ -155,6 +155,10 @@ public class Sample implements MqttCallback {
 			// Create an instance of this class
 			Sample sampleClient = new Sample(url, clientId, cleanSession, quietMode,userName,password);
 
+			
+			sampleClient.publish(topic,qos,message.getBytes());
+			Thread.sleep(1000);
+			sampleClient.subscribe(topic,qos);
 			// Perform the requested action
 			if (action.equals("publish")) {
 				sampleClient.publish(topic,qos,message.getBytes());
@@ -169,6 +173,9 @@ public class Sample implements MqttCallback {
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
 			me.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -187,8 +194,8 @@ public class Sample implements MqttCallback {
 	 * @param clientId the client id to connect with
 	 * @param cleanSession clear state at end of connection or not (durable or non-durable subscriptions)
 	 * @param quietMode whether debug should be printed to standard out
-   * @param userName the username to connect with
-   * @param password the password for the user
+     * @param userName the username to connect with
+     * @param password the password for the user
 	 * @throws MqttException
 	 */
     public Sample(String brokerUrl, String clientId, boolean cleanSession, boolean quietMode, String userName, String password) throws MqttException {
