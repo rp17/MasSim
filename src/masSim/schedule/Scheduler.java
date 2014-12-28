@@ -17,7 +17,7 @@ import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
 
-public class Scheduler implements Runnable, MqttCallback {
+public class Scheduler implements Runnable, SchedulingEventListener {
 	
 	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
@@ -38,8 +38,10 @@ public class Scheduler implements Runnable, MqttCallback {
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
-		this.mq = new MqttMessagingProvider((MqttCallback)this);
-		taskRepository.ReadTasks(agent.getName()+".xml");
+		taskRepository.ReadTaskDescriptions(agent.getName()+".xml");
+		this.mq = MqttMessagingProvider.GetMqttProvider();
+		this.mq.AddListener(this);
+		this.mq.SubscribeForAgent(agent.getName());
 	}
 	
 	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
@@ -418,27 +420,9 @@ public class Scheduler implements Runnable, MqttCallback {
 	}
 
 	@Override
-	public void connectionLost(Throwable arg0) {
+	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void messageArrived(String topic, MqttMessage message)
-	        throws Exception {
-		String messageContent = message.toString();
-		System.out.println(messageContent);
-		Task task = taskRepository.GetTask(messageContent);
-		if (task!=null)
-		{
-			this.PendingTasks.add(task);
-		}
+		return null;
 	}
 
 }

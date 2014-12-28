@@ -42,7 +42,7 @@ public class TaskRepository {
 		this.taskDefinitions = new HashMap<String,Task>();
 	}
 	
-	public Task ReadTasks(String fileName)
+	public Task ReadTaskDescriptions(String fileName)
 	{
 		try {
 			File file = new File(repositoryFolderPath + "\\" + fileName);
