@@ -6,12 +6,22 @@ import java.io.InputStreamReader;
 
 import masSim.world.MqttMessagingProvider;
 
-public class CommandCenter {
+public class MqttConsole implements Runnable {
 
 	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus
 	//has its own main entry point.
 	public static void main(String[] args) {
-		
+		MqttConsole cc = new MqttConsole();
+		cc.Execute();
+	}
+	
+	@Override
+	public void run() {
+		Execute();
+	}
+	
+	private void Execute()
+	{
 		System.out.println("Enter the agent name and the task which you need the agent to execute ");
 		System.out.println("in the format: AgentName>TaskName ");
 		System.out.println("Type \"exit\" to quit");

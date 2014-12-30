@@ -89,6 +89,18 @@ public class Scheduler implements Runnable, SchedulingEventListener {
 				if (schedule!=null)
 					this.agent.UpdateSchedule(schedule);	
 			}
+			else
+			{
+				//ONE TIME EXECUTION COMMANDS IF MQTT CONSOLE NOT RUNNING
+				//int seconds = (int) (System.currentTimeMillis()%60);
+				//if (seconds<2)
+				//{
+				//	if (this.agent.getName().equals("Police"))
+				//	{
+				//		this.mq.PublishMessage("Ambulance,ASSIGNTASK,PickPatient");
+				//	}
+				//}
+			}
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {

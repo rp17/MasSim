@@ -2,6 +2,7 @@ package masSim.world;
 import java.util.ArrayList;
 import java.util.List;
 
+import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
 import masSim.taems.IAgent;
@@ -27,10 +28,12 @@ public class MqttMessagingProvider implements MqttCallback{
 	private static MqttMessagingProvider provider;
 	private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
 	
-	public static MqttMessagingProvider GetMqttProvider()
+	public static synchronized MqttMessagingProvider GetMqttProvider()
 	{
-		if (provider==null)
+		if (provider==null){
 			provider = new MqttMessagingProvider();
+			System.out.println("Mqtt Ready");
+		}
 		return provider;
 	}
 	
@@ -53,11 +56,9 @@ public class MqttMessagingProvider implements MqttCallback{
 			MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
 			client.connect(connOpts);
-			Thread.sleep(5000);//Wait for client to connect. TODO convert to synchronous method call for mqtt so it proceeds only when connected.
+            System.out.println("Mqtt connected");
 		} catch(MqttException me) {
         	DisplayMqttException(me);
-        } catch(InterruptedException ex){
-        	//Do nothing
         }
 	}
 	
@@ -70,7 +71,7 @@ public class MqttMessagingProvider implements MqttCallback{
         }
 	}
 	
-	public void PublishMessage(String agentName, String commandType, String commandText)
+	public void PublishMessage(String agentName, SchedulingCommandType commandType, String commandText)
 	{
 		PublishMessage(agentName+","+commandType+","+commandText);
 	}
@@ -78,10 +79,11 @@ public class MqttMessagingProvider implements MqttCallback{
 	public void PublishMessage(String messageString)
 	{
 		try {
+			String agentName = messageString.substring(0, messageString.indexOf(","));
 	        MqttMessage message = new MqttMessage();
 	        message.setPayload(messageString.getBytes());
 	        message.setQos(qos);
-	        String topicForAgent = baseTopic + "/" + "schedulingMessages";
+	        String topicForAgent = baseTopic + "/" + agentName;
 	        client.publish(topicForAgent, message);
 	    } catch (MqttException e) {
 	        e.printStackTrace();
@@ -113,9 +115,7 @@ public class MqttMessagingProvider implements MqttCallback{
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		System.out.println("Delivery complete");
-		// TODO Auto-generated method stub
-		
+		System.out.println("Message delivered successfully");
 	}
 
 	@Override
@@ -123,6 +123,7 @@ public class MqttMessagingProvider implements MqttCallback{
 	        throws Exception {
 		String messageContent = message.toString();
 		String[] messageParts = messageContent.split(",");
+		System.out.println("Message Recieved :" + messageContent);
 		for(SchedulingEventListener listener : schedulingEventListeners)
 		{
 			SchedulingEvent event = new SchedulingEvent(messageParts[0],messageParts[1],messageParts[2]);
