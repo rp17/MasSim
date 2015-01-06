@@ -1,11 +1,13 @@
 package masSim.world;
 
 import masSim.world.WorldEvent;
-import masSim.world.WorldEventListener;
 import masSim.world.WorldEvent.TaskType;
 import masSim.schedule.IScheduleUpdateEventListener;
 import masSim.schedule.ScheduleUpdateEvent;
 import masSim.schedule.Scheduler;
+import masSim.schedule.SchedulingCommandType;
+import masSim.schedule.SchedulingEvent;
+import masSim.schedule.SchedulingEventListener;
 import masSim.taems.*;
 
 import java.util.*;
@@ -18,7 +20,7 @@ import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
 
-public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, Runnable{
+public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
 	private boolean debugFlag = true;
 	private static int GloballyUniqueAgentId = 1;
@@ -29,7 +31,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean resetScheduleExecutionFlag = false;
 	private ArrayList<IAgent> agentsUnderManagement = null;
 	private AgentMode mode;
-	public ArrayList<WorldEventListener> listeners;
 	public double x;
 	public double y;
 	public boolean flagScheduleRecalculateRequired;
@@ -37,6 +38,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled for this agent
 	private Task currentTaskGroup;
 	public ArrayList<Task> pendingTasks = new ArrayList<Task>();
+	private MqttMessagingProvider mq;
 	
 	
 	public static void main(String[] args) {
@@ -62,31 +64,29 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Status status;
 	
 	public Agent(int newCode){
-		this(newCode,"Agent"+newCode,false,0,0,null, null);
+		this(newCode,"Agent"+newCode,false,0,0);
 	}
 	
-	public Agent(String name, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners,
+	public Agent(String name, boolean isManagingAgent, int x, int y,
 			MqttMessagingProvider mq){
-		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, listeners, mq);
+		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y);
 	}
 	
-	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, ArrayList<WorldEventListener> listeners,
-			MqttMessagingProvider mq){
+	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y){
 		this.code = newCode;
 		this.label = label;
 		taskInd = 0;
 		status = Status.EMPTY;
 		flagScheduleRecalculateRequired = true;
-		if (listeners==null)
-			this.listeners = new ArrayList<WorldEventListener>();
-		else
-			this.listeners = listeners;
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
 		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
 		schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
+		this.mq = MqttMessagingProvider.GetMqttProvider();
+		this.mq.SubscribeForAgent(getName());
+		this.mq.AddListener(this);
 		
 	}
 	
@@ -181,21 +181,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 			}
 		}
-		this.fireWorldEvent(TaskType.METHODCOMPLETED, null, m.label, m.x, m.y, m);
+		this.mq.PublishMessage("",SchedulingCommandType.DISPLAYREMOVEMETHOD, m.label + "-"+ m.x + "-" + m.y);
 		flagScheduleRecalculateRequired = true;
 		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 	}
 	
 	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2, IAgent agent, Method method) {
-        Main.Message(debugFlag, "[Agent 78] Firing Execute Method for " + methodId);
 		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2, agent, method);
-        Iterator it = listeners.iterator();
-        WorldEventListener listener;
-        while(it.hasNext())
-        {
-        	listener = (WorldEventListener)it.next();
-        	listener.HandleWorldEvent(worldEvent);
-        }
+        mq.PublishMessage(worldEvent);
     }
 	
 	// Returns identifying code, specific for this agent
@@ -237,7 +230,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
-			this.fireWorldEvent(TaskType.METHODCREATED, null, method.label, method.x, method.y, method);
+			this.mq.PublishMessage("",SchedulingCommandType.DISPLAYADDMETHOD, method.label + "-"+ method.x + "-" + method.y);
 		}
 		else
 		{
@@ -306,16 +299,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, double x2, double y2, Method method) {
         WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x2, y2, this, method);
-        WorldEventListener listener;
-        for(int i=0;i<listeners.size();i++)
-        {
-        	Object o = listeners.get(i);
-        	listener = (WorldEventListener) o;
-        	listener.HandleWorldEvent(worldEvent);
-        }
+        mq.PublishMessage(worldEvent);
     }
 
-	
 
 	@Override
 	public void setPosition(Vector2D pos) {
@@ -336,5 +322,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public void setMode(AgentMode mode) {
 		this.mode = mode;
+	}
+	
+	@Override
+	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
+		return null;
 	}
 }

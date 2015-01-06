@@ -37,12 +37,14 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
+import masSim.schedule.SchedulingCommandType;
+import masSim.schedule.SchedulingEvent;
+import masSim.schedule.SchedulingEventListener;
 import masSim.taems.IAgent;
 import masSim.taems.SumAllQAF;
 import masSim.taems.Task;
 import masSim.world.WorldEvent;
 import masSim.world.WorldEvent.TaskType;
-import masSim.world.WorldEventListener;
 import raven.Main;
 import raven.edit.editor.EditorViewController;
 import raven.game.RavenGame;
@@ -56,7 +58,7 @@ import raven.goals.GoalComposite;
 import raven.math.Vector2D;
 import raven.utils.*;
 
-public class RavenUI extends JFrame implements KeyListener, MouseInputListener, ComponentListener, WorldEventListener
+public class RavenUI extends JFrame implements KeyListener, MouseInputListener, ComponentListener, SchedulingEventListener
 {
 	/**
 	 * 
@@ -66,7 +68,6 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	private int width = 700;
 	private int height = 700;
 	private int framerate = 60;
-	private IAgent mainAgent;
 	private int masSimTaskCount = 1;
 
 	private RavenGame game;
@@ -456,51 +457,42 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		// TODO Auto-generated method stub
 		
 	}
+	
 	@Override
-	public void HandleWorldEvent(WorldEvent event) {
-		if (event.taskType==TaskType.AGENTCREATED)
+	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
+		if (event.commandType==SchedulingCommandType.DISPLAYADDMETHOD)
 		{
-			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
-			game.addRoverBotAt(popupLoc, event.agentId, event.agent);
-			Main.Message(debugFlag, "[RavenUI 464] Added bot " + event.agentId);
+			String[] points = event.commandText.split("-"); 
+			Vector2D popupLoc = new Vector2D(points[1], points[2]);
+			game.addWpt(popupLoc, points[0]);
 		}
-		if (event.taskType==TaskType.METHODCOMPLETED)
+		if (event.commandType==SchedulingCommandType.DISPLAYREMOVEMETHOD)
 		{
-			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
-			game.removeWpt(popupLoc, event.methodId);
+			String[] points = event.commandText.split("-"); 
+			Vector2D popupLoc = new Vector2D(points[1], points[2]);
+			game.removeWpt(popupLoc, points[0]);
 		}
-		if (event.taskType==TaskType.METHODCREATED)
+		if (event.commandType==SchedulingCommandType.DISPLAYADDAGENT)
 		{
-			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
-			game.addWpt(popupLoc, event.methodId);
-			Main.Message(debugFlag, "[RavenUI 475] Added Method " + event.methodId);
+			String[] points = event.commandText.split("-"); 
+			Vector2D popupLoc = new Vector2D(points[1], points[2]);
+			game.addRoverBotAt(popupLoc, points[0]);
 		}
-		if (event.taskType==TaskType.EXECUTEMETHOD)
+		if (event.commandType==SchedulingCommandType.DISPLAYTASKEXECUTION)
 		{
-			Vector2D popupLoc = new Vector2D(event.xCoordinate, event.yCoordinate);
-			IRavenBot bot = game.getBotByName(event.agentId);
+			String[] points = event.commandText.split("-"); 
+			Vector2D popupLoc = new Vector2D(points[2], points[3]);
+			String agentId = points[0];
+			String methodId = points[1];
+			IRavenBot bot = game.getBotByName(agentId);
 			
 			if(bot != null && bot instanceof RoverBot) {
 				RoverBot rbot = (RoverBot)bot;
-				Waypoints matchedWaypoints = game.getWptsForMethodExecution(event.methodId, rbot.pos());
-				Main.Message(debugFlag, "[RavenUI 472] Handling Method " + event.methodId + ". Going to " + event.xCoordinate + ", " + event.yCoordinate);
+				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot.pos());
 				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints);
-				if (g!=null){
-					Main.Message(true, "[RavenUI 488] Agent is" + event.agent.getName());
-					GoalCompletionWatcher w = new GoalCompletionWatcher(g,event.agent,event.method);
-					Thread agentThread = new Thread(w,"Watcher"+event.methodId);
-					agentThread.start();
-				}
-				else
-				{
-					event.agent.MarkMethodCompleted(event.method);
-				}
+				//!goal.isComplete() add completion logic
 			}
-			Main.Message(debugFlag, "[RavenUI 488] Executing Task at " + popupLoc.x + " " + popupLoc.y);
 		}
-	}
-	@Override
-	public void RegisterMainAgent(IAgent agent) {
-		this.mainAgent = agent;
+		return null;
 	}
 }

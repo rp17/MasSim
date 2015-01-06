@@ -11,31 +11,33 @@ import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld implements Runnable, WorldEventListener {
+public class SimWorld implements Runnable {
 
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
-	private ArrayList<WorldEventListener> listeners;
 	private IAgent agentAmbulance;
 	private IAgent agentPolice;
 	private MqttMessagingProvider mq;
 	
-	public SimWorld(WorldEventListener eventListener)
+	public SimWorld()
 	{
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
-		listeners = new ArrayList<WorldEventListener>();
-		listeners.add(eventListener);
-		listeners.add(this);
+		mq = MqttMessagingProvider.GetMqttProvider();
 		
 		//Initialize two agents, and specify their initial positions
-		agentPolice = new Agent("Police", true, 40, 300, listeners, mq);
-		agentAmbulance = new Agent("Ambulance", false, 40, 100, listeners, mq);
+		agentPolice = new Agent("Police", true, 40, 300, mq);
+		agentAmbulance = new Agent("Ambulance", false, 40, 100, mq);
 		agentPolice.AddChildAgent(agentAmbulance);
 		agents.add(agentPolice);
 		agents.add(agentAmbulance);
-		eventListener.RegisterMainAgent(agentPolice);
 	}
+	
+	public MqttMessagingProvider getMqttMessagingProvider()
+	{
+		return mq;
+	}
+	
 	
 	@Override
 	public void run()
@@ -57,29 +59,6 @@ public class SimWorld implements Runnable, WorldEventListener {
 			}
 		}
 		//agentOne.assignTask(new Task("Emergency Station",new SumAllQAF(), new Method("Emergency Method",1,300,90), null));
-	}
-	
-	public synchronized void addListener(WorldEventListener sl) {
-        listeners.add(sl);
-    }
- 
-    public synchronized void removeListener(WorldEventListener sl) {
-        listeners.remove(sl);
-    }
-
-	@Override
-	public void HandleWorldEvent(WorldEvent event) {
-		if (event.taskType==TaskType.METHODCOMPLETED)
-		{
-			Main.Message(true, "[SimWorld4] " + event.methodId + " completed");
-			//mainAgent.assignTask(new Task(event.methodId + " Task",new SumAllQAF(), new Method(event.methodId + " Method",1,1,event.xCoordinate,event.yCoordinate, 4, null), mainAgent));
-		}
-	}
-
-	@Override
-	public void RegisterMainAgent(IAgent agent) {
-		// TODO Auto-generated method stub
-		
 	}
     
 }

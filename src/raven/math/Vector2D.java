@@ -31,6 +31,11 @@ public class Vector2D {
 		this.y = y;
 	}
 	
+	public Vector2D(String x, String y) {
+		this.x = Integer.parseInt(x);
+		this.y = Integer.parseInt(y);
+	}
+	
 	/**
 	 * Clones the x and y positions of the passed Vector2D.  Used as a deep copy.
 	 * @param pos

@@ -17,12 +17,11 @@ import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
 
-public class Scheduler implements Runnable, SchedulingEventListener {
+public class Scheduler implements Runnable {
 	
 	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
-	private MqttMessagingProvider mq;
 	
 	//New pending tasks that need to be added to the taskGroup, whose schedule needs to be calculated, usually
 	//during runtime when a previous schedule has already been calculated and is available, but which needs
@@ -39,9 +38,6 @@ public class Scheduler implements Runnable, SchedulingEventListener {
 	{
 		this.agent = agent;
 		taskRepository.ReadTaskDescriptions(agent.getName()+".xml");
-		this.mq = MqttMessagingProvider.GetMqttProvider();
-		this.mq.AddListener(this);
-		this.mq.SubscribeForAgent(agent.getName());
 	}
 	
 	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
@@ -431,11 +427,6 @@ public class Scheduler implements Runnable, SchedulingEventListener {
 		return result;
 	}
 
-	@Override
-	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }
 

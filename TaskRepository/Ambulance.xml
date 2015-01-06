@@ -7,4 +7,7 @@
 		<Method id="M1T2" name="PickFromHospital" Quality="10" Duration="10" XCoord="150" YCoord="150"></Method>
 		<Method id="M2T2" name="DropToHouse" Quality="10" Duration="10" XCoord="150" YCoord="150"></Method>
 	</Task>
+	<Task id="T3" name="RespondToAccident" qaf="SumAll" >
+		<Method id="M1T3" name="VisitAccidentLocation" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>
+	</Task>
 </Taems>

@@ -799,12 +799,12 @@ public class RavenGame {
 		return local;
 	}
 	public boolean addRoverBotAt(Vector2D pos) {
-		return addRoverBotAt(pos, "default",null);
+		return addRoverBotAt(pos, "default");
 	}
-	public boolean addRoverBotAt(Vector2D pos, String name, IAgent agent) {
-		return addRoverBotAt(pos, name, true, agent);
+	public boolean addRoverBotAt(Vector2D pos, String name) {
+		return addRoverBotAt(pos, name, true);
 	}
-	public boolean addRoverBotAt(Vector2D pos, String name, boolean start, IAgent agent) {
+	public boolean addRoverBotAt(Vector2D pos, String name, boolean start) {
 		boolean available = true;
 		for (IRavenBot other : bots) {
 			if (pos.distance(other.pos()) < other.getBRadius()) {
@@ -813,7 +813,6 @@ public class RavenGame {
 			}
 		}
 		IRavenBot bot = new RoverBot(this, pos, Goal.GoalType.goal_roverthink);
-		bot.setAgent(agent);
 		((RoverBot)bot).name = name;
 		// switch the default steering behaviors on
 		bot.getSteering().wallAvoidanceOn();

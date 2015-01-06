@@ -20,8 +20,8 @@ public class CalculateScheduleFromTaemsTests {
 	
 	@Before
 	public void setUp() throws Exception {
-		agentMain = new Agent("Helicopter0", true, 10, 10, null, null);
-		agentTwo = new Agent("Helicopter1", false, 40, 200, null, null);
+		agentMain = new Agent("Helicopter0", true, 10, 10, null);
+		agentTwo = new Agent("Helicopter1", false, 40, 200, null);
 		topLevelTask = new Task("Container Task",new SumAllQAF(), agentMain);
 	}
 	

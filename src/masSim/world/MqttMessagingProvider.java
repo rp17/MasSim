@@ -50,8 +50,8 @@ public class MqttMessagingProvider implements MqttCallback{
 		broker = "tcp://test.mosquitto.org:1883";
 		persistence = new MemoryPersistence();
 		try {
-			client = new MqttClient("tcp://test.mosquitto.org:1883", "MasSimMqttClient", persistence);
-			//client = new MqttClient("tcp://dev.rabbitmq.com:1883", "MasSimMqttClient", persistence);
+			//client = new MqttClient("tcp://test.mosquitto.org:1883", "MasSimMqttClient", persistence);
+			client = new MqttClient("tcp://dev.rabbitmq.com:1883", "MasSimMqttClient", persistence);
 			client.setCallback(this);
 			MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
@@ -74,6 +74,11 @@ public class MqttMessagingProvider implements MqttCallback{
 	public void PublishMessage(String agentName, SchedulingCommandType commandType, String commandText)
 	{
 		PublishMessage(agentName+","+commandType+","+commandText);
+	}
+	
+	public void PublishMessage(WorldEvent event)
+	{
+		
 	}
 	
 	public void PublishMessage(String messageString)

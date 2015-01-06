@@ -37,7 +37,8 @@ public class Main {
   	    });
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
-		SimWorld world = new SimWorld((WorldEventListener) ui);
+		SimWorld world = new SimWorld();
+		world.getMqttMessagingProvider().AddListener(ui);
 		Thread MasSimThread = new Thread(world);
 		MasSimThread.start();
 		game.togglePause();
