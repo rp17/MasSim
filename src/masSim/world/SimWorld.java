@@ -8,7 +8,6 @@ import java.util.List;
 import raven.Main;
 import raven.math.Vector2D;
 import masSim.world.*;
-import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
 public class SimWorld implements Runnable {
@@ -24,7 +23,10 @@ public class SimWorld implements Runnable {
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
 		mq = MqttMessagingProvider.GetMqttProvider();
-		
+	}
+	
+	public void Initialize()
+	{
 		//Initialize two agents, and specify their initial positions
 		agentPolice = new Agent("Police", true, 40, 300, mq);
 		agentAmbulance = new Agent("Ambulance", false, 40, 100, mq);

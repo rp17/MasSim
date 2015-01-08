@@ -32,8 +32,8 @@ public class Vector2D {
 	}
 	
 	public Vector2D(String x, String y) {
-		this.x = Integer.parseInt(x);
-		this.y = Integer.parseInt(y);
+		this.x = Double.parseDouble(x);
+		this.y = Double.parseDouble(y);
 	}
 	
 	/**

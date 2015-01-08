@@ -1,17 +1,17 @@
 package masSim.world;
 
-import masSim.world.WorldEvent;
-import masSim.world.WorldEvent.TaskType;
 import masSim.schedule.IScheduleUpdateEventListener;
 import masSim.schedule.ScheduleUpdateEvent;
 import masSim.schedule.Scheduler;
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
+import masSim.schedule.SchedulingEventParams;
 import masSim.taems.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,9 +37,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Queue<Method> queue = new LinkedList<Method>();
 	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled for this agent
 	private Task currentTaskGroup;
-	public ArrayList<Task> pendingTasks = new ArrayList<Task>();
+	public ConcurrentLinkedQueue<Task> pendingTasks = new ConcurrentLinkedQueue<Task>();
 	private MqttMessagingProvider mq;
-	
+	private TaskRepository taskRepository = new TaskRepository();
 	
 	public static void main(String[] args) {
 		//Agent to be run via this method in its own jvm
@@ -81,13 +81,13 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
-		fireWorldEvent(TaskType.AGENTCREATED, label, null, x, y, null);
-		schedulerPool = Executors.newFixedThreadPool(3);
-		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		this.mq = MqttMessagingProvider.GetMqttProvider();
 		this.mq.SubscribeForAgent(getName());
 		this.mq.AddListener(this);
-		
+		fireWorldEvent(SchedulingCommandType.DISPLAYADDAGENT, label, null, x, y, null);
+		schedulerPool = Executors.newFixedThreadPool(3);
+		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
+		taskRepository.ReadTaskDescriptions(getName()+".xml");
 	}
 	
 	@Override
@@ -145,7 +145,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void ExecuteTask(Method m) throws InterruptedException
 	{
-		
 		while (!AreEnablersInPlace(m))
 		{
 			Main.Message(true, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
@@ -153,7 +152,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (m.x!=0 && m.y!=0)
 		{
-			fireAgentMovedEvent(TaskType.EXECUTEMETHOD, this.label, m.label, m.x, m.y, this, m);
+			fireAgentMovedEvent(SchedulingCommandType.DISPLAYTASKEXECUTION, this.label, m.label, m.x, m.y, this, m);
 			Main.Message(true, "[Agent 76] Agent " + this.label + " executing " + m.label);
 			this.flagScheduleRecalculateRequired = false;
 		}
@@ -186,8 +185,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 	}
 	
-	public void fireAgentMovedEvent(TaskType type, String agentId, String methodId, double x2, double y2, IAgent agent, Method method) {
-		WorldEvent worldEvent = new WorldEvent(this, TaskType.EXECUTEMETHOD, agentId, methodId, x2, y2, agent, method);
+	public void fireAgentMovedEvent(SchedulingCommandType type, String agentId, String methodId, double x2, double y2, IAgent agent, Method method) {
+		SchedulingEventParams params = new SchedulingEventParams(agentId, methodId, Double.toString(x2), Double.toString(y2));
+		SchedulingEvent worldEvent = new SchedulingEvent(this.getName(), type, params);
         mq.PublishMessage(worldEvent);
     }
 	
@@ -297,8 +297,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.agentsUnderManagement.add(agent);
 	}
 	
-	public synchronized void fireWorldEvent(TaskType type, String agentId, String methodId, double x2, double y2, Method method) {
-        WorldEvent worldEvent = new WorldEvent(this, type, agentId, methodId, x2, y2, this, method);
+	public synchronized void fireWorldEvent(SchedulingCommandType type, String agentId, String methodId, double x2, double y2, Method method) {
+        SchedulingEvent worldEvent = new SchedulingEvent(agentId, type, new SchedulingEventParams(agentId, methodId, Double.toString(x2), Double.toString(y2)));
         mq.PublishMessage(worldEvent);
     }
 
@@ -326,6 +326,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	@Override
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
+		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
+		{
+			this.pendingTasks.add(this.taskRepository.GetTask(event.params.TaskName));
+		}
 		return null;
 	}
 }

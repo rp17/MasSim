@@ -35,23 +35,23 @@ public class MqttConsole implements Runnable {
 				if (commandText.equalsIgnoreCase("exit")) break;
 				else if (commandText.equalsIgnoreCase("pickpatient"))
 				{
-					commandText = "Ambulance,ASSIGNTASK,PickPatient";
+					commandText = "Ambulance,ASSIGNTASK,----PickPatient";
 				}
 				else if (commandText.equalsIgnoreCase("droppatient"))
 				{
-					commandText = "Ambulance,ASSIGNTASK,DropPatient";
+					commandText = "Ambulance,ASSIGNTASK,----DropPatient";
 				}
 				else if (commandText.equalsIgnoreCase("patrola"))
 				{
-					commandText = "Police,ASSIGNTASK,PatrolA";
+					commandText = "Police,ASSIGNTASK,----PatrolA";
 				}
 				else if (commandText.equalsIgnoreCase("patrolb"))
 				{
-					commandText = "Police,ASSIGNTASK,PatrolB";
+					commandText = "Police,ASSIGNTASK,----PatrolB";
 				}
 				else if (commandText.equalsIgnoreCase("accident"))
 				{
-					commandText = "Police,NEGOTIATE,RespondToAccident";
+					commandText = "Police,NEGOTIATE,----RespondToAccident";
 				}
 				mqtt.PublishMessage(commandText);
 			} 

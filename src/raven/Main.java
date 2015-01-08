@@ -39,6 +39,7 @@ public class Main {
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
 		SimWorld world = new SimWorld();
 		world.getMqttMessagingProvider().AddListener(ui);
+		world.Initialize();
 		Thread MasSimThread = new Thread(world);
 		MasSimThread.start();
 		game.togglePause();

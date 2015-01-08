@@ -29,7 +29,6 @@ public class Scheduler implements Runnable {
 	public ArrayList<Task> PendingTasks = new ArrayList<Task>();
 	
 	private IAgent agent;
-	private TaskRepository taskRepository = new TaskRepository();
 	
 	//Represents the current final optimum schedule calculated for the taskGroup member
 	private Schedule schedule;
@@ -37,7 +36,6 @@ public class Scheduler implements Runnable {
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
-		taskRepository.ReadTaskDescriptions(agent.getName()+".xml");
 	}
 	
 	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
@@ -87,6 +85,7 @@ public class Scheduler implements Runnable {
 			}
 			else
 			{
+				Main.Message(true, this.agent.getName() + " pending tasks empty");
 				//ONE TIME EXECUTION COMMANDS IF MQTT CONSOLE NOT RUNNING
 				//int seconds = (int) (System.currentTimeMillis()%60);
 				//if (seconds<2)
@@ -98,7 +97,7 @@ public class Scheduler implements Runnable {
 				//}
 			}
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(3000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

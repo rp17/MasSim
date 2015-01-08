@@ -43,8 +43,6 @@ import masSim.schedule.SchedulingEventListener;
 import masSim.taems.IAgent;
 import masSim.taems.SumAllQAF;
 import masSim.taems.Task;
-import masSim.world.WorldEvent;
-import masSim.world.WorldEvent.TaskType;
 import raven.Main;
 import raven.edit.editor.EditorViewController;
 import raven.game.RavenGame;
@@ -462,35 +460,31 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType==SchedulingCommandType.DISPLAYADDMETHOD)
 		{
-			String[] points = event.commandText.split("-"); 
-			Vector2D popupLoc = new Vector2D(points[1], points[2]);
-			game.addWpt(popupLoc, points[0]);
+			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			game.addWpt(popupLoc, event.params.MethodId);
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYREMOVEMETHOD)
-		{
-			String[] points = event.commandText.split("-"); 
-			Vector2D popupLoc = new Vector2D(points[1], points[2]);
-			game.removeWpt(popupLoc, points[0]);
+		{ 
+			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			game.removeWpt(popupLoc, event.params.MethodId);
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYADDAGENT)
-		{
-			String[] points = event.commandText.split("-"); 
-			Vector2D popupLoc = new Vector2D(points[1], points[2]);
-			game.addRoverBotAt(popupLoc, points[0]);
+		{ 
+			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			game.addRoverBotAt(popupLoc, event.params.AgentId);
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYTASKEXECUTION)
 		{
-			String[] points = event.commandText.split("-"); 
-			Vector2D popupLoc = new Vector2D(points[2], points[3]);
-			String agentId = points[0];
-			String methodId = points[1];
+			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			String agentId = event.params.AgentId;
+			String methodId = event.params.MethodId;
 			IRavenBot bot = game.getBotByName(agentId);
 			
 			if(bot != null && bot instanceof RoverBot) {
 				RoverBot rbot = (RoverBot)bot;
 				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot.pos());
 				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints);
-				//!goal.isComplete() add completion logic
+				//TODO !goal.isComplete() add completion logic
 			}
 		}
 		return null;
