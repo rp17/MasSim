@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import raven.Main;
 import raven.math.Vector2D;
+import raven.ui.RavenUI;
 import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
@@ -25,7 +26,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean debugFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
-	ExecutorService schedulerPool;
 	private Schedule currentSchedule = new Schedule();
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
@@ -37,12 +37,23 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Queue<Method> queue = new LinkedList<Method>();
 	//Represents the top level task, called task group in taems, which contains all child tasks to be scheduled for this agent
 	private Task currentTaskGroup;
-	public ConcurrentLinkedQueue<Task> pendingTasks = new ConcurrentLinkedQueue<Task>();
+	//New pending tasks that need to be added to the taskGroup, whose schedule needs to be calculated, usually
+	//during runtime when a previous schedule has already been calculated and is available, but which needs
+	//to be updated now with arrival of these new tasks
+	private List<Task> pendingTasks = new ArrayList<Task>();
 	private MqttMessagingProvider mq;
 	private TaskRepository taskRepository = new TaskRepository();
+	private ExecutorService schedulerPool;
+	private Scheduler localScheduler;
 	
 	public static void main(String[] args) {
 		//Agent to be run via this method in its own jvm
+	}
+	
+	@Override
+	public synchronized List<Task> getPendingTasks()
+	{
+		return this.pendingTasks;
 	}
 	
 	public ArrayList<IAgent> getAgentsUnderManagement()
@@ -84,10 +95,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.mq = MqttMessagingProvider.GetMqttProvider();
 		this.mq.SubscribeForAgent(getName());
 		this.mq.AddListener(this);
-		fireWorldEvent(SchedulingCommandType.DISPLAYADDAGENT, label, null, x, y, null);
-		schedulerPool = Executors.newFixedThreadPool(3);
+		//schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
+		this.schedulerPool = Executors.newFixedThreadPool(5);
+		localScheduler = new Scheduler(this);
 	}
 	
 	@Override
@@ -96,11 +108,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return currentTaskGroup;
 	}
 	
-	public void RunSchedularForAgent(IAgent agent)
+	public void RunSchedular()
 	{
-		Scheduler newLocalSchedularThread = new Scheduler(agent);
-		newLocalSchedularThread.run();
-		//this.schedulerPool.execute(newLocalSchedularThread);
+		schedulerPool.execute(localScheduler);
 	}
 	
 	//TODO This method call will be removed to include an internal loop to check mqtt for new assignments
@@ -202,8 +212,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	private void executeNextTask() {
-		try{	
-			Main.Message(debugFlag, "[Agent 186] Executing Schedule");
+		try
+		{
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
@@ -226,11 +236,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void RegisterChildrenWithUI(Node node)
 	{
-		//TODO Remove method and do this via mqtt/ui directly. not task or agent's job to do this
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
-			this.mq.PublishMessage("",SchedulingCommandType.DISPLAYADDMETHOD, method.label + "-"+ method.x + "-" + method.y);
+			fireWorldEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, method.getLabel(), method.x, method.y, null);
 		}
 		else
 		{
@@ -242,8 +251,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 		}
 	}
-	
-	
 	
 	public void update(int tick) {
 		
@@ -267,14 +274,15 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//Second, it executes those tasks whose schedule had already been created.
 		//Thread agentScheduler = new Thread(this.scheduler,"Scheduler " + this.label);
 		//agentScheduler.start();
-		RunSchedularForAgent(this);
+		fireWorldEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, null, x, y, null);
+		RunSchedular();
 		status=Status.PROCESSNG;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
 		while(status==Status.PROCESSNG)
 		{
 			executeNextTask();
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -297,10 +305,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.agentsUnderManagement.add(agent);
 	}
 	
-	public synchronized void fireWorldEvent(SchedulingCommandType type, String agentId, String methodId, double x2, double y2, Method method) {
-        SchedulingEvent worldEvent = new SchedulingEvent(agentId, type, new SchedulingEventParams(agentId, methodId, Double.toString(x2), Double.toString(y2)));
+	public synchronized void fireWorldEvent(String targetAgent, SchedulingCommandType type, String methodId, double x2, double y2, Method method) {
+        SchedulingEvent worldEvent = new SchedulingEvent(targetAgent, type, new SchedulingEventParams(targetAgent, methodId, Double.toString(x2), Double.toString(y2)));
         mq.PublishMessage(worldEvent);
     }
+	
+	
 
 
 	@Override
@@ -328,7 +338,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			this.pendingTasks.add(this.taskRepository.GetTask(event.params.TaskName));
+			Task task = this.taskRepository.GetTask(event.params.TaskName);
+			task.agent = this;
+			RegisterChildrenWithUI(task);
+			this.pendingTasks.add(task);
+			schedulerPool.execute(localScheduler);
 		}
 		return null;
 	}

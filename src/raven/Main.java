@@ -1,10 +1,11 @@
 package raven;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import raven.game.RavenGame;
 import raven.ui.GameCanvas;
 import raven.ui.RavenUI;
-import raven.utils.Log;
-import raven.utils.SchedulingLog;
 import raven.utils.*;
 
 import javax.swing.SwingUtilities;
@@ -37,11 +38,9 @@ public class Main {
   	    });
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
-		SimWorld world = new SimWorld();
-		world.getMqttMessagingProvider().AddListener(ui);
-		world.Initialize();
-		Thread MasSimThread = new Thread(world);
-		MasSimThread.start();
+    	ExecutorService schedulerPool = Executors.newFixedThreadPool(5);
+		SimWorld world = new SimWorld(ui, schedulerPool);
+		world.InitializeAndRun();
 		game.togglePause();
     	gameLoop();
 	}

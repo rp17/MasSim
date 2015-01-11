@@ -23,10 +23,6 @@ public class Scheduler implements Runnable {
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
-	//New pending tasks that need to be added to the taskGroup, whose schedule needs to be calculated, usually
-	//during runtime when a previous schedule has already been calculated and is available, but which needs
-	//to be updated now with arrival of these new tasks
-	public ArrayList<Task> PendingTasks = new ArrayList<Task>();
 	
 	private IAgent agent;
 	
@@ -65,7 +61,7 @@ public class Scheduler implements Runnable {
 	public void AddTask(Task pendingTask)
 	{
 		Main.Message(debugFlag, "[Scheduler 62] Added Pending task " + pendingTask.label + " to Scheduler " + this.hashCode());
-		PendingTasks.add(pendingTask);
+		agent.getPendingTasks().add(pendingTask);
 	}
 	
 	//This is the main method of the scheduler, which implements runnable interface of java thread
@@ -75,36 +71,14 @@ public class Scheduler implements Runnable {
 	@Override
 	public void run() 
 	{
-		while(true)
-		{
-			if (!this.PendingTasks.isEmpty())
-			{
-				Schedule schedule = CalculateSchedule();
-				if (schedule!=null)
-					this.agent.UpdateSchedule(schedule);	
-			}
-			else
-			{
-				Main.Message(true, this.agent.getName() + " pending tasks empty");
-				//ONE TIME EXECUTION COMMANDS IF MQTT CONSOLE NOT RUNNING
-				//int seconds = (int) (System.currentTimeMillis()%60);
-				//if (seconds<2)
-				//{
-				//	if (this.agent.getName().equals("Police"))
-				//	{
-				//		this.mq.PublishMessage("Ambulance,ASSIGNTASK,PickPatient");
-				//	}
-				//}
-			}
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
 		
+		if (!this.agent.getPendingTasks().isEmpty())
+		{
+			Main.Message(true, "Pending task found");
+			Schedule schedule = CalculateSchedule();
+			if (schedule!=null)
+				this.agent.UpdateSchedule(schedule);	
+		}
 	}
 	
 	
@@ -114,15 +88,15 @@ public class Scheduler implements Runnable {
 		try {
 			Main.Message(debugFlag, "[Scheduler 82] Calculate Schedule called");
 			//Read all new tasks
-			int numberOfPendingTasks = this.PendingTasks.size();
+			int numberOfPendingTasks = this.agent.getPendingTasks().size();
 			if (numberOfPendingTasks<=0) return null;
 			boolean newTasksAssigned = assignTask(null);
 			String debugMessage = "";
 			for(int i=0;i<numberOfPendingTasks;i++)
 			{
-				Task newTask = this.PendingTasks.get(0);
+				Task newTask = this.agent.getPendingTasks().get(0);
 				debugMessage += " > " + newTask.label;
-				this.PendingTasks.remove(0);
+				this.agent.getPendingTasks().remove(0);
 				if (newTask.agent.equals(agent)){
 					agent.GetCurrentTasks().addTask(newTask);
 					Main.Message(debugFlag, "[Scheduler 95] task added " + newTask.label + " in " + agent.getName());

@@ -67,6 +67,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	private int height = 700;
 	private int framerate = 60;
 	private int masSimTaskCount = 1;
+	public static String schedulingEventListenerName = "RavenUI";
 
 	private RavenGame game;
 	private KeyState keys;
@@ -488,5 +489,11 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public String getName()
+	{
+		return schedulingEventListenerName;
 	}
 }

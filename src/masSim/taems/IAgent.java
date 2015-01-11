@@ -1,12 +1,15 @@
 package masSim.taems;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import raven.math.Vector2D;
 import masSim.schedule.Scheduler;
 import masSim.world.AgentMode;
 
 public interface IAgent {
+	List<Task> getPendingTasks();
 	public int getCode();
 	public void AddChildAgent(IAgent agent);
 	//public void assignTask(Task task);

@@ -90,7 +90,7 @@ public class MqttMessagingProvider implements MqttCallback{
 	        MqttMessage message = new MqttMessage();
 	        message.setPayload(messageString.getBytes());
 	        message.setQos(qos);
-	        String topicForAgent = baseTopic + "/" + agentName;
+	        String topicForAgent = baseTopic + agentName;
 	        client.publish(topicForAgent, message);
 	    } catch (MqttException e) {
 	        e.printStackTrace();
@@ -100,7 +100,7 @@ public class MqttMessagingProvider implements MqttCallback{
 	
 	private String GetAgentSpecificTopic(String agentName)
 	{
-		return baseTopic + "/" + agentName;
+		return baseTopic + agentName;
 	}
 	
 	private void DisplayMqttException(MqttException me)
@@ -128,13 +128,12 @@ public class MqttMessagingProvider implements MqttCallback{
 	@Override
 	public void messageArrived(String topic, MqttMessage message)
 	        throws Exception {
-		String messageContent = message.toString();
-		String[] messageParts = messageContent.split(",");
-		System.out.println("Message Recieved :" + messageContent);
+		SchedulingEvent event = SchedulingEvent.Parse(message.toString());
+		System.out.println("Message Recieved :" + event);
 		for(SchedulingEventListener listener : schedulingEventListeners)
 		{
-			SchedulingEvent event = new SchedulingEvent(messageParts[0],messageParts[1],messageParts[2]);
-			listener.ProcessSchedulingEvent(event);
+			if (event.agentName.equals(listener.getName()))
+				listener.ProcessSchedulingEvent(event);
 		}
 	}
 }
