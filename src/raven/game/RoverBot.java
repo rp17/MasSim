@@ -150,7 +150,7 @@ public class RoverBot extends RavenBot {
 		velocity.y = velY;
 		position.x += velX*delta + distNoise*heading.x;
 		position.y += velY*delta + distNoise*heading.y;
-		this.agent.setPosition(position);
+		//TODO see if this is really needed or not. this.agent.setPosition(position);
 		//if the vehicle has a non zero velocity the heading and side vectors must 
 		//be updated
 		/*

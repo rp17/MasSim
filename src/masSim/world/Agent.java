@@ -62,7 +62,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	private enum Status {
-		IDLE, PROCESSNG, EMPTY
+		IDLE, PROCESSNG, EMPTY, AWAITINGTASKCOMPLETION
 	}
 	
 	@Override
@@ -162,7 +162,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (m.x!=0 && m.y!=0)
 		{
-			fireAgentMovedEvent(SchedulingCommandType.DISPLAYTASKEXECUTION, this.label, m.label, m.x, m.y, this, m);
+			status=Status.AWAITINGTASKCOMPLETION;
+			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			Main.Message(true, "[Agent 76] Agent " + this.label + " executing " + m.label);
 			this.flagScheduleRecalculateRequired = false;
 		}
@@ -195,9 +196,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 	}
 	
-	public void fireAgentMovedEvent(SchedulingCommandType type, String agentId, String methodId, double x2, double y2, IAgent agent, Method method) {
-		SchedulingEventParams params = new SchedulingEventParams(agentId, methodId, Double.toString(x2), Double.toString(y2));
-		SchedulingEvent worldEvent = new SchedulingEvent(this.getName(), type, params);
+	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
+		SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2));
+		SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
         mq.PublishMessage(worldEvent);
     }
 	
@@ -239,7 +240,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
-			fireWorldEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, method.getLabel(), method.x, method.y, null);
+			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
 		}
 		else
 		{
@@ -269,18 +270,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public void run() {
-		//Running the agent means that the agent starts doing two things, and does them indefinitely unless it is killed or suspended.
-		//First, it creates a background thread to keep checking for new tasks, and to calculate an optimum schedule for those.
-		//Second, it executes those tasks whose schedule had already been created.
-		//Thread agentScheduler = new Thread(this.scheduler,"Scheduler " + this.label);
-		//agentScheduler.start();
-		fireWorldEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, null, x, y, null);
+		fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
 		RunSchedular();
 		status=Status.PROCESSNG;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
-		while(status==Status.PROCESSNG)
+		while(true)
 		{
-			executeNextTask();
+			if (status==Status.PROCESSNG)
+				executeNextTask();
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -304,14 +301,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			System.out.println("Child Agent being added to non-managing agent");
 		this.agentsUnderManagement.add(agent);
 	}
-	
-	public synchronized void fireWorldEvent(String targetAgent, SchedulingCommandType type, String methodId, double x2, double y2, Method method) {
-        SchedulingEvent worldEvent = new SchedulingEvent(targetAgent, type, new SchedulingEventParams(targetAgent, methodId, Double.toString(x2), Double.toString(y2)));
-        mq.PublishMessage(worldEvent);
-    }
-	
-	
-
 
 	@Override
 	public void setPosition(Vector2D pos) {

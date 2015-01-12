@@ -13,6 +13,7 @@ import raven.ui.GameCanvas;
 abstract public class GoalComposite<T extends BaseGameEntity> extends Goal<T> {
 	
 	protected ArrayList <Goal> m_SubGoals;
+	public boolean LaunchedByMasSim = false;
 	public GoalComposite(T PE, raven.goals.Goal.GoalType type) {
 		super(PE, type);
 		m_SubGoals = new ArrayList<Goal>();

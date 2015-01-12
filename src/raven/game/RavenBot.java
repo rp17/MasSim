@@ -2,6 +2,7 @@ package raven.game;
 
 import java.util.ArrayList;
 
+import masSim.world.MqttMessagingProvider;
 import raven.game.interfaces.IRavenBot;
 import raven.game.messaging.Dispatcher;
 import raven.game.messaging.RavenMessage;
@@ -21,11 +22,16 @@ public class RavenBot extends MovingEntity implements IRavenBot {
 	protected enum Status {
 		ALIVE, DEAD, SPAWNING
 	}
-
+	
+	protected MqttMessagingProvider mq;
 	/** alive, dead or spawning? */
 	protected Status status;
 
 	protected String name;
+	
+	public String getName(){
+		return name;
+	}
 	
 	/** a pointer to the world data */
 	protected RavenGame world;
@@ -240,6 +246,8 @@ public class RavenBot extends MovingEntity implements IRavenBot {
 
 		sensoryMem = new RavenSensoryMemory(this,
 				RavenScript.getDouble("Bot_MemorySpan"));
+		
+		mq = MqttMessagingProvider.GetMqttProvider();
 	}
 
 	

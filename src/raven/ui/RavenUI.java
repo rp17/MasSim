@@ -476,7 +476,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYTASKEXECUTION)
 		{
-			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			//Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
 			String agentId = event.params.AgentId;
 			String methodId = event.params.MethodId;
 			IRavenBot bot = game.getBotByName(agentId);
@@ -485,7 +485,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 				RoverBot rbot = (RoverBot)bot;
 				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot.pos());
 				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints);
-				//TODO !goal.isComplete() add completion logic
+				g.LaunchedByMasSim = true;
 			}
 		}
 		return null;

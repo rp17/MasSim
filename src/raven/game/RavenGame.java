@@ -407,7 +407,6 @@ public class RavenGame {
 			bot.getSteering().wallAvoidanceOn();
 			bot.getSteering().separationOn();
 			bots.add(bot);
-			Log.info("game", "Bot " + bot.ID() + " added");
 			
 			// register the bot with the entity manager
 			EntityManager.registerEntity(bot);
@@ -426,7 +425,6 @@ public class RavenGame {
 		bots.add(bot);
 		// register the bot with the entity manager
 		EntityManager.registerEntity(bot);
-		Log.info("game", "Bot " + bot.getName() + " ID: " + bot.ID() + " added");
 	}
 	
 	public void addNetNodeAt(Vector2D pos){
@@ -597,7 +595,7 @@ public class RavenGame {
 	
 	public IRavenBot getBotByName(String label) {
 		for (IRavenBot bot : bots) {
-			if (((RoverBot)bot).name == label) {
+			if (((RoverBot)bot).name.equals(label)) {
 				return bot;
 			}
 		}	
@@ -789,7 +787,7 @@ public class RavenGame {
 		{
 			Waypoints.Wpt wp = wpts.get(i);
 			//Main.Message(true, "[RavenGame 790] Testing waypoint " + wp.name );
-			if (wp.name==methodName)
+			if (wp.name.equals(methodName))
 			{
 				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
 				local.addWpt(new Vector2D(wp.x, wp.y));
@@ -818,7 +816,6 @@ public class RavenGame {
 		bot.getSteering().wallAvoidanceOn();
 		bot.getSteering().separationOn();
 		bots.add(bot);
-		Log.info("game", "Bot " + bot.ID() + " added");
 					
 		// register the bot with the entity manager
 		EntityManager.registerEntity(bot);

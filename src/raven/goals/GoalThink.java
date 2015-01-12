@@ -2,6 +2,10 @@ package raven.goals;
 
 import java.util.Vector;
 
+import masSim.schedule.SchedulingCommandType;
+import masSim.schedule.SchedulingEvent;
+import masSim.schedule.SchedulingEventParams;
+import masSim.world.MqttMessagingProvider;
 import raven.game.RavenBot;
 import raven.game.RavenObject;
 import raven.math.Vector2D;
@@ -15,6 +19,7 @@ public class GoalThink extends GoalComposite<RavenBot> {
 	private double RailgunBias = 0.0;
 	private double ExploreBias = 0;
 	private double AttackBias  = 0;
+	private MqttMessagingProvider mq;
 
 	public GoalThink(RavenBot ravenBot) {
 		super(ravenBot, Goal.GoalType.goal_think);
@@ -41,12 +46,12 @@ public class GoalThink extends GoalComposite<RavenBot> {
 		} catch(Exception ex) {
 			System.out.println(ex.getMessage());
 		}
+		mq.GetMqttProvider();
 	}
 
 	
 	public GoalThink(RavenBot ravenBot, Goal.GoalType mode) {
 		super(ravenBot, mode);
-		Log.debug("GoalThink", "created new brain attached to bot " + ravenBot.ID());
 		if(mode != Goal.GoalType.goal_roverthink) {
 			// random values are between 0.5 and 1.5
 			HealthBias = Math.random() + 0.5;
@@ -102,6 +107,13 @@ public class GoalThink extends GoalComposite<RavenBot> {
 			if (!m_pOwner.isPossessed())
 			{
 				m_iStatus = Goal.CurrentStatus.inactive;
+			}
+			if (LaunchedByMasSim)
+			{
+				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), "", "0", "0");
+				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
+				LaunchedByMasSim = false;
+				mq.PublishMessage(event);
 			}
 		}
 

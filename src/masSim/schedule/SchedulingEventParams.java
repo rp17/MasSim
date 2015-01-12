@@ -11,14 +11,14 @@ public class SchedulingEventParams {
 	public SchedulingEventParams()
 	{}
 	
-	public SchedulingEventParams(String agentId, String methodId, String xCoord, String yCoord)
+	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord)
 	{
-		this(agentId, methodId, xCoord, yCoord, "");
+		this(subjectAgentId, methodId, xCoord, yCoord, "");
 	}
 	
-	public SchedulingEventParams(String agentId, String methodId, String xCoord, String yCoord, String taskName)
+	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord, String taskName)
 	{
-		this.AgentId = agentId;
+		this.AgentId = subjectAgentId;
 		this.MethodId = methodId;
 		this.XCoordinate = xCoord;
 		this.YCoordinate = yCoord;
