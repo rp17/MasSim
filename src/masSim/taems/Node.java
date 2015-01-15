@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import masSim.world.MqttMessagingProvider;
+
 public abstract class Node extends Element  implements IObserver {
 	public static final int    EXECUTING = 1;
 	public static final int    COMPLETED = 2;
@@ -19,7 +21,7 @@ public abstract class Node extends Element  implements IObserver {
 		return children.iterator();
 	}
 	
-	public void Cleanup()
+	public void Cleanup(MqttMessagingProvider mq)
 	{}
 
 

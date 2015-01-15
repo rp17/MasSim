@@ -335,4 +335,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		return null;
 	}
+
+	@Override
+	public boolean IsGlobalListener() {
+		return false;
+	}
 }

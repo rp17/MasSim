@@ -53,6 +53,6 @@ public class SchedulingEventParams {
 	public String toString()
 	{
 		return this.XCoordinate + "-" + this.YCoordinate + "-" +
-				this.AgentId + "-" + this.MethodId;
+				this.AgentId + "-" + this.MethodId + "-" + this.TaskName;
 	}
 }

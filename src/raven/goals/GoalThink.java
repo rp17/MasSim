@@ -19,7 +19,6 @@ public class GoalThink extends GoalComposite<RavenBot> {
 	private double RailgunBias = 0.0;
 	private double ExploreBias = 0;
 	private double AttackBias  = 0;
-	private MqttMessagingProvider mq;
 
 	public GoalThink(RavenBot ravenBot) {
 		super(ravenBot, Goal.GoalType.goal_think);
@@ -46,7 +45,6 @@ public class GoalThink extends GoalComposite<RavenBot> {
 		} catch(Exception ex) {
 			System.out.println(ex.getMessage());
 		}
-		mq.GetMqttProvider();
 	}
 
 	
@@ -107,13 +105,6 @@ public class GoalThink extends GoalComposite<RavenBot> {
 			if (!m_pOwner.isPossessed())
 			{
 				m_iStatus = Goal.CurrentStatus.inactive;
-			}
-			if (LaunchedByMasSim)
-			{
-				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), "", "0", "0");
-				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
-				LaunchedByMasSim = false;
-				mq.PublishMessage(event);
 			}
 		}
 

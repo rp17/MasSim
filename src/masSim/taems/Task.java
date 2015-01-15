@@ -8,8 +8,12 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.concurrent.locks.Lock;
 
+import masSim.schedule.SchedulingCommandType;
+import masSim.schedule.SchedulingEvent;
+import masSim.world.MqttMessagingProvider;
 import masSim.world.WorldState;
 import raven.Main;
+import raven.TaskIssuer;
 
 public class Task extends Node {
 
@@ -105,7 +109,7 @@ public class Task extends Node {
 	}
 	
 	@Override
-	public synchronized void Cleanup()
+	public synchronized void Cleanup(MqttMessagingProvider mq)
 	{
 		if (this.hasChildren())
 			for(Node n : children)
@@ -115,15 +119,17 @@ public class Task extends Node {
 					if (n.IsComplete())
 					{
 						children.remove(n);
+						mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----"+n.getLabel()));
 					}
 					else
 					{
 						if (n.IsTask())
 						{
-							n.Cleanup();
+							n.Cleanup(mq);
 							if (n.IsComplete())//Recheck after cleanup
 							{
 								children.remove(n);
+								mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----"+n.getLabel()));
 							}
 						}
 					}

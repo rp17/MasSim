@@ -20,6 +20,7 @@ import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 public class MqttMessagingProvider implements MqttCallback{
 
+	private boolean simulationMode = true;
 	private String baseTopic;
 	private int qos;
 	private String broker;
@@ -45,32 +46,38 @@ public class MqttMessagingProvider implements MqttCallback{
 	
 	private MqttMessagingProvider()
 	{
-		baseTopic = "txstate/rp/masSim/";
-		qos = 2;
-		broker = "tcp://test.mosquitto.org:1883";
-		persistence = new MemoryPersistence();
-		try {
-			//client = new MqttClient("tcp://test.mosquitto.org:1883", "MasSimMqttClient", persistence);
-			//client = new MqttClient("tcp://dev.rabbitmq.com:1883", "MasSimMqttClient", persistence);
-			client = new MqttClient("tcp://localhost:1883", "MasSimMqttClient", persistence);
-			client.setCallback(this);
-			MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
-            client.setTimeToWait(9000);
-			client.connect(connOpts);
-            System.out.println("Mqtt connected");
-		} catch(MqttException me) {
-        	DisplayMqttException(me);
-        }
+		if (!simulationMode)
+		{
+			baseTopic = "txstate/rp/masSim/";
+			qos = 2;
+			broker = "tcp://test.mosquitto.org:1883";
+			persistence = new MemoryPersistence();
+			try {
+				//client = new MqttClient("tcp://test.mosquitto.org:1883", "MasSimMqttClient", persistence);
+				//client = new MqttClient("tcp://dev.rabbitmq.com:1883", "MasSimMqttClient", persistence);
+				client = new MqttClient("tcp://localhost:1883", "MasSimMqttClient", persistence);
+				client.setCallback(this);
+				MqttConnectOptions connOpts = new MqttConnectOptions();
+	            connOpts.setCleanSession(true);
+	            client.setTimeToWait(9000);
+				client.connect(connOpts);
+	            System.out.println("Mqtt connected");
+			} catch(MqttException me) {
+	        	DisplayMqttException(me);
+	        }
+		}
 	}
 	
 	public void SubscribeForAgent(String agentName)
 	{
-		try {
-			client.subscribe(GetAgentSpecificTopic(agentName));
-		} catch(MqttException me) {
-        	DisplayMqttException(me);
-        }
+		if (!this.simulationMode)
+		{
+			try {
+				client.subscribe(GetAgentSpecificTopic(agentName));
+			} catch(MqttException me) {
+	        	DisplayMqttException(me);
+	        }
+		}
 	}
 	
 	public void PublishMessage(String agentName, SchedulingCommandType commandType, String commandText)
@@ -85,16 +92,23 @@ public class MqttMessagingProvider implements MqttCallback{
 	
 	public void PublishMessage(String messageString)
 	{
-		try {
-			String agentName = messageString.substring(0, messageString.indexOf(","));
-	        MqttMessage message = new MqttMessage();
-	        message.setPayload(messageString.getBytes());
-	        message.setQos(qos);
-	        String topicForAgent = baseTopic + agentName;
-	        client.publish(topicForAgent, message);
-	    } catch (MqttException e) {
-	        e.printStackTrace();
-	    }
+		if (!simulationMode)
+		{
+			try {
+				String agentName = messageString.substring(0, messageString.indexOf(","));
+		        MqttMessage message = new MqttMessage();
+		        message.setPayload(messageString.getBytes());
+		        message.setQos(qos);
+		        String topicForAgent = baseTopic + agentName;
+		        client.publish(topicForAgent, message);
+		    } catch (MqttException e) {
+		        e.printStackTrace();
+		    }
+		}
+		else
+		{
+			ProcessArrivedMessage(messageString);
+		}
 	}
 
 	
@@ -128,11 +142,19 @@ public class MqttMessagingProvider implements MqttCallback{
 	@Override
 	public void messageArrived(String topic, MqttMessage message)
 	        throws Exception {
-		SchedulingEvent event = SchedulingEvent.Parse(message.toString());
+		ProcessArrivedMessage(message.toString());
+	}
+	
+	private void ProcessArrivedMessage(String message)
+	{
+		SchedulingEvent event = SchedulingEvent.Parse(message);
 		System.out.println("Message Recieved :" + event);
+		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate
+		//the running of separate mqtt listeners in each agent thread, because the same TCP port number gets tied down.
+		//However, the logic expects that not all events go to all listeners, hence a filtering is being done here
 		for(SchedulingEventListener listener : schedulingEventListeners)
 		{
-			if (event.agentName.equals(listener.getName()))
+			if (event.agentName.equals(listener.getName()) || listener.IsGlobalListener())
 				listener.ProcessSchedulingEvent(event);
 		}
 	}

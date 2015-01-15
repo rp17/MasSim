@@ -1,5 +1,9 @@
 package raven.goals;
 
+import masSim.schedule.SchedulingCommandType;
+import masSim.schedule.SchedulingEvent;
+import masSim.schedule.SchedulingEventParams;
+import masSim.world.MqttMessagingProvider;
 import raven.game.RavenBot;
 import raven.game.RoverBot;
 import raven.game.navigation.NavGraphEdge;
@@ -12,6 +16,8 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 	private static double distTolerance = 350.0;
 	//the edge the bot will follow
 	PathEdge  m_Edge;
+
+	private MqttMessagingProvider mq;
 	
 	Vector2D dest;
 	Vector2D source;
@@ -32,6 +38,7 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 		m_Edge = edge;
 		m_dTimeExpected = 0.0;
 		m_bLastEdgeInPath = lastedgeinpath;
+		mq = MqttMessagingProvider.GetMqttProvider();
 	}
 	
 	@Override
@@ -99,6 +106,10 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 		//System.out.println("Distance from destination: " + dist);
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
+				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), "", "0", "0");
+				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
+				LaunchedByMasSim = false;
+				mq.PublishMessage(event);
 			}
 		//}
 		return m_iStatus;

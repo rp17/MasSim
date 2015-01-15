@@ -496,4 +496,8 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	{
 		return schedulingEventListenerName;
 	}
+	@Override
+	public boolean IsGlobalListener() {
+		return false;
+	}
 }

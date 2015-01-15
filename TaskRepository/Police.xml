@@ -1,11 +1,11 @@
 <Taems>
 	<Task id="T3" name="PatrolA" qaf="SumAll" >
-		<Method id="M1T3" name="GoToRegionA" Quality="10" Duration="10" XCoord="200" YCoord="250"></Method>
-		<Method id="M2T3" name="DriveAround" Quality="10" Duration="10" XCoord="200" YCoord="300"></Method>
+		<Method id="M1T3" name="GoToRegionA" Quality="10" Duration="10" XCoord="100" YCoord="250"></Method>
+		<Method id="M2T3" name="DriveAround" Quality="10" Duration="10" XCoord="100" YCoord="300"></Method>
 	</Task>
 	<Task id="T4" name="PatrolB" qaf="SumAll" >
-		<Method id="M4T4" name="GoToRegionA" Quality="10" Duration="10" XCoord="250" YCoord="250"></Method>
-		<Method id="M5T4" name="DriveAround" Quality="10" Duration="10" XCoord="250" YCoord="300"></Method>
+		<Method id="M4T4" name="GoToRegionA" Quality="10" Duration="10" XCoord="300" YCoord="250"></Method>
+		<Method id="M5T4" name="DriveAround" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>
 	</Task>
 	<Task id="T5" name="RespondToAccident" qaf="SumAll" >
 		<Method id="M6T5" name="VisitAccidentLocation" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>

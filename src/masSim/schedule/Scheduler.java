@@ -52,7 +52,7 @@ public class Scheduler implements Runnable {
 			Main.Message(debugFlag, "[Scheduler 56] task added to tempTaskGroup " + task.label + " in " + agent.getName());
 		} else
 			Main.Message(debugFlag, "[Scheduler 56] no new task added. Just calculating base cost");
-		tempTaskGroup.Cleanup();
+		tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
 		schedule = CalculateScheduleFromTaems(tempTaskGroup);
 		return schedule;
 	}
@@ -104,7 +104,7 @@ public class Scheduler implements Runnable {
 			}
 			Main.Message(true, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
 			//Remove completed tasks
-			agent.GetCurrentTasks().Cleanup();
+			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
 			if(agent.GetCurrentTasks().hasChildren())
 			{
 				schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());

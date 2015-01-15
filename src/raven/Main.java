@@ -25,7 +25,7 @@ public class Main {
     public static void main(String args[]) {
     	
     	//Launch a new thread containing a console window to issue commands to agents via mqtt
-    	new Thread(new MqttConsole()).start();
+    	new Thread(new TaskIssuer()).start();
     	
     	Log.setLevel(Level.DEBUG);
     	SchedulingLog.setLevel(Level.INFO);
