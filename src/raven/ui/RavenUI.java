@@ -157,7 +157,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 				if(bot != null && bot instanceof RoverBot) {
 					System.out.println("Starting bot at " + popupLoc.x + " " + popupLoc.y);
 					Waypoints wpts = game.getWpts();
-					((RoverBot)bot).addWptsGoal(wpts);
+					((RoverBot)bot).addWptsGoal(wpts,"");
 				}
 				
 			}
@@ -484,8 +484,9 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 			if(bot != null && bot instanceof RoverBot) {
 				RoverBot rbot = (RoverBot)bot;
 				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot.pos());
-				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints);
-				g.LaunchedByMasSim = true;
+				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints, methodId);
+				if (g!=null)
+					g.LaunchedByMasSim = true;
 			}
 		}
 		return null;

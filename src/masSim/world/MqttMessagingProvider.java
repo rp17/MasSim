@@ -148,7 +148,7 @@ public class MqttMessagingProvider implements MqttCallback{
 	private void ProcessArrivedMessage(String message)
 	{
 		SchedulingEvent event = SchedulingEvent.Parse(message);
-		System.out.println("Message Recieved :" + event);
+		//System.out.println("Message Recieved :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate
 		//the running of separate mqtt listeners in each agent thread, because the same TCP port number gets tied down.
 		//However, the logic expects that not all events go to all listeners, hence a filtering is being done here

@@ -19,7 +19,7 @@ import raven.utils.SchedulingLog;
 
 public class Scheduler implements Runnable {
 	
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
@@ -81,16 +81,15 @@ public class Scheduler implements Runnable {
 		}
 	}
 	
-	
-	
-	public Schedule CalculateSchedule()
+		
+	public synchronized Schedule CalculateSchedule()
 	{
 		try {
 			Main.Message(debugFlag, "[Scheduler 82] Calculate Schedule called");
 			//Read all new tasks
 			int numberOfPendingTasks = this.agent.getPendingTasks().size();
 			if (numberOfPendingTasks<=0) return null;
-			boolean newTasksAssigned = assignTask(null);
+			//boolean newTasksAssigned = assignTask(null);
 			String debugMessage = "";
 			for(int i=0;i<numberOfPendingTasks;i++)
 			{
@@ -99,7 +98,7 @@ public class Scheduler implements Runnable {
 				this.agent.getPendingTasks().remove(0);
 				if (newTask.agent.equals(agent)){
 					agent.GetCurrentTasks().addTask(newTask);
-					Main.Message(debugFlag, "[Scheduler 95] task added " + newTask.label + " in " + agent.getName());
+					Main.Message(debugFlag, "[Scheduler 101] task added " + newTask.label + " in " + agent.getName());
 				}
 			}
 			Main.Message(true, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
@@ -200,10 +199,11 @@ public class Scheduler implements Runnable {
 	//corresponding to the optimum path from the starting task to the ending task
 	public Schedule CalculateScheduleFromTaems(Task topLevelTask)
 	{
+		Main.Message(debugFlag, "[Scheduler 202] Calculating schedule for Top level Tasks:");
 		Iterator ii = topLevelTask.getSubtasks();
 		while(ii.hasNext())
 		{
-			Main.Message(debugFlag, "[Scheduler 123] " + ((Node)ii.next()).label);
+			Main.Message(debugFlag, ((Node)ii.next()).label);
 		}
 		//Reinitialize the schedule item
 	  	schedule = new Schedule();
@@ -280,22 +280,20 @@ public class Scheduler implements Runnable {
 		String m = "";
 		for(Node s:n)
 		{
-			m += s.label;
+			m += s.label + " > ";
 		}
-		Main.Message(debugFlag, "[Scheduler 185]" + m );
+		Main.Message(debugFlag, "[Scheduler 185] Node Methods: " + m );
 	}
 	
 	//A helper method used internally by CalculateScheduleFromTaems method
 	private Method[] AppendAllMethodExecutionRoutes(ArrayList<Method> nodes, ArrayList<MethodTransition> edges, Node task,
 			Method[] appendTo, Node Parent, boolean makeMethodsUnique)
 	{
-		Main.Message(debugFlag, "[Scheduler 185] Calculating subroutes for " + task.label + " " + nodes.size());
 		ArrayList<Method> lastMethodList = new ArrayList<Method>();
 		for(int mIndex = 0; mIndex<appendTo.length; mIndex++)
 		{
 			//For subtasks, look at the relevant QAF, which will constrain how the tasks must be scheduled (and executed)
 			Method lastMethod = appendTo[mIndex];
-			Main.Message(debugFlag, "[Scheduler 189] Routes to append to " + lastMethod.label);
 			if (!task.IsTask())
 			{
 				Method m;
@@ -324,7 +322,7 @@ public class Scheduler implements Runnable {
 					//TODO We can cater for earliest start time introducing wait
 					for(Iterator<Node> subtasks = tk.getSubtasks(); subtasks.hasNext(); ) {
 						Node subtask = subtasks.next();
-						localLastMethodList = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk, false);
+						localLastMethodList = AppendAllMethodExecutionRoutes(nodes, edges, subtask, localLastMethodList, tk, true);
 					}
 					for(int i=0;i<localLastMethodList.length;i++)
 					{
@@ -342,7 +340,6 @@ public class Scheduler implements Runnable {
 					while(subtasks.hasNext()) {
 						Node subtask = subtasks.next();
 						subtasksList.add(subtask);
-						Main.Message(debugFlag, "[Scheduler 244] " + subtask.label);
 					}
 					Node[] subTaskListForSumPermutation = subtasksList.toArray(new Node[subtasksList.size()]);
 					PrintNodeArray(subTaskListForSumPermutation);
@@ -353,16 +350,6 @@ public class Scheduler implements Runnable {
 					Method[] permutationLinkMethodsList = localLastMethodList;
 					for (Node[] s : permutations)
 					{
-						Main.Message(debugFlag, "[Scheduler] Permuted " + permutations.size() + " SumAllQAF for appending to " + tk.label);
-						for(int i=0;i<s.length;i++)
-						{
-							String debugMessage = "";
-							for(Node n : s)
-							{
-								debugMessage += n.label;
-							}
-							Main.Message(debugFlag, debugMessage);
-						}
 						Method[] m = new Method[]{lastMethod};
 						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
 						//only one, then for aesthetic purposes, we can have the same object repeated

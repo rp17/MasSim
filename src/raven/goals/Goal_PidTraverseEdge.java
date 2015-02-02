@@ -106,7 +106,7 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 		//System.out.println("Distance from destination: " + dist);
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
-				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), "", "0", "0");
+				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
 				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
 				LaunchedByMasSim = false;
 				mq.PublishMessage(event);

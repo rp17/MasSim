@@ -34,7 +34,6 @@ public class Method extends Node implements IMethod {
 		else if (nm == FinalPoint) index = 2;
 		else index = Index++;
 		deadline = dl;
-		Main.Message(true, "[Method 35] " + this.label + this.index + " created");
 		this.x = x2;
 		this.y = y2;
 		this.Interrelationships = new ArrayList<Interrelationship>();

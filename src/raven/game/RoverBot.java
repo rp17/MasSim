@@ -50,7 +50,7 @@ public class RoverBot extends RavenBot {
 		steeringNoise = steerNoise;
 		distanceNoise = distNoise;
 	}
-	public GoalComposite<RoverBot> addWptsGoal(Waypoints wpts){
+	public GoalComposite<RoverBot> addWptsGoal(Waypoints wpts, String methodName){
 		if(wpts.size() > 1) {
 			List<PathEdge>  m_Path = new ArrayList<PathEdge>();
 			Vector2D src = wpts.get(0).pos;
@@ -58,7 +58,7 @@ public class RoverBot extends RavenBot {
 			for(int i=1; i < wpts.size(); i++) {
 				Waypoints.Wpt wpt = wpts.get(i);
 				dest = wpt.pos;
-				PathEdge edge = new PathEdge(src, dest, NavGraphEdge.NORMAL, 0);
+				PathEdge edge = new PathEdge(src, dest, NavGraphEdge.NORMAL, 0, methodName);
 				m_Path.add(edge);
 				src = dest;
 			}

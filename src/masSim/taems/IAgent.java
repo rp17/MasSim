@@ -18,7 +18,7 @@ public interface IAgent {
 	public void setPosition(Vector2D pos);
 	public Vector2D getPosition();
 	public String getName();
-	public void MarkMethodCompleted(Method method);
+	public void MarkMethodCompleted(String methodName);
 	public AgentMode getMode();
 	public void setMode(AgentMode mode);
 	public void UpdateSchedule(Schedule schedule);

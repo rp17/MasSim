@@ -11,9 +11,46 @@ public class SchedulingEventParams {
 	public SchedulingEventParams()
 	{}
 	
-	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord)
+	public SchedulingEventParams AddAgentId(String agentId)
 	{
-		this(subjectAgentId, methodId, xCoord, yCoord, "");
+		this.AgentId = agentId;
+		return this;
+	}
+	
+	public SchedulingEventParams AddTaskName(String taskName)
+	{
+		this.TaskName = taskName;
+		return this;
+	}
+	
+	public SchedulingEventParams AddMethodId(String methodId)
+	{
+		this.MethodId = methodId;
+		return this;
+	}
+	
+	public SchedulingEventParams AddXCoord(String xCoord)
+	{
+		this.XCoordinate = xCoord;
+		return this;
+	}
+	
+	public SchedulingEventParams AddYCoord(String yCoord)
+	{
+		this.YCoordinate = yCoord;
+		return this;
+	}
+	
+	public SchedulingEventParams AddXCoord(double xCoord)
+	{
+		this.XCoordinate = xCoord + "";
+		return this;
+	}
+	
+	public SchedulingEventParams AddYCoord(double yCoord)
+	{
+		this.YCoordinate = yCoord + "";
+		return this;
 	}
 	
 	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord, String taskName)

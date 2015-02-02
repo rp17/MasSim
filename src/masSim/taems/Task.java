@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Lock;
 
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
+import masSim.schedule.SchedulingEventParams;
 import masSim.world.MqttMessagingProvider;
 import masSim.world.WorldState;
 import raven.Main;
@@ -119,7 +120,7 @@ public class Task extends Node {
 					if (n.IsComplete())
 					{
 						children.remove(n);
-						mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----"+n.getLabel()));
+						mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
 					}
 					else
 					{
@@ -129,7 +130,7 @@ public class Task extends Node {
 							if (n.IsComplete())//Recheck after cleanup
 							{
 								children.remove(n);
-								mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----"+n.getLabel()));
+								mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
 							}
 						}
 					}

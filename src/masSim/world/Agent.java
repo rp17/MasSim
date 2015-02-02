@@ -45,6 +45,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private TaskRepository taskRepository = new TaskRepository();
 	private ExecutorService schedulerPool;
 	private Scheduler localScheduler;
+	private Method currentMethod = null;
 	
 	public static void main(String[] args) {
 		//Agent to be run via this method in its own jvm
@@ -163,6 +164,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (m.x!=0 && m.y!=0)
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
+			this.currentMethod = m;
 			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			Main.Message(true, "[Agent 76] Agent " + this.label + " executing " + m.label);
 			this.flagScheduleRecalculateRequired = false;
@@ -170,34 +172,39 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	@Override
-	public void MarkMethodCompleted(Method m)
+	public void MarkMethodCompleted(String methodName)
 	{
-		//schedule.get().RemoveElement(e);Does this need to be done?
-		m.MarkCompleted();
-		WorldState.CompletedMethods.add(m);
-		Main.Message(true, "[Agent 130] " + m.label + " added to completed queue");
-		if (currentSchedule!=null)
+		Main.Message(true, "[Agent 176] Agent Calling complete for " + methodName + " for agent " + this.label);
+		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
 		{
-			Iterator<ScheduleElement> el = currentSchedule.getItems();
-			if(el.hasNext())
+			//schedule.get().RemoveElement(e);Does this need to be done?
+			currentMethod.MarkCompleted();
+			WorldState.CompletedMethods.add(currentMethod);
+			Main.Message(true, "[Agent 130] " + currentMethod.label + " added to completed queue");
+			if (currentSchedule!=null)
 			{
-				ScheduleElement e = el.next();
-				if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
-					e = el.next();
-				if (m.equals(e.getMethod()))
+				Iterator<ScheduleElement> el = currentSchedule.getItems();
+				if(el.hasNext())
 				{
-					currentSchedule.RemoveElement(e);
-					Main.Message(true, "[Agent 135] Removed " + e.getName() + " from schedule");
+					ScheduleElement e = el.next();
+					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
+						e = el.next();
+					if (currentMethod.equals(e.getMethod()))
+					{
+						currentSchedule.RemoveElement(e);
+						Main.Message(true, "[Agent 135] Removed " + e.getName() + " from schedule");
+					}
 				}
 			}
+			this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+			flagScheduleRecalculateRequired = true;
+			Main.Message(true, "[Agent 87] " + currentMethod.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
+			status=Status.PROCESSNG;
 		}
-		this.mq.PublishMessage("",SchedulingCommandType.DISPLAYREMOVEMETHOD, m.label + "-"+ m.x + "-" + m.y);
-		flagScheduleRecalculateRequired = true;
-		Main.Message(true, "[Agent 87] " + m.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 	}
 	
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
-		SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2));
+		SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
 		SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
         mq.PublishMessage(worldEvent);
     }
@@ -276,8 +283,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
 		while(true)
 		{
-			if (status==Status.PROCESSNG)
+			if (status==Status.PROCESSNG){
 				executeNextTask();
+			}
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -332,6 +340,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			RegisterChildrenWithUI(task);
 			this.pendingTasks.add(task);
 			schedulerPool.execute(localScheduler);
+		}
+		if (event.commandType==SchedulingCommandType.METHODCOMPLETED && event.agentName.equalsIgnoreCase(this.getName()))
+		{
+			String completedMethodName = event.params.MethodId;
+			if (completedMethodName!=null)
+				MarkMethodCompleted(completedMethodName);
 		}
 		return null;
 	}
