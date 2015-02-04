@@ -8,6 +8,6 @@
 		<Method id="M5T4" name="DriveAroundB" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>
 	</Task>
 	<Task id="T5" name="RespondToAccident" qaf="SumAll" >
-		<Method id="M6T5" name="VisitAccidentLocation" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>
+		<Method id="M6T5" name="VisitAccidentLocation" Quality="10" Duration="10" XCoord="400" YCoord="300"></Method>
 	</Task>
 </Taems>

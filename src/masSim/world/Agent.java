@@ -125,9 +125,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			{
 				if (this.equals(task.agent))
 				{
-					Main.Message(debugFlag, "[Agent] " + getName() + " assigned " + task.label);
-					this.RegisterChildrenWithUI(task);
-					this.AddTask(task);
+					//Main.Message(debugFlag, "[Agent] " + getName() + " assigned " + task.label);
+					//this.RegisterChildrenWithUI(task);
+					//this.AddTask(task);
+					//return true;
 					return true;
 				}
 				else if (this.getAgentsUnderManagement().contains(task.agent)) 
@@ -149,7 +150,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
 				task.AssignAgent(selectedAgent);
 				Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
-				return assignTask(task);
+				SchedulingEventParams params = new SchedulingEventParams().AddTaskName(task.getLabel());
+				SchedulingEvent event = new SchedulingEvent(selectedAgent.getName(), SchedulingCommandType.ASSIGNTASK, params);
+				mq.PublishMessage(event);
+				return true;
 			}
 		}
 		catch(Exception ex)
