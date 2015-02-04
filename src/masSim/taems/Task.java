@@ -37,6 +37,17 @@ public class Task extends Node {
 		return this.children.size()>0;
 	}
 	
+	public ArrayList<Method> GetMethods()
+	{
+		ArrayList<Method> methods = new ArrayList<Method>();
+		for(Node n: children)
+		{
+			if (!n.IsTask())
+				methods.add((Method)n);
+		}
+		return methods;
+	}
+	
 	public void AssignAgent(IAgent ag)
 	{
 		this.agent=ag;

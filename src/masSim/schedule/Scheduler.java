@@ -26,42 +26,9 @@ public class Scheduler implements Runnable {
 	
 	private IAgent agent;
 	
-	//Represents the current final optimum schedule calculated for the taskGroup member
-	private Schedule schedule;
-	
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
-	}
-	
-	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
-	{
-		//Make a copy
-		if (task!=null) taskAgent = task.agent;
-		Task tempTaskGroup = new Task("Task Group",new SumAllQAF(), taskAgent);
-		Iterator<Node> copyTasks = this.agent.GetCurrentTasks().getSubtasks();
-		while(copyTasks.hasNext())
-		{
-			tempTaskGroup.addTask(copyTasks.next());
-		}
-		//Sometimes we want to calculate base cost of executing existing tasks, without assiging a new one, where this
-		//method will be called with a null value. So this check is necessary
-		if (task!=null)
-		{
-			tempTaskGroup.addTask(task);
-			Main.Message(debugFlag, "[Scheduler 56] task added to tempTaskGroup " + task.label + " in " + agent.getName());
-		} else
-			Main.Message(debugFlag, "[Scheduler 56] no new task added. Just calculating base cost");
-		tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
-		schedule = CalculateScheduleFromTaems(tempTaskGroup);
-		return schedule;
-	}
-		
-	//A public method to feed new tasks to the scheduler
-	public void AddTask(Task pendingTask)
-	{
-		Main.Message(debugFlag, "[Scheduler 62] Added Pending task " + pendingTask.label + " to Scheduler " + this.hashCode());
-		agent.getPendingTasks().add(pendingTask);
 	}
 	
 	//This is the main method of the scheduler, which implements runnable interface of java thread
@@ -80,7 +47,6 @@ public class Scheduler implements Runnable {
 				this.agent.UpdateSchedule(schedule);	
 		}
 	}
-	
 		
 	public synchronized Schedule CalculateSchedule()
 	{
@@ -106,7 +72,7 @@ public class Scheduler implements Runnable {
 			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
 			if(agent.GetCurrentTasks().hasChildren())
 			{
-				schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
+				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
 				Main.Message(true, "[Scheduler 94] " + schedule.toString());
 				return schedule;
 			}
@@ -117,83 +83,6 @@ public class Scheduler implements Runnable {
 		return null;
 	}
 	
-	public boolean assignTask(Task task){
-		try{
-			if (task.IsFullyAssigned())
-			{
-				if (this.agent.equals(task.agent))
-				{
-					Main.Message(debugFlag, "[Agent] " + agent.getName() + " assigned " + task.label);
-					this.agent.RegisterChildrenWithUI(task);
-					this.AddTask(task);
-					return true;
-				}
-				else if (this.agent.getAgentsUnderManagement().contains(task.agent)) 
-				{
-					//TODO This will not be needed as the tasks picked up by this agent will be those of its own
-					//or ones not assigned. Otherwise, each agent will pick their own from mqtt
-					//Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
-					//assignTask(task);
-				}
-				else
-				{
-					Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.agent.getName());
-				}
-				return false;
-			}
-			else
-			{
-				//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
-				//Calculate which agent is best to assign
-				int baseQuality = getExpectedScheduleQuality(null, this.agent);
-				int qualityWithThisAgent = getExpectedScheduleQuality(task, this.agent);
-				int addedQuality = qualityWithThisAgent - baseQuality;
-				Main.Message(true, "[Agent 162] Quality with agent " + this.agent.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + addedQuality);
-				IAgent selectedAgent = this.agent;
-				for(IAgent ag : this.agent.getAgentsUnderManagement())
-				{
-					baseQuality = getExpectedScheduleQuality(null, ag);
-					qualityWithThisAgent = getExpectedScheduleQuality(task, ag);
-					int newAddedQuality = qualityWithThisAgent-baseQuality;
-					Main.Message(true, "[Agent 162] Quality with agent " + this.agent.getName() + " " + qualityWithThisAgent + " + " + baseQuality + " = " + newAddedQuality);
-					if (newAddedQuality>addedQuality)
-					{
-						addedQuality = newAddedQuality;
-						selectedAgent = ag;
-					}
-				}
-			//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
-			task.AssignAgent(selectedAgent);
-			Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
-			return assignTask(task);
-			}
-		}
-		catch(Exception ex)
-		{
-			Main.Message(true, "[Agent 282] Exception: " + ex.toString());
-		}
-		return false;
-	}
-	
-	public int getExpectedScheduleQuality(Task task, IAgent agent) {
-		int cost = 0;
-		Schedule sc;
-		if (task!=null)
-		{
-			IAgent previousAgent = task.agent;
-			task.agent = agent;
-			sc = GetScheduleCostSync(task, agent);
-			cost = sc.TotalQuality;
-			task.agent = previousAgent;
-		}
-		else{
-			sc = GetScheduleCostSync(null, agent);
-			cost = sc.TotalQuality;
-		}
-		SchedulingLog.info(this.agent.getName() + " Negotiated: " + sc.toString() + System.lineSeparator());
-		return cost;
-	}
-
 	//Method takes a Teams structure as input and outputs all the possible schedules resulting from that
 	//task structure. This output is then fed to a generic Dijkstra's algorithm to calculate the optimum schedule
 	//corresponding to the optimum path from the starting task to the ending task
@@ -206,7 +95,7 @@ public class Scheduler implements Runnable {
 			Main.Message(debugFlag, ((Node)ii.next()).label);
 		}
 		//Reinitialize the schedule item
-	  	schedule = new Schedule();
+	  	Schedule schedule = new Schedule();
 	  	//Reinitialize the start time of calculation
 	  	startTime = new Date();
 	

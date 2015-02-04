@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.sample.MQTTAgent;
@@ -16,6 +17,13 @@ import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
 import masSim.taems.IAgent;
 import masSim.taems.Task;
+
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+
 
 //import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 //import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -27,7 +35,7 @@ import masSim.taems.Task;
 //import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 //import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
-public class MqttMessagingProvider extends TestMQTTAgent {
+public class MqttMessagingProvider implements MqttCallback {
 
 	private boolean simulationMode = true;
 	private String baseTopic;
@@ -111,6 +119,38 @@ public class MqttMessagingProvider extends TestMQTTAgent {
 	        }
 		}
 	}
+	
+	public static String getNodeMacAddress(){
+		 try {
+			    InetAddress ip = InetAddress.getLocalHost();
+			    System.out.println("Current IP address : " + ip.getHostAddress());
+
+			    Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
+			    while(networks.hasMoreElements()) {
+			      NetworkInterface network = networks.nextElement();
+			      byte[] mac = network.getHardwareAddress();
+
+			      if(mac != null) {
+			        System.out.print("Current MAC address : ");
+
+			        StringBuilder sb = new StringBuilder();
+			        for (int i = 0; i < mac.length; i++) {
+			          sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+			        }
+			        System.out.println(sb.toString());
+			        return sb.toString();
+			      }
+			    }
+			    return null;
+		  } catch (UnknownHostException e) {
+		    e.printStackTrace();
+		    return null;
+		  } catch (SocketException e){
+		    e.printStackTrace();
+		    return null;
+		  }
+	}
+
 	
 	public void PublishMessage(String agentName, SchedulingCommandType commandType, String commandText)
 	{

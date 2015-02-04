@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Observable;
 
 import raven.Main;
+import raven.math.Vector2D;
 import masSim.schedule.Scheduler;
 import masSim.world.AgentMode;
 import masSim.world.WorldState;
@@ -52,7 +53,10 @@ public class Method extends Node implements IMethod {
 	{
 		this.Interrelationships.add(relationship);
 	}
-	
+	public Vector2D getPosition()
+	{
+		return new Vector2D(this.x, this.y);
+	}
 	@Override
 	public synchronized void MarkCompleted()
 	{
