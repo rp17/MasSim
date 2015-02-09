@@ -1,5 +1,6 @@
 package masSim.taems;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
@@ -35,14 +36,17 @@ public class Schedule {
 	public Iterator<ScheduleElement> getItems() {
 		return items.iterator();
 	}
-	public void Merge(Schedule sch)
+	public synchronized void Merge(Schedule sch)
 	{
-		Schedule mergedSchedule = new Schedule();
 		ScheduleElement first = null;
 		ScheduleElement last = null;
-		PriorityQueue<ScheduleElement> orderedElements = new PriorityQueue<ScheduleElement>();
+		Queue<ScheduleElement> mergedList = new ConcurrentLinkedQueue<ScheduleElement>();
+		List<ScheduleElement> cachedNewList = new ArrayList<ScheduleElement>();
+		//First, loop through all elements of new schedule
 		for(ScheduleElement el : sch.items)
 		{
+			//Save its first and last methods, as these will be given priority over first and last methods of
+			//old schedule
 			if (el.getMethod().isStartMethod())
 			{
 				first = el;
@@ -51,44 +55,65 @@ public class Schedule {
 			{
 				last = el;
 			}
-			else if (orderedElements.contains(el))
-			{
-				//skip
-			}
 			else
 			{
-				orderedElements.add(el);
+				//Cache these new elements
+				cachedNewList.add(el);
+			}
+			//Remove all those elements from the old schedule, which are also present in new one 
+			//since they'd be the updated versions of those same methods
+			if (ContainsSameMethod(this.items,el))
+			{
+				this.items.remove(el);
 			}
 		}
+		//Now we have a pruned over schedule containing only those elements which were not present in new
+		//one and thus need to be brought in. Loop through old schedule and being them in
 		for(ScheduleElement el : this.items)
 		{
-			if (el.getMethod().isStartMethod())
+			if (el.getMethod().isStartMethod())//If first was not found in new schedule
 			{
-				first = el;
+				if (first==null)
+					first = el;
+				//By this time we should have a first method, so add it to new merged schedule now
+				mergedList.add(first);
 			}
-			else if (el.getMethod().isEndMethod())
+			else if (el.getMethod().isEndMethod())//If last was not found in new schedule
 			{
-				last = el;
-			}
-			else if (orderedElements.contains(el))
-			{
-				//skip
+				if (last==null)
+					last = el;//By this time, we should have a last, but don't add it yet to schedule
 			}
 			else
 			{
-				orderedElements.add(el);
+				mergedList.add(el);//Add all elements of old schedule
 			}
 		}
-		if (first != null)
-			mergedSchedule.items.add(first);
-		while(!orderedElements.isEmpty())
+		//If old schedule was empty, first did not get added, so check and add now
+		if (!ContainsSameMethod(mergedList,first))
 		{
-			mergedSchedule.addItem(orderedElements.poll());
+			mergedList.add(first);
 		}
-		if (last != null)
-			mergedSchedule.items.add(last);
-		this.items = mergedSchedule.items;
+		//Now that we are done adding all elements of old schedule, along with a first, add new elements and last
+		for(ScheduleElement el : cachedNewList)
+		{
+			mergedList.add(el);
+		}
+		//Finally add the last method
+		mergedList.add(last);
+		this.items = mergedList;
 	}
+	
+	private boolean ContainsSameMethod(Collection<ScheduleElement> one, ScheduleElement two)
+	{
+		//Different from equals() because it will check name rather than id
+		for(ScheduleElement el : one)
+		{
+			if (el.getName().equals(two.getName()))
+				return true;
+		}
+		return false;
+	}
+	
 	@Override
 	public String toString()
 	{

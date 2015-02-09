@@ -67,6 +67,10 @@ public class ScheduleElement implements Comparable<ScheduleElement>
 
 	@Override
 	public int compareTo(ScheduleElement arg0) {
+		if (this.method==null) return 0;
+		if (this.method.agent==null) return 0;
+		if (arg0.method==null) return 0;
+		if (arg0.method.agent==null) return 0;
 		Vector2D agentPos1 = this.getMethod().agent.getPosition();
 		double dist1 = agentPos1.distance(this.getMethod().getPosition());
 		Vector2D agentPost2 = arg0.getMethod().agent.getPosition();
