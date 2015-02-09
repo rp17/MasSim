@@ -4,7 +4,10 @@ import java.util.*;
 import java.io.*;
 import java.awt.*;
 
-public class ScheduleElement {
+import raven.math.Vector2D;
+
+public class ScheduleElement implements Comparable<ScheduleElement>
+{
 	  private String name;
 	  private Method method;
 	  private double elapsedTime;
@@ -61,5 +64,14 @@ public class ScheduleElement {
 	  }
 	  
 	  public Status getStatus(){return status;}
+
+	@Override
+	public int compareTo(ScheduleElement arg0) {
+		Vector2D agentPos1 = this.getMethod().agent.getPosition();
+		double dist1 = agentPos1.distance(this.getMethod().getPosition());
+		Vector2D agentPost2 = arg0.getMethod().agent.getPosition();
+		double dist2 = agentPost2.distance(arg0.getMethod().getPosition());
+		return (int)(dist1 - dist2);
+	}
 	  
 }

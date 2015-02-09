@@ -2,6 +2,7 @@ package masSim.taems;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
@@ -36,8 +37,57 @@ public class Schedule {
 	}
 	public void Merge(Schedule sch)
 	{
-		items.clear();
-		items.addAll(sch.items);
+		Schedule mergedSchedule = new Schedule();
+		ScheduleElement first = null;
+		ScheduleElement last = null;
+		PriorityQueue<ScheduleElement> orderedElements = new PriorityQueue<ScheduleElement>();
+		for(ScheduleElement el : sch.items)
+		{
+			if (el.getMethod().isStartMethod())
+			{
+				first = el;
+			}
+			else if (el.getMethod().isEndMethod())
+			{
+				last = el;
+			}
+			else if (orderedElements.contains(el))
+			{
+				//skip
+			}
+			else
+			{
+				orderedElements.add(el);
+			}
+		}
+		for(ScheduleElement el : this.items)
+		{
+			if (el.getMethod().isStartMethod())
+			{
+				first = el;
+			}
+			else if (el.getMethod().isEndMethod())
+			{
+				last = el;
+			}
+			else if (orderedElements.contains(el))
+			{
+				//skip
+			}
+			else
+			{
+				orderedElements.add(el);
+			}
+		}
+		if (first != null)
+			mergedSchedule.items.add(first);
+		while(!orderedElements.isEmpty())
+		{
+			mergedSchedule.addItem(orderedElements.poll());
+		}
+		if (last != null)
+			mergedSchedule.items.add(last);
+		this.items = mergedSchedule.items;
 	}
 	@Override
 	public String toString()

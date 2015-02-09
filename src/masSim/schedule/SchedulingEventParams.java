@@ -89,7 +89,16 @@ public class SchedulingEventParams {
 	@Override
 	public String toString()
 	{
-		return this.XCoordinate + "-" + this.YCoordinate + "-" +
-				this.AgentId + "-" + this.MethodId + "-" + this.TaskName;
+		String result = "";
+		if (this.XCoordinate!=null) result += this.XCoordinate;
+		result += "-";
+		if (this.YCoordinate!=null) result += this.YCoordinate;
+		result += "-";
+		if (this.AgentId!=null) result += this.AgentId;
+		result += "-";
+		if (this.MethodId!=null) result += this.MethodId;
+		result += "-";
+		if (this.TaskName!=null) result += this.TaskName;
+		return result;
 	}
 }

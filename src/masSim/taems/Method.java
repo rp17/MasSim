@@ -28,6 +28,7 @@ public class Method extends Node implements IMethod {
 	public Method(String nm, double outcomeQuality, double x2, double y2){
 		this(nm,outcomeQuality, -1, x2, y2, 0, null);
 	}
+	
 	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
 		outcome = new Outcome(outcomeQuality, outcomeDuration, 0);
@@ -40,6 +41,17 @@ public class Method extends Node implements IMethod {
 		this.Interrelationships = new ArrayList<Interrelationship>();
 		if (ir!=null) this.Interrelationships = ir;
 	}
+	
+	public boolean isStartMethod()
+	{
+		return index == 1;
+	}
+	
+	public boolean isEndMethod()
+	{
+		return index == 2;
+	}
+	
 	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl)
 	{
 		this(nm,outcomeQuality, outcomeDuration, x2, y2, 0, null);

@@ -373,7 +373,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void UpdateSchedule(Schedule newSchedule)
 	{
-		this.currentSchedule = newSchedule;
+		this.currentSchedule.Merge(newSchedule);
+		
 	}
 	
 	private void executeNextTask() {
