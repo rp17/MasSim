@@ -50,6 +50,7 @@ public class Task extends Node {
 	
 	public void AssignAgent(IAgent ag)
 	{
+		Main.Message(debugFlag, "[Agent 175] Assigning " + this.label + " to " + this.agent.getName());
 		this.agent=ag;
 		for(Node n: children)
 		{

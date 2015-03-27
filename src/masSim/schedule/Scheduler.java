@@ -19,7 +19,7 @@ import raven.utils.SchedulingLog;
 
 public class Scheduler implements Runnable {
 	
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
@@ -38,10 +38,10 @@ public class Scheduler implements Runnable {
 	@Override
 	public void run() 
 	{
-		
-		if (!this.agent.getPendingTasks().isEmpty())
+		List<Task> pendingTasks = this.agent.getPendingTasks();
+		if (!pendingTasks.isEmpty())
 		{
-			Main.Message(true, "Pending task found");
+			Main.Message(debugFlag, pendingTasks.size() + " pending task found");
 			Schedule schedule = CalculateSchedule();
 			if (schedule!=null)
 				this.agent.UpdateSchedule(schedule);	
@@ -67,18 +67,18 @@ public class Scheduler implements Runnable {
 					Main.Message(debugFlag, "[Scheduler 101] task added " + newTask.label + " in " + agent.getName());
 				}
 			}
-			Main.Message(true, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
+			Main.Message(debugFlag, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
 			//Remove completed tasks
 			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
 			if(agent.GetCurrentTasks().hasChildren())
 			{
 				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
-				Main.Message(true, "[Scheduler 94] " + schedule.toString());
+				Main.Message(debugFlag, "[Scheduler 94] " + schedule.toString());
 				return schedule;
 			}
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
-			Main.Message(true, "[Schedular 109]" + e.toString());
+			Main.Message(debugFlag, "[Schedular 109]" + e.toString());
 		}
 		return null;
 	}
@@ -135,7 +135,7 @@ public class Scheduler implements Runnable {
 		        {
 		    		totalquality += vertex.getOutcome().getQuality();
 		    		schedule.addItem(new masSim.taems.ScheduleElement(vertex));
-		    		Main.Message(true, "[Scheduler 167] " + vertex.label + " " + vertex.getOutcome().getQuality());
+		    		Main.Message(debugFlag, "[Scheduler 167] " + vertex.label + " " + vertex.getOutcome().getQuality());
 		        }
 		    }
 	    schedule.TotalQuality = totalquality;

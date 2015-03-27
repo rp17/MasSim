@@ -68,7 +68,7 @@ public class RoverBot extends RavenBot {
 			brain.ClearAndAddSubgoal(g);
 			return g;
 		}
-		Main.Message(true, "[RoverBot 70] Waypoints size is zero or one");
+		Main.Message(true, "[RoverBot 70] Possible Error: Waypoints size is zero or one");
 		return null;
 	}
 	

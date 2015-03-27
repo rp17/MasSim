@@ -51,8 +51,6 @@ public class Main {
 
 	private static void gameLoop() {
     	
-    	Log.info("raven", "Starting game...");
-    	
     	long lastTime = System.nanoTime();
     	
     	while (true) {

@@ -73,7 +73,6 @@ public class RavenGame {
 	private volatile int botsToAdd;
 
 	private void clear() {
-		Log.debug("game", "Clearing Map");
 		// delete the bots
 		bots.clear();
 		// delete any active projectiles
@@ -391,7 +390,6 @@ public class RavenGame {
 		EntityManager.reset();
 		//addBots(RavenScript.getInt("NumBots"));
 		
-		Log.info("game", "Loaded map " + map);
 		
 		return true;
 	}
@@ -604,7 +602,6 @@ public class RavenGame {
 
 	public boolean togglePause() {
 		paused = !paused;
-		Log.info("game", paused ? "Paused" : "Unpaused");
 		
 		//TODO ASIFCODE Move this code to a proper location (Controller) from where tasks can be updated and invoked for display in the game
 		/*Agent helicopter1 = new Agent("Helicopter1");
@@ -781,12 +778,12 @@ public class RavenGame {
 	public Waypoints getWpts() {return wpts;}
 	public Waypoints getWptsForMethodExecution(String methodName, Vector2D currentPosition)
 	{
-		//Main.Message(true, "[RavenGame 790] getting waypoints for " + methodName );
+		//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
 		Waypoints local = new Waypoints();
 		for(int i=0;i<wpts.size();i++)
 		{
 			Waypoints.Wpt wp = wpts.get(i);
-			//Main.Message(true, "[RavenGame 790] Testing waypoint " + wp.name );
+			//Main.Message(debugFlag, "[RavenGame 790] Testing waypoint " + wp.name );
 			if (wp.name.equals(methodName))
 			{
 				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));

@@ -92,11 +92,11 @@ public class Method extends Node implements IMethod {
 		if ((totalDurationTillNow)>deadline && deadline!=0) 
 		{
 			d.quality = Long.MIN_VALUE;
-			Main.Message(true, "[Method 54] Using infinitely negative utility because of " + deadline + " deadline breakage by duration " + totalDurationTillNow);
+			Main.Message(debugFlag, "[Method 54] Using infinitely negative utility because of " + deadline + " deadline breakage by duration " + totalDurationTillNow);
 		}
 		else
 		{
-			//Main.Message(true, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
+			//Main.Message(debugFlag, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
 			d.quality = this.outcome.quality;
 			if (d.quality>heuristicQuality)
 			{

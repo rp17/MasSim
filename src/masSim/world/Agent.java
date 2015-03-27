@@ -30,7 +30,8 @@ import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
+	private boolean errorFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Schedule currentSchedule = new Schedule();
@@ -119,7 +120,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		getPendingTasks().add(pendingTask);
 	}
 		
-	public boolean assignTask(Task task){
+	public boolean negotiateAssignmentOfTask(Task task){
 		try{
 			if (task.IsFullyAssigned())
 			{
@@ -140,7 +141,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 				else
 				{
-					Main.Message(debugFlag, task.agent.getCode() + " is not a child of " + this.getName());
+					Main.Message(debugFlag, "Possible Error: " + task.agent.getCode() + " is not a child of " + this.getName());
 				}
 				return false;
 			}
@@ -149,7 +150,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				Agent selectedAgent = FindBestAgentForTaskParallel(task);
 				//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
 				task.AssignAgent(selectedAgent);
-				Main.Message(true, "[Agent 175] Assigning " + task.label + " to " + task.agent.getName());
 				SchedulingEventParams params = new SchedulingEventParams().AddTaskName(task.getLabel());
 				SchedulingEvent event = new SchedulingEvent(selectedAgent.getName(), SchedulingCommandType.ASSIGNTASK, params);
 				mq.PublishMessage(event);
@@ -158,14 +158,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		catch(Exception ex)
 		{
-			Main.Message(true, "[Agent 282] Exception: " + ex.toString());
+			Main.Message(debugFlag, "[Agent 282] Exception: " + ex.toString());
 		}
 		return false;
 	}
 	
 	public Agent FindBestAgentForTaskParallel(Task task)
 	{
-		//Italian guy practical applications to quadrovers. Look at that.dellefave-IAAI-12.pdf
+		Main.Message(debugFlag, "[Agent 168] Finding Best Agent for " + task.getLabel());
 		//Calculate which agent is best to assign
 		int currentQuality = getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(task, this);
 		IAgent selectedAgent = this;
@@ -183,56 +183,47 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	private int getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(Task task, IAgent agent)
 	{
+		int result = 0;
 		try {
 			Future<Integer> baseQualityFuture = getExpectedScheduleQuality(null, this);
 			Future<Integer> incrementalQualityFuture = getExpectedScheduleQuality(task, this);
-			int base = baseQualityFuture.get(3, TimeUnit.SECONDS);
-			int incremental = incrementalQualityFuture.get(3, TimeUnit.SECONDS);
-			return incremental-base;
+			int base = baseQualityFuture.get(5, TimeUnit.SECONDS);
+			int incremental = incrementalQualityFuture.get(5, TimeUnit.SECONDS);
+			result = incremental-base;
+			Main.Message(debugFlag, "Quality increase for " + agent.getName() + " if assigned "	+ task.getLabel() + " is " + result);
 		} catch (IOException | InterruptedException | ExecutionException
 				| TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Main.Message(debugFlag, "Failed to obtain Quality increase for " + agent.getName() + " if assigned "	+ task.getLabel() + ". Using default of 0");
+			return 0;
 		}
-		return 0;
+		return result;
 	}
 	
 	public Future<Integer> getExpectedScheduleQuality(final Task task, final IAgent agent) throws IOException {
 		return schedulerPool.submit(new Callable<Integer>() {
 			@Override
 			public Integer call() throws Exception {
-				if (task==null || agent==null) return 0;
-				boolean positionBasedApproach = true;
-				if (positionBasedApproach)
+				/*if (agent==null) 
+					Main.Message(errorFlag, "[Agent 208] Possible Error. Agent is null");
+				int cost = 0;
+				Schedule sc;
+				if (task!=null)
 				{
-					Vector2D agentPosition = agent.getPosition();
-					ArrayList<Method> methods = task.GetMethods();
-					Double result = 0d;
-					for(Method n: methods)
-					{
-						result += agentPosition.distance(n.getPosition());
-					}
-					return 100-result.intValue();
+					IAgent previousAgent = task.agent;
+					task.agent = agent;
+					sc = GetScheduleCostSync(task, agent);
+					cost = sc.TotalQuality;
+					task.agent = previousAgent;
+					Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " if assigned " + task.label);
 				}
-				else //ScheduleBasedApproach
-				{
-					int cost = 0;
-					Schedule sc;
-					if (task!=null)
-					{
-						IAgent previousAgent = task.agent;
-						task.agent = agent;
-						sc = GetScheduleCostSync(task, agent);
-						cost = sc.TotalQuality;
-						task.agent = previousAgent;
-					}
-					else{
-						sc = GetScheduleCostSync(null, agent);
-						cost = sc.TotalQuality;
-					}
-					SchedulingLog.info(getName() + " Negotiated: " + sc.toString() + System.lineSeparator());
-					return cost;
+				else{
+					sc = GetScheduleCostSync(null, agent);
+					cost = sc.TotalQuality;
+					Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " in base schedule");
 				}
+				
+				return cost;*/
+				return 10;
 			}
 		});
 	}
@@ -247,14 +238,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			tempTaskGroup.addTask(copyTasks.next());
 		}
-		//Sometimes we want to calculate base cost of executing existing tasks, without assiging a new one, where this
+		//Sometimes we want to calculate base cost of executing existing tasks, without assigning a new one, where this
 		//method will be called with a null value. So this check is necessary
 		if (task!=null)
 		{
 			tempTaskGroup.addTask(task);
-			Main.Message(debugFlag, "[Scheduler 56] task added to tempTaskGroup " + task.label + " in " + getName());
-		} else
-			Main.Message(debugFlag, "[Scheduler 56] no new task added. Just calculating base cost");
+		}
 		tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
 		this.schedule = this.localScheduler.CalculateScheduleFromTaems(tempTaskGroup);
 		return schedule;
@@ -315,7 +304,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		while (!AreEnablersInPlace(m))
 		{
-			Main.Message(true, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
+			Main.Message(debugFlag, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
 			Thread.sleep(1000);
 		}
 		if (m.x!=0 && m.y!=0)
@@ -323,7 +312,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
 			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
-			Main.Message(true, "[Agent 76] Agent " + this.label + " executing " + m.label);
+			Main.Message(debugFlag, "[Agent 76] Agent " + this.label + " executing " + m.label);
 			this.flagScheduleRecalculateRequired = false;
 		}
 	}
@@ -331,13 +320,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public void MarkMethodCompleted(String methodName)
 	{
-		Main.Message(true, "[Agent 176] Agent Calling complete for " + methodName + " for agent " + this.label);
 		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
 		{
 			//schedule.get().RemoveElement(e);Does this need to be done?
 			currentMethod.MarkCompleted();
 			WorldState.CompletedMethods.add(currentMethod);
-			Main.Message(true, "[Agent 130] " + currentMethod.label + " added to completed queue");
+			Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
@@ -349,13 +337,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					if (currentMethod.equals(e.getMethod()))
 					{
 						currentSchedule.RemoveElement(e);
-						Main.Message(true, "[Agent 135] Removed " + e.getName() + " from schedule");
+						Main.Message(debugFlag, "[Agent 135] Removed " + e.getName() + " from schedule");
 					}
 				}
 			}
 			this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
 			flagScheduleRecalculateRequired = true;
-			Main.Message(true, "[Agent 87] " + currentMethod.label + " completed and recalc flag set to " + flagScheduleRecalculateRequired);
 			status=Status.PROCESSNG;
 		}
 	}
@@ -391,7 +378,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					else
 						return;
 					Method m = e.getMethod();
-					Main.Message(debugFlag, "[Agent 197] Next method to be executed from schedule " + m.label);
 					ExecuteTask(m);	
 				}
 			}
@@ -424,12 +410,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			ScheduleElement el = currentSchedule.peek();
 			ScheduleElement.Status status = el.update(tick);
 			if(status == ScheduleElement.Status.COMPLETED) {
-				System.out.println("Agent " + label + " completed item " + el.getName());
+				Main.Message(debugFlag, "Agent " + label + " completed item " + el.getName());
 				currentSchedule.poll();
 			}
 		}
 		else {
-			System.out.println("Agent " + label + " idle");
+			Main.Message(debugFlag, "Agent " + label + " idle");
 		}
 	}
 
@@ -464,7 +450,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public void AddChildAgent(IAgent agent){
 		if (agentsUnderManagement==null)
-			System.out.println("Child Agent being added to non-managing agent");
+			Main.Message(debugFlag, "Child Agent being added to non-managing agent");
 		this.agentsUnderManagement.add(agent);
 	}
 
@@ -508,7 +494,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (event.commandType==SchedulingCommandType.NEGOTIATE && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
-			this.assignTask(task);
+			this.negotiateAssignmentOfTask(task);
 		}
 		return null;
 	}

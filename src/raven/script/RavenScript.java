@@ -24,7 +24,6 @@ public class RavenScript extends GameScript {
 			System.err.println(e.getLocalizedMessage());
 			System.exit(1);
 		}
-		System.out.println("Loaded parameters.");
 	}
 	
 	public static String getString(String name) {

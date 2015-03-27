@@ -19,6 +19,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import raven.Main;
 import masSim.taems.ExactlyOneQAF;
 import masSim.taems.Method;
 import masSim.taems.QAF;
@@ -28,6 +29,7 @@ import masSim.taems.Task;
 
 public class TaskRepository {
 	
+	boolean debugFlag = true;
 	String repositoryFolderPath = "";
 	Map<String,Task> taskDefinitions;
 	
@@ -60,6 +62,7 @@ public class TaskRepository {
 				if (node instanceof Element) {
 					Task t = ParseTask(node);
 					this.taskDefinitions.put(t.getLabel(), t);
+					Main.Message(debugFlag, "Task " + t.label + " added to repository");
 				}
 			}
 		} 

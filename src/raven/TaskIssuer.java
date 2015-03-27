@@ -45,7 +45,6 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
 		try {
 			Thread.sleep(5000);
-			System.out.println("Launching tasks");
 			RelaunchExecutionLoop();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -67,6 +66,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		TasksPendingCompletion.addAll(MasterTaskList);
 		for(String taskMessage : TasksPendingCompletion)
 		{
+			Main.Message(true, "[TaskIssuer 69] Issuing message " + taskMessage);
 			mq.PublishMessage(taskMessage);
 		}
 	}

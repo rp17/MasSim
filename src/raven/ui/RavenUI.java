@@ -77,16 +77,12 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 	
 	public RavenUI(RavenGame game) {
 		super("Raven");
-		
-		Log.info("gui", "Initializing...");
 		// Ensure we have the right size
 		this.game = game;
 		width = game.getMap().getSizeX();
     	height = game.getMap().getSizeY();
 		
-    	Log.info("raven", "Map dimensions: " + width + " x " + height);
-    	
-		// Get the frame's content and use it for the game
+    	// Get the frame's content and use it for the game
     	JPanel panel = (JPanel)this.getContentPane();
     	panel.setPreferredSize(new Dimension(width, height));
     	panel.setLayout(null);
