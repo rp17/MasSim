@@ -1,0 +1,12 @@
+digraph finite_state_machine {
+rankdir=LR;
+size="18,18"
+node [shape = doublecircle]; Finish_2;
+node [shape = point ]; Start_1
+node [shape = circle];
+Start_1 [label="Start"];
+Finish_2 [label="Finish"];
+Visit_Station_1_25 [label="Visit_Station_1"];
+Start_1->Visit_Station_1_25;
+Visit_Station_1_25->Finish_2;
+}

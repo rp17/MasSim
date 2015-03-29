@@ -35,8 +35,7 @@ public class Main {
     	//ui = new RavenUI(game);
     	//GameCanvas.getInstance().setNewSize(game.getMap().getSizeX(), game.getMap().getSizeY());
 		SimWorld4 world = new SimWorld4((WorldEventListener) ui);
-		Thread MasSimThread = new Thread(world);
-		MasSimThread.start();
+		world.initAgents();
 		game.togglePause();
     	gameLoop();
 	}

@@ -1,0 +1,31 @@
+digraph finite_state_machine {
+rankdir=LR;
+size="66,66"
+node [shape = doublecircle]; Finish_2;
+node [shape = point ]; Start_1
+node [shape = circle];
+Start_1 [label="Start"];
+Finish_2 [label="Finish"];
+M1_2 [label="M1"];
+M4_5 [label="M4"];
+M5_6 [label="M5"];
+Visit_Station_1_25 [label="Visit_Station_1"];
+Visit_Station_1_25 [label="Visit_Station_1"];
+Visit_Station_1_25 [label="Visit_Station_1"];
+M1_2 [label="M1"];
+M4_5 [label="M4"];
+M5_6 [label="M5"];
+Start_1->M1_2;
+M1_2->M4_5;
+M1_2->M5_6;
+M4_5->Visit_Station_1_25;
+M5_6->Visit_Station_1_25;
+Start_1->Visit_Station_1_25;
+Visit_Station_1_25->M1_2;
+M1_2->M4_5;
+M1_2->M5_6;
+Visit_Station_1_25->Finish_2;
+Visit_Station_1_25->Finish_2;
+M4_5->Finish_2;
+M5_6->Finish_2;
+}

@@ -5,15 +5,16 @@ import java.util.Iterator;
 import java.util.List;
 
 import raven.Main;
+import raven.game.RavenGame;
 import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld3 implements Runnable {
+public class SimWorld3 {
 
-	private ArrayList<IAgent> agents;
-	private ArrayList<Task> tasks;
-	private ArrayList<WorldEventListener> listeners;
+	private List<IAgent> agents;
+	private List<Task> tasks;
+	private List<WorldEventListener> listeners;
 	private IAgent mainAgent;
 	
 	public SimWorld3(WorldEventListener eventListener)
@@ -34,62 +35,41 @@ public class SimWorld3 implements Runnable {
 		eventListener.RegisterMainAgent(agentOne);
 	}
 	
-	@Override
-	public void run()
+	public List<IAgent> initAgents()
 	{
-		Thread t = (new Thread() {
-			  public void run() {
-				  try {
-						Thread.sleep(1);
-						for(int i=0;i<3;i++)
-						{
-							int interval = 5000;
-							int sinterval = 2000;
-							Method m_from = new Method("Visit Station A1",10,100,110);
-							mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), mainAgent, m_from));
-							mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
-							mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
-							mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
-							mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
-							mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
-							
-							//Thread.sleep(interval);
-							Method m_to = new Method("Visit Station B1",1,100,210);
-							m_to.AddInterrelationship(new Interrelationship(m_from, m_to, new Outcome(100,1,1)));
-							mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), agents.get(1), m_to));
-							mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
-							mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
-							mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
-							mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
-							mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
-							Thread.sleep(2*interval);
-							
-							
-							Thread.sleep(7*interval);
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-			  }
-			 });
-		t.start();
-		
+					
+				Method m_from = new Method("Visit Station A1",10,100,110);
+				mainAgent.assignTask(new Task("Station A1",new SumAllQAF(), mainAgent, m_from));
+				mainAgent.assignTask(new Task("Station A2",new SumAllQAF(), mainAgent, new Method("Visit Station A2",10,200,90)));
+				mainAgent.assignTask(new Task("Station A3",new SumAllQAF(), mainAgent, new Method("Visit Station A3",10,300,110)));
+				mainAgent.assignTask(new Task("Station A4",new SumAllQAF(), mainAgent, new Method("Visit Station A4",10,400,90)));
+				mainAgent.assignTask(new Task("Station A5",new SumAllQAF(), mainAgent, new Method("Visit Station A5",10,500,110)));
+				mainAgent.assignTask(new Task("Station A6",new SumAllQAF(), mainAgent, new Method("Visit Station A6",10,600,90)));
+				
+				//Thread.sleep(interval);
+				Method m_to = new Method("Visit Station B1",1,100,210);
+				m_to.AddInterrelationship(new Interrelationship(m_from, m_to, new Outcome(100,1,1)));
+				mainAgent.assignTask(new Task("Station B1",new SumAllQAF(), agents.get(1), m_to));
+				mainAgent.assignTask(new Task("Station B2",new SumAllQAF(), agents.get(1), new Method("Visit Station B2",1,200,190)));
+				mainAgent.assignTask(new Task("Station B3",new SumAllQAF(), agents.get(1), new Method("Visit Station B3",1,300,210)));
+				mainAgent.assignTask(new Task("Station B4",new SumAllQAF(), agents.get(1), new Method("Visit Station B4",1,400,190)));
+				mainAgent.assignTask(new Task("Station B5",new SumAllQAF(), agents.get(1), new Method("Visit Station B5",1,500,210)));
+				mainAgent.assignTask(new Task("Station B6",new SumAllQAF(), agents.get(1), new Method("Visit Station B6",1,600,190)));
+
+				
+				
 		//Start Agents
-		Iterator it = agents.iterator();
+				
+				
+		Iterator<IAgent> it = agents.iterator();
 		while(it.hasNext())
 		{
 			Agent agent = (Agent) it.next();
 			Thread agentThread = new Thread(agent,agent.label);
 			agentThread.start();
 		}
-		while(true)
-		{
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		return agents;
+		
 		//agentOne.assignTask(new Task("Emergency Station",new SumAllQAF(), new Method("Emergency Method",1,300,90), null));
 	}
 	

@@ -11,7 +11,7 @@ import masSim.world.*;
 import masSim.world.WorldEvent.TaskType;
 import masSim.taems.*;
 
-public class SimWorld4 implements Runnable, WorldEventListener {
+public class SimWorld4 implements WorldEventListener {
 
 	private ArrayList<IAgent> agents;
 	private ArrayList<Task> tasks;
@@ -37,18 +37,10 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 		eventListener.RegisterMainAgent(agentOne);
 	}
 	
-	@Override
-	public void run()
+	public void initAgents()
 	{
-		Thread t = (new Thread() {
-			  public void run() {
-				  try {
-						Thread.sleep(1);
-						for(int i=0;i<3;i++)
-						{
-							int interval = 5000;
-							int sinterval = 2000;
-							
+		
+						
 							Task taskHierarchy = new Task("TaskTree", new SeqSumQAF(), mainAgent);
 							
 							Task task1 = new Task("Task2",new SumAllQAF(), mainAgent, new Method[]{
@@ -70,15 +62,6 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 							//Method destination1 = new Method("Visit Destination 1",10,-1, 300,50, -1, null);
 							//destination1.AddInterrelationship(new Interrelationship(gasStation, destination1, new Outcome(100,1,1)));
 							
-							Thread.sleep(7*interval);
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-			  }
-			 });
-		t.start();
-		
 		//Start Agents
 		Iterator it = agents.iterator();
 		while(it.hasNext())
@@ -86,14 +69,6 @@ public class SimWorld4 implements Runnable, WorldEventListener {
 			Agent agent = (Agent) it.next();
 			Thread agentThread = new Thread(agent,agent.label);
 			agentThread.start();
-		}
-		while(true)
-		{
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
 		//agentOne.assignTask(new Task("Emergency Station",new SumAllQAF(), new Method("Emergency Method",1,300,90), null));
 	}
