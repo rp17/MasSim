@@ -294,7 +294,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
 		this.schedule = this.localScheduler.CalculateScheduleFromTaems(tempTaskGroup);
+		//send schedule quality back to mqtt
+		//this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.PUBLISHCOST, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+		
 		return schedule;
+		
 	}
 	
 	@Override
@@ -537,6 +541,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
 			this.negotiateAssignmentOfTask(task);
 		}
+		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
+		{
+			//GetScheduleCostSync(task, agent);
+		}
+		if (event.commandType==SchedulingCommandType.PUBLISHCOST && event.agentName.equalsIgnoreCase(this.getName()))
+		{
+			//resumes calculation of find best agent
+		}
+		
+		
 		return null;
 	}
 
