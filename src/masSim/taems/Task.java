@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Observable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
@@ -18,12 +20,12 @@ import raven.TaskIssuer;
 
 public class Task extends Node {
 
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	private QAF qaf;
 	public Date earliest_start_time;
 	public Date deadline;
 	public boolean isComplete = false;
-	private Lock lock;
+	public static Object Lock = new Object();
 	
 	public int GetUtility()
 	{
@@ -40,38 +42,40 @@ public class Task extends Node {
 	public ArrayList<Method> GetMethods()
 	{
 		ArrayList<Method> methods = new ArrayList<Method>();
+		synchronized(Task.Lock){
 		for(Node n: children)
 		{
 			if (!n.IsTask())
 				methods.add((Method)n);
-		}
+		}}
 		return methods;
 	}
 	
 	public void AssignAgent(IAgent ag)
 	{
-		Main.Message(debugFlag, "[Agent 175] Assigning " + this.label + " to " + this.agent.getName());
+		Main.Message(this, debugFlag, "Assigning " + this.label + " to " + ag.getName());
 		this.agent=ag;
+		synchronized(Task.Lock){
 		for(Node n: children)
 		{
 			if (n.agent==null)
 				n.agent=ag;
-		}
+		}}
 	}
 	
 	public boolean IsFullyAssigned()
 	{
 		if (this.agent==null) return false;
-		for(Node n: children)
+		synchronized(Task.Lock){for(Node n: children)
 		{
 			if (n.agent==null)
 				return false;
-		}
+		}}
 		return true;
 	}
 		
 	// Constructor
-	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent, Node[] m){
+	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent, Node[] m, boolean recurring){
 		this.label = label;
 		children = new ArrayList<Node>();
 		this.qaf = qaf;
@@ -84,14 +88,19 @@ public class Task extends Node {
 			}
 		}
 		this.agent = agent;
+		this.recurring = recurring;
 	}
 	
 	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent ,Node m){
-		this(label, qaf, earliest_start, deadline, agent, new Node[]{m});
+		this(label, qaf, earliest_start, deadline, agent, new Node[]{m}, false);
 	}
 	
 	public Task(String name, QAF qaf, IAgent agent){
-		this(name, qaf, new Date(), new Date(2015,1,1), agent, new Method[]{});
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, new Method[]{}, false);
+	}
+	
+	public Task(String name, QAF qaf, IAgent agent, boolean recurring){
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, new Method[]{}, recurring);
 	}
 	
 	public Task(String name, QAF qaf, IAgent agent, Node m){
@@ -99,12 +108,13 @@ public class Task extends Node {
 	}
 	
 	public Task(String name, QAF qaf, IAgent agent, Node[] m){
-		this(name, qaf, new Date(), new Date(2015,1,1), agent, m);
+		this(name, qaf, new Date(), new Date(2015,1,1), agent, m, false);
 	}
 	
 	
 	public void addTask(Node task){
-		this.children.add(task);
+		synchronized(Task.Lock){
+		this.children.add(task);}
 	}
 	
 	public QAF getQAF(){
@@ -119,36 +129,54 @@ public class Task extends Node {
 		Main.Message(debugFlag, "[Task 63] Task " + label + " completed.");
 		WorldState.CompletedTasks.add(this);
 		this.NotifyAll();
+		//ReIssueIfNecessary();
+	}
+	
+	private void ReIssueIfNecessary()
+	{
+		if (this.recurring)
+		{
+			Main.Message(debugFlag, "Reissuing recurring task " + this.label);
+			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider();
+			mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
+		}
 	}
 	
 	@Override
 	public synchronized void Cleanup(MqttMessagingProvider mq)
 	{
 		if (this.hasChildren())
-			for(Node n : children)
+		{
+			synchronized(Task.Lock)
 			{
-				if (n!=null)
+				Main.Message(true, "entered lock 1");
+				for(Node n : children)
 				{
-					if (n.IsComplete())
+					if (n!=null)
 					{
-						children.remove(n);
-						mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
-					}
-					else
-					{
-						if (n.IsTask())
+						if (n.IsComplete())
 						{
-							n.Cleanup(mq);
-							if (n.IsComplete())//Recheck after cleanup
+							children.remove(n);
+							mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+						}
+						else
+						{
+							if (n.IsTask())
 							{
-								children.remove(n);
-								mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+								n.Cleanup(mq);
+								if (n.IsComplete())//Recheck after cleanup
+								{
+									children.remove(n);
+									mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+								}
 							}
 						}
 					}
 				}
 			}
+			Main.Message(true, "exited lock 1");
 		}
+	}
 	
 	public static Task CreateDefaultTask(int counter, double x, double y)
 	{

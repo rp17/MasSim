@@ -13,6 +13,7 @@ public abstract class Node extends Element  implements IObserver {
 	public static final int    COMPLETED = 2;
 	public static final int    ACTIVE = 3;
 	protected int NodeType;
+	protected boolean recurring = false;
 	protected transient int status;
 	protected List<Node> children;
 	public ArrayList<Node> Observers = new ArrayList<Node>();
@@ -219,6 +220,7 @@ public abstract class Node extends Element  implements IObserver {
 
 		@Override
 		public void Update(Node observedTask) {
+			synchronized(Task.Lock){
 			Node matchingTask = null;
 			for(Node b: this.children)
 			{
@@ -232,7 +234,7 @@ public abstract class Node extends Element  implements IObserver {
 			if (this.children.isEmpty() && !this.IsComplete())
 			{
 				MarkCompleted();
-			}
+			}}
 		}
 
 		@Override

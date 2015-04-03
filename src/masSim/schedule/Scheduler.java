@@ -19,7 +19,7 @@ import raven.utils.SchedulingLog;
 
 public class Scheduler implements Runnable {
 	
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
@@ -41,7 +41,10 @@ public class Scheduler implements Runnable {
 		List<Task> pendingTasks = this.agent.getPendingTasks();
 		if (!pendingTasks.isEmpty())
 		{
-			Main.Message(debugFlag, pendingTasks.size() + " pending task found");
+			for(int i=0;i<pendingTasks.size();i++)
+			{
+				Main.Message(this, debugFlag, "Pending task " + pendingTasks.get(i).label + " found for agent " + this.agent.getName());
+			}
 			Schedule schedule = CalculateSchedule();
 			if (schedule!=null)
 				this.agent.UpdateSchedule(schedule);	
@@ -51,7 +54,6 @@ public class Scheduler implements Runnable {
 	public synchronized Schedule CalculateSchedule()
 	{
 		try {
-			Main.Message(debugFlag, "[Scheduler 82] Calculate Schedule called");
 			//Read all new tasks
 			int numberOfPendingTasks = this.agent.getPendingTasks().size();
 			if (numberOfPendingTasks<=0) return null;
@@ -63,17 +65,20 @@ public class Scheduler implements Runnable {
 				debugMessage += " > " + newTask.label;
 				this.agent.getPendingTasks().remove(0);
 				if (newTask.agent.equals(agent)){
-					agent.GetCurrentTasks().addTask(newTask);
-					Main.Message(debugFlag, "[Scheduler 101] task added " + newTask.label + " in " + agent.getName());
+					synchronized(Task.Lock)
+					{
+						Main.Message(true, "entered lock 2");
+						agent.GetCurrentTasks().addTask(newTask);
+					}
+					Main.Message(true, "exited lock 2");
 				}
 			}
-			Main.Message(debugFlag, "[Scheduler 95] Pending Tasks found " + debugMessage + " for " + agent.getName());
 			//Remove completed tasks
-			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
+			synchronized(Task.Lock){
+			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());}
 			if(agent.GetCurrentTasks().hasChildren())
 			{
 				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
-				Main.Message(debugFlag, "[Scheduler 94] " + schedule.toString());
 				return schedule;
 			}
 			Thread.sleep(10000);
@@ -88,12 +93,7 @@ public class Scheduler implements Runnable {
 	//corresponding to the optimum path from the starting task to the ending task
 	public Schedule CalculateScheduleFromTaems(Task topLevelTask)
 	{
-		Main.Message(debugFlag, "[Scheduler 202] Calculating schedule for Top level Tasks:");
 		Iterator ii = topLevelTask.getSubtasks();
-		while(ii.hasNext())
-		{
-			Main.Message(debugFlag, ((Node)ii.next()).label);
-		}
 		//Reinitialize the schedule item
 	  	Schedule schedule = new Schedule();
 	  	//Reinitialize the start time of calculation
@@ -117,14 +117,13 @@ public class Scheduler implements Runnable {
 			MethodTransition t = new MethodTransition(
 					"From " + finalMethodList[i].label + " to " + finalMethod.label, 
 					finalMethodList[i], finalMethod);
-			Main.Message(debugFlag, "[Scheduler 135]" + t.getId());
 			edges.add(t);
 		}
 		
 		//Create a Graph of these methods and run Dijkstra Algorithm on it
 		Graph graph = new Graph(nodes, edges);
 		graph.Print();
-	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
+	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph, agentPos);
 	    dijkstra.execute(initialMethod);
 	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
 	    //Print the determined schedule
@@ -135,8 +134,7 @@ public class Scheduler implements Runnable {
 		        {
 		    		totalquality += vertex.getOutcome().getQuality();
 		    		schedule.addItem(new masSim.taems.ScheduleElement(vertex));
-		    		Main.Message(debugFlag, "[Scheduler 167] " + vertex.label + " " + vertex.getOutcome().getQuality());
-		        }
+		    	}
 		    }
 	    schedule.TotalQuality = totalquality;
 		return schedule;
@@ -193,7 +191,6 @@ public class Scheduler implements Runnable {
 				m.AddObserver(Parent);
 				nodes.add(m);
 				MethodTransition t = new MethodTransition("From " + lastMethod.label + " to " + m.label, lastMethod, m);
-				Main.Message(debugFlag, "[Scheduler 200] Route "+t.getId());
 				edges.add(t);
 				lastMethodList.add(m);
 			}
@@ -217,7 +214,6 @@ public class Scheduler implements Runnable {
 					{
 						if (!lastMethodList.contains(localLastMethodList[i]))
 							lastMethodList.add(localLastMethodList[i]);
-						Main.Message(debugFlag, "[Scheduler 222] Local Last Method " + localLastMethodList[i].label);
 					}
 				}
 				if (qaf instanceof SumAllQAF)

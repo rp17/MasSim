@@ -78,7 +78,7 @@ public class Method extends Node implements IMethod {
 		this.NotifyAll();
 	}
 	
-	public DijkstraDistance getPathUtilityRepresentedAsDistance(DijkstraDistance distanceTillPreviousNode)
+	public DijkstraDistance getPathUtilityRepresentedAsDistance(DijkstraDistance distanceTillPreviousNode, Vector2D agentPos)
 	{
 		//This is distance calculation for this step only. Previous distance used for calculation, but not appended
 		DijkstraDistance d = new DijkstraDistance(0,0,this.x, this.y);
@@ -97,7 +97,9 @@ public class Method extends Node implements IMethod {
 		else
 		{
 			//Main.Message(debugFlag, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
-			d.quality = this.outcome.quality;
+			double distance = Math.round(agentPos.distance(new Vector2D(this.x, this.y)));
+			d.quality = this.outcome.quality - distance;
+			Main.Message(true, "task distance = " + distance + " total quality = " + d.quality);
 			if (d.quality>heuristicQuality)
 			{
 				//Revisit heuristic logic

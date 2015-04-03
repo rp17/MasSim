@@ -43,7 +43,7 @@ public class ScheduleElement implements Comparable<ScheduleElement>
 	  
 	  @Override
 	  public String toString(){
-		  return getName();
+		  return getName() + "[" + hashCode() + "]";
 	  }
 	  
 	  public Status update(int dt){

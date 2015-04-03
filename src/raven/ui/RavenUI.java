@@ -479,7 +479,7 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 			
 			if(bot != null && bot instanceof RoverBot) {
 				RoverBot rbot = (RoverBot)bot;
-				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot.pos());
+				Waypoints matchedWaypoints = game.getWptsForMethodExecution(methodId, rbot);
 				GoalComposite<RoverBot> g = rbot.addWptsGoal(matchedWaypoints, methodId);
 				if (g!=null)
 					g.LaunchedByMasSim = true;

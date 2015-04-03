@@ -62,7 +62,7 @@ public class TaskRepository {
 				if (node instanceof Element) {
 					Task t = ParseTask(node);
 					this.taskDefinitions.put(t.getLabel(), t);
-					Main.Message(debugFlag, "Task " + t.label + " added to repository");
+					Main.Message(this, debugFlag, "Task " + t.label + " added to repository");
 				}
 			}
 		} 
@@ -83,10 +83,14 @@ public class TaskRepository {
 		String taskName;
 		String qafStringValue;
 		QAF qaf = null;
+		boolean recurring = false;
 		boolean isTask = node.getNodeName()=="Task";
 		taskId = node.getAttributes().getNamedItem("id").getNodeValue();
 		taskName = node.getAttributes().getNamedItem("name").getNodeValue();
 		if (isTask) {
+			Node recurringNode = node.getAttributes().getNamedItem("recurring");
+			if (recurringNode!=null)
+				recurring = recurringNode.getNodeValue().toString().toLowerCase().equalsIgnoreCase("true");
 			qafStringValue = node.getAttributes().getNamedItem("qaf").getNodeValue().toString().toLowerCase();
 			if (qafStringValue.equalsIgnoreCase("sumall"))
 			{
@@ -101,7 +105,7 @@ public class TaskRepository {
 				qaf = new SeqSumQAF();
 			}
 		}
-		Task task = new Task(taskName, qaf, null);
+		Task task = new Task(taskName, qaf, null, recurring);
 		NodeList children = node.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			Node childNode = children.item(i);

@@ -27,12 +27,14 @@ public class DijkstraAlgorithm {
   private Set<Method> unSettledNodes;
   private Map<Method, Method> predecessors;
   private Map<Method, DijkstraDistance> distance;
+  private Vector2D agentPos;
   private final OptimizationMode optimizationMode = OptimizationMode.QUALITY;
 
-  public DijkstraAlgorithm(Graph graph) {
+  public DijkstraAlgorithm(Graph graph, Vector2D agentPos) {
     // create a copy of the array so that we can operate on this array
     this.nodes = new ArrayList<Method>(graph.getMethods());
     this.edges = new ArrayList<MethodTransition>(graph.getTransitions());
+    this.agentPos = agentPos;
   }
  
   public void execute(Method source) {
@@ -71,7 +73,7 @@ public class DijkstraAlgorithm {
     for (MethodTransition edge : edges) {
       if (edge.getSource().equals(node)
           && edge.getDestination().equals(target)) {
-        return edge.getPathUtility(distanceTillPreviousNode);
+        return edge.getPathUtility(distanceTillPreviousNode, agentPos);
       }
     }
     throw new RuntimeException("Should not happen");

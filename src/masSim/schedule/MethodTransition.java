@@ -1,4 +1,5 @@
 package masSim.schedule;
+import raven.math.Vector2D;
 import masSim.taems.*;
 
 public class MethodTransition  {
@@ -22,8 +23,8 @@ public class MethodTransition  {
 	  public Method getSource() {
 	    return source;
 	  }
-	  public DijkstraDistance getPathUtility( DijkstraDistance distanceTillPreviousNode) {
-	    return destination.getPathUtilityRepresentedAsDistance(distanceTillPreviousNode);
+	  public DijkstraDistance getPathUtility( DijkstraDistance distanceTillPreviousNode, Vector2D agentPos) {
+	    return destination.getPathUtilityRepresentedAsDistance(distanceTillPreviousNode, agentPos);
 	  }
 	  
 	  @Override

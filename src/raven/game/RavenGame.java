@@ -14,6 +14,7 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.JPanel;
 
 import masSim.taems.IAgent;
+import masSim.taems.Method;
 import raven.game.Waypoints.Wpt;
 import raven.game.armory.Bolt;
 import raven.game.armory.Pellet;
@@ -776,13 +777,16 @@ public class RavenGame {
 		wpts.clearWpts();
 	}
 	public Waypoints getWpts() {return wpts;}
-	public Waypoints getWptsForMethodExecution(String methodName, Vector2D currentPosition)
+	public Waypoints getWptsForMethodExecution(String methodName, RoverBot bot)
 	{
 		//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
+		Vector2D currentPosition = bot.pos();
 		Waypoints local = new Waypoints();
+		String waypointNamesForDebugging = "";
 		for(int i=0;i<wpts.size();i++)
 		{
 			Waypoints.Wpt wp = wpts.get(i);
+			waypointNamesForDebugging += wp.name + ".";
 			//Main.Message(debugFlag, "[RavenGame 790] Testing waypoint " + wp.name );
 			if (wp.name.equals(methodName))
 			{
@@ -790,6 +794,11 @@ public class RavenGame {
 				local.addWpt(new Vector2D(wp.x, wp.y));
 				break;
 			}
+		}
+		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
+		{
+			waypointNamesForDebugging = "Possible Error: " + methodName + " not found in " + waypointNamesForDebugging + " by " + bot.name;
+			Main.Message(this, true, waypointNamesForDebugging);
 		}
 		return local;
 	}

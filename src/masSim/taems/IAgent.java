@@ -25,5 +25,4 @@ public interface IAgent {
 	public Task GetCurrentTasks();
 	public void RegisterChildrenWithUI(Node node);
 	public ArrayList<IAgent> getAgentsUnderManagement();
-	public void AddPendingTask(Task task);
 }

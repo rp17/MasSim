@@ -1,13 +1,11 @@
 <Taems>
-	<Task id="T3" name="PatrolA" qaf="SeqSum" >
-		<Method id="M1T3" name="GoToRegionA" Quality="10" Duration="10" XCoord="100" YCoord="250"></Method>
-		<Method id="M2T3" name="DriveAroundA" Quality="10" Duration="10" XCoord="100" YCoord="300"></Method>
-	</Task>
-	<Task id="T4" name="PatrolB" qaf="SeqSum" >
-		<Method id="M4T4" name="GoToRegionB" Quality="10" Duration="10" XCoord="300" YCoord="250"></Method>
-		<Method id="M5T4" name="DriveAroundB" Quality="10" Duration="10" XCoord="300" YCoord="300"></Method>
+	<Task id="T3" name="Patrol" qaf="SeqSum" recurring="true" >
+		<Method id="A2M1T3" name="PatrolPointA" Quality="500" Duration="10" XCoord="100" YCoord="250"></Method>
+		<Method id="A2M2T3" name="PatrolPointB" Quality="500" Duration="10" XCoord="100" YCoord="300"></Method>
+		<Method id="A2M3T3" name="PatrolPointC" Quality="500" Duration="10" XCoord="300" YCoord="250"></Method>
+		<Method id="A2M4T3" name="PatrolPointD" Quality="500" Duration="10" XCoord="300" YCoord="300"></Method>
 	</Task>
 	<Task id="T5" name="RespondToAccident" qaf="SumAll" >
-		<Method id="M6T5" name="VisitAccidentLocation" Quality="10" Duration="10" XCoord="400" YCoord="300"></Method>
+		<Method id="A2M6T5" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="300"></Method>
 	</Task>
 </Taems>
