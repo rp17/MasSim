@@ -1,6 +1,7 @@
 package masSim.world;
 
 import masSim.schedule.IScheduleUpdateEventListener;
+import masSim.schedule.MaxSumCalculator;
 import masSim.schedule.ScheduleUpdateEvent;
 import masSim.schedule.Scheduler;
 import masSim.schedule.SchedulingCommandType;
@@ -38,7 +39,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Schedule currentSchedule = new Schedule();
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
+
 	private ArrayList<String> agentsUnderManagement = null;
+
+	ArrayList<MaxSumCalculator> negotiations = new ArrayList<MaxSumCalculator>();
+
 	private AgentMode mode;
 	public double x;
 	public double y;
@@ -125,54 +130,49 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.pendingTasks.add(task);
 		schedulerPool.execute(localScheduler);
 	}
-		
-	public boolean negotiateAssignmentOfTask(Task task){
-		try{
-			if (task.IsFullyAssigned())
-			{
-				if (this.equals(task.agent))
-				{
-					//Main.Message(debugFlag, "[Agent] " + getName() + " assigned " + task.label);
-					//this.RegisterChildrenWithUI(task);
-					//this.AddTask(task);
-					//return true;
-					return true;
-				}
-				else if (this.getAgentsUnderManagement().contains(task.agent)) 
-				{
-					//TODO This will not be needed as the tasks picked up by this agent will be those of its own
-					//or ones not assigned. Otherwise, each agent will pick their own from mqtt
-					//Main.Message(debugFlag, "[Agent] 150" + task.label + " already has agent assigned");
-					//assignTask(task);
-				}
-				else
-				{
-					Main.Message(debugFlag, "Possible Error: " + task.agent.getCode() + " is not a child of " + this.getName());
-				}
-				return false;
-			}
-			else
-			{
-				Agent selectedAgent = FindBestAgentForTaskParallel(task);
-				//TODO Assigning a task to an agent means its methods will also be performed by the same agent. But this needs to be revisited
-				task.AssignAgent(selectedAgent);
-				SchedulingEventParams params = new SchedulingEventParams().AddTaskName(task.getLabel());
-				SchedulingEvent event = new SchedulingEvent(selectedAgent.getName(), SchedulingCommandType.ASSIGNTASK, params);
-				mq.PublishMessage(event);
-				return true;
-			}
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-			Main.Message(debugFlag, "[Agent 282] Exception: " + ex.toString());
-		}
-		return false;
+	
+	private boolean IsManagingAgent()
+	{
+		if(agentsUnderManagement == null) return false;
+		else
+		return this.agentsUnderManagement.size()>0;
 	}
 	
-	public Agent FindBestAgentForTaskParallel(Task task)
+	public void CalculateCost(Task task)
 	{
-		Main.Message(debugFlag, "[Agent 168] Finding Best Agent for " + task.getLabel());
+		int[] costs = CalculateIncrementalQualitiesForTask(task);
+		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
+		SchedulingEventParams params = new SchedulingEventParams()
+		.AddTaskName(task.getLabel())
+		.AddAgentId(getName())
+		.AddData(costsString);
+		SchedulingEvent event = new SchedulingEvent(this.getName(), SchedulingCommandType.COSTBROADCAST, params);
+		mq.PublishMessage(event);
+	}
+	
+	public void Negotiate(Task task)
+	{
+		if (IsManagingAgent())
+		{
+			MaxSumCalculator maxSumInstance = new MaxSumCalculator(task.label,this.agentsUnderManagement.size()+1);//One additional for managing agent
+			int[] costs = CalculateIncrementalQualitiesForTask(task);
+			maxSumInstance.AddCostData(this.label, costs[0], costs[1]);
+			this.negotiations.add(maxSumInstance);
+			for(String agName : this.getAgentsUnderManagement())
+			{
+				SchedulingEventParams params = new SchedulingEventParams()
+				.AddTaskName(task.getLabel())
+				.AddAgentId(agName);
+				SchedulingEvent event = new SchedulingEvent(agName, SchedulingCommandType.CALCULATECOST, params);
+				mq.PublishMessage(event);
+			}
+		}
+	}
+	
+	public MaxSumCalculator GetMaxSumCalculatorForTask(String taskName)
+	{
+
+		Main.Message(debugFlag, "[Agent 168] Finding Best Agent for " + taskName);
 		/*
 		StringBuilder cop = new StringBuilder("AGENT 1");
 		cop.append("VARIABLE 1 1 3");
@@ -191,26 +191,17 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//test.Main jmaxMain = new test.Main();
 		//ArrayList<SimpleEntry<String, String>> result = jmaxMain.CalculateMaxSumAssignments(cop.toString());
 		//Calculate which agent is best to assign
-		int currentQuality = getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(task, this);
-		IAgent selectedAgent = this;
 		
-		// send out asynchronous requests for marginal utilities 
-		for(String agName : this.getAgentsUnderManagement())
+		for(MaxSumCalculator cal : this.negotiations)
 		{
-			//System.out.();
-			/*
-			int newQuality = getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(task, ag);
-			if (newQuality>currentQuality)
-			{
-				currentQuality = newQuality;
-				selectedAgent = ag;
-			}
-			*/
+			if (cal.getTaskName().equalsIgnoreCase(taskName))
+				return cal;
 		}
-		return (Agent) selectedAgent;
+		return null;
 	}
 	
-	
+
+	/*
 	
 	private int getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(Task task, IAgent agent)
 	{
@@ -230,60 +221,49 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				) {
 			Main.Message(debugFlag, "Failed to obtain Quality increase for " + agent.getName() + " if assigned "	+ task.getLabel() + ". Using default of 0");
 			return 0;
-		}
-		return result;
-	}
-	
-	public int getExpectedScheduleQuality(final Task task, final IAgent agent) throws IOException {
-		Main.Message(true, "Reached here");
-		if (agent==null) 
-			Main.Message(errorFlag, "[Agent 208] Possible Error. Agent is null");
-		int cost = 0;
-		Schedule sc;
-		if (task!=null)
-		{
-			IAgent previousAgent = task.agent;
-			task.agent = agent;
-			sc = GetScheduleCostSync(task, agent);
-			cost = sc.TotalQuality;
-			task.agent = previousAgent;
-			Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " if assigned " + task.label);
-		}
-		else{
-			sc = GetScheduleCostSync(null, agent);
-			cost = sc.TotalQuality;
-			Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " in base schedule");
-		}
-		return cost;	
-	}
-	
-	/*public Future<Integer> getExpectedScheduleQuality(final Task task, final IAgent agent) throws IOException {
-		return schedulerPool.submit(new Callable<Integer>() {
-			@Override
-			public Integer call() throws Exception {
-				Main.Message(true, "Reached here");
-				if (agent==null) 
-					Main.Message(errorFlag, "[Agent 208] Possible Error. Agent is null");
-				int cost = 0;
-				Schedule sc;
-				if (task!=null)
-				{
-					IAgent previousAgent = task.agent;
-					task.agent = agent;
-					sc = GetScheduleCostSync(task, agent);
-					cost = sc.TotalQuality;
-					task.agent = previousAgent;
-					Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " if assigned " + task.label);
-				}
-				else{
-					sc = GetScheduleCostSync(null, agent);
-					cost = sc.TotalQuality;
-					Main.Message(debugFlag, "Schedule Quality is " + cost + " for " + agent.getName() + " in base schedule");
-				}
-				return cost;
+*/
+	public void ProcessCostBroadcast(String taskName, String agentName, String data)
+	{	
+		if(IsManagingAgent()) {
+			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
+			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
+			if(calc == null) {
+				System.out.println("calc is null");
 			}
-		});
-	}*/
+			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+			if (calc.IsDataCollectionComplete())
+			{
+				String selectedAgentName = calc.GetBestAgent();
+				SchedulingEventParams params = new SchedulingEventParams()
+				.AddTaskName(taskName)
+				.AddAgentId(selectedAgentName);
+				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
+				mq.PublishMessage(event);
+			}
+
+		}
+	}
+	
+	private int[] CalculateIncrementalQualitiesForTask(Task task)
+	{
+		try
+		{
+			if (task==null) throw new Exception ("Calculate Incremental Qualities called for a null task");
+			IAgent previousAgent = task.agent;//Save previous agent, because assignment of agent will change while calculating costs and need to be reset
+			task.agent = this;
+			int base = GetScheduleCostSync(task, this).TotalQuality;
+			//Reset agent change for done for calculation
+			task.agent = previousAgent;
+			int incremental = GetScheduleCostSync(null, this).TotalQuality;
+			Main.Message(debugFlag, getName() + " for task " + task.getLabel() + " Base " + base + " Incremental " + incremental);
+			return new int[]{base,incremental};	
+		}
+		catch(Exception e)
+		{
+			Main.Message(this, true, e.getMessage() + " " + e.getStackTrace());
+			return new int[]{0,0};
+		}	
+	}
 	
 	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
 	{
@@ -548,15 +528,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
-			this.negotiateAssignmentOfTask(task);
+			this.Negotiate(task);
 		}
 		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			//GetScheduleCostSync(task, agent);
+			Task task = this.taskRepository.GetTask(event.params.TaskName);
+			CalculateCost(task);
 		}
-		if (event.commandType==SchedulingCommandType.PUBLISHCOST && event.agentName.equalsIgnoreCase(this.getName()))
+		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			//resumes calculation of find best agent
+			ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
 		}
 		
 		

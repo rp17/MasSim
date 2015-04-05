@@ -2,7 +2,7 @@ package masSim.schedule;
 
 public enum SchedulingCommandType {
 	CALCULATECOST,
-	PUBLISHCOST,
+	COSTBROADCAST,
 	ASSIGNTASK,
 	NEGOTIATE,
 	DISPLAYADDMETHOD,
