@@ -3,12 +3,13 @@ package masSim.schedule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.AbstractMap.SimpleEntry;
 
 public class MaxSumCalculator {
 
 	private String negotiatedTaskName = "";
 	private int numberOfAgentsInNegotiation = 0;
-	public Map<String,Integer> agentsIndex = new HashMap<String,Integer>();
+	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
 	private class ScheduleQualities {public int agentVariableId; public int base; public int incremental;}
 	private ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
 	int agentsIdIndex = 0;
@@ -17,6 +18,33 @@ public class MaxSumCalculator {
 	{
 		this.negotiatedTaskName = negotiatedTaskName;
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
+	}
+	
+	public String GetBestAgent()
+	{
+		String selectedAgent = "";
+		//Commenting out maxsum calculation, to do a manual one for now.
+		//test.Main jmaxMain = new test.Main();
+		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(calc.toString());
+		//for(SimpleEntry<String,String> ent : result)
+		//{
+		//	if (ent.getValue().equals("1"))
+		//	{
+		//		selectedAgent = ent.getKey();
+		//	}
+		//}
+		int maxImprovement = 0;
+		ScheduleQualities selectedQuality = null;
+		for(ScheduleQualities ql : this.scheduleQualities)
+		{
+			int improvement = ql.incremental - ql.base;
+			if (improvement > maxImprovement)
+			{
+				maxImprovement = improvement;
+				selectedQuality = ql;
+			}
+		}
+		return this.agentsIndex.get(selectedQuality.agentVariableId);
 	}
 	
 	public String getTaskName()
@@ -31,13 +59,14 @@ public class MaxSumCalculator {
 	
 	public void AddCostData(String agentName, int base, int increment)
 	{
-		if (!agentsIndex.containsKey(agentName))
+		if (!agentsIndex.containsValue(agentName))
 		{
 			ScheduleQualities s = new ScheduleQualities();
 			s.agentVariableId = agentsIdIndex++;
 			s.base = base;
 			s.incremental = increment;
-			scheduleQualities.add(s);	
+			scheduleQualities.add(s);
+			this.agentsIndex.put(s.agentVariableId, agentName);
 		}
 	}
 	

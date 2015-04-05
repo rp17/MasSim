@@ -29,7 +29,6 @@ import raven.Main;
 import raven.math.Vector2D;
 import raven.ui.RavenUI;
 import raven.utils.SchedulingLog;
-import system.COP_Instance;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
@@ -182,16 +181,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
 		if (calc.IsDataCollectionComplete())
 		{
-			test.Main jmaxMain = new test.Main();
-			String selectedAgentName = this.label;//Default
-			ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(calc.toString());
-			for(SimpleEntry<String,String> ent : result)
-			{
-				if (ent.getValue().equals("0"))
-				{
-					selectedAgentName = ent.getKey();
-				}
-			}
+			String selectedAgentName = calc.GetBestAgent();
 			SchedulingEventParams params = new SchedulingEventParams()
 			.AddTaskName(taskName)
 			.AddAgentId(selectedAgentName);
