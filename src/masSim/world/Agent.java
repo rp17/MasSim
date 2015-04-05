@@ -165,8 +165,39 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 	
-	public void ProcessCostBroadcast(Task task, String agent, String data)
+	public MaxSumCalculator GetMaxSumCalculatorForTask(String taskName)
 	{
+		for(MaxSumCalculator cal : this.negotiations)
+		{
+			if (cal.getTaskName().equalsIgnoreCase(taskName))
+				return cal;
+		}
+		return null;
+	}
+	
+	public void ProcessCostBroadcast(String taskName, String agentName, String data)
+	{
+		String[] arr = data.split(",");
+		MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
+		calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+		if (calc.IsDataCollectionComplete())
+		{
+			test.Main jmaxMain = new test.Main();
+			String selectedAgentName = this.label;//Default
+			ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(calc.toString());
+			for(SimpleEntry<String,String> ent : result)
+			{
+				if (ent.getValue().equals("0"))
+				{
+					selectedAgentName = ent.getKey();
+				}
+			}
+			SchedulingEventParams params = new SchedulingEventParams()
+			.AddTaskName(taskName)
+			.AddAgentId(selectedAgentName);
+			SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
+			mq.PublishMessage(event);
+		}
 		
 	}
 	
@@ -463,7 +494,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			//ProcessCostBroadcast();
+			ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
 		}
 		
 		

@@ -19,6 +19,11 @@ public class MaxSumCalculator {
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
+	public String getTaskName()
+	{
+		return this.negotiatedTaskName;
+	}
+	
 	public boolean IsDataCollectionComplete()
 	{
 		return scheduleQualities.size()==this.numberOfAgentsInNegotiation;
