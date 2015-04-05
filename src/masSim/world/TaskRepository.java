@@ -35,7 +35,7 @@ public class TaskRepository {
 	
 	public TaskRepository()
 	{
-		this("D:\\EclipseWorkspace\\RoverSim\\TaskRepository");
+		this("D:\\wspacesEcl43\\MasSim\\TaskRepository");
 	}
 			
 	public TaskRepository(String repositoryFolderPath)

@@ -11,7 +11,7 @@ import masSim.world.AgentMode;
 public interface IAgent {
 	List<Task> getPendingTasks();
 	public int getCode();
-	public void AddChildAgent(IAgent agent);
+	public void AddChildAgent(String agentName);
 	//public void assignTask(Task task);
 	public void update(int tick);
 	//public int getExpectedScheduleQuality(Task task, IAgent agent);
@@ -24,5 +24,5 @@ public interface IAgent {
 	public void UpdateSchedule(Schedule schedule);
 	public Task GetCurrentTasks();
 	public void RegisterChildrenWithUI(Node node);
-	public ArrayList<IAgent> getAgentsUnderManagement();
+	public ArrayList<String> getAgentsUnderManagement();
 }

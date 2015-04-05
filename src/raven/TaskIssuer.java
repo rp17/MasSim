@@ -43,6 +43,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
 		try {
+			// need to invoke this method once the previous scenario is finished - then no need to sleep for 5 sec
 			Thread.sleep(5000);
 			RelaunchExecutionLoop();
 		} catch (InterruptedException e) {

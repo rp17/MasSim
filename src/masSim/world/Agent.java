@@ -38,7 +38,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Schedule currentSchedule = new Schedule();
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
-	private ArrayList<IAgent> agentsUnderManagement = null;
+	private ArrayList<String> agentsUnderManagement = null;
 	private AgentMode mode;
 	public double x;
 	public double y;
@@ -68,7 +68,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return this.pendingTasks;
 	}
 	
-	public ArrayList<IAgent> getAgentsUnderManagement()
+	public ArrayList<String> getAgentsUnderManagement()
 	{
 		return agentsUnderManagement;
 	}
@@ -103,7 +103,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		flagScheduleRecalculateRequired = true;
 		this.x = x;
 		this.y = y;
-		if (isManagingAgent) agentsUnderManagement = new ArrayList<IAgent>();
+		if (isManagingAgent) agentsUnderManagement = new ArrayList<String>(2);
 		this.mq = MqttMessagingProvider.GetMqttProvider();
 		this.mq.SubscribeForAgent(getName());
 		this.mq.AddListener(this);
@@ -173,6 +173,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Agent FindBestAgentForTaskParallel(Task task)
 	{
 		Main.Message(debugFlag, "[Agent 168] Finding Best Agent for " + task.getLabel());
+		/*
 		StringBuilder cop = new StringBuilder("AGENT 1");
 		cop.append("VARIABLE 1 1 3");
 		cop.append("VARIABLE 0 1 3");
@@ -186,22 +187,30 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		cop.append("F 0 2 13");
 		cop.append("F 0 1 14");
 		cop.append("F 0 0 8");
-		test.Main jmaxMain = new test.Main();
-		ArrayList<SimpleEntry<String, String>> result = jmaxMain.CalculateMaxSumAssignments(cop.toString());
+		*/
+		//test.Main jmaxMain = new test.Main();
+		//ArrayList<SimpleEntry<String, String>> result = jmaxMain.CalculateMaxSumAssignments(cop.toString());
 		//Calculate which agent is best to assign
 		int currentQuality = getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(task, this);
 		IAgent selectedAgent = this;
-		for(IAgent ag : this.getAgentsUnderManagement())
+		
+		// send out asynchronous requests for marginal utilities 
+		for(String agName : this.getAgentsUnderManagement())
 		{
+			//System.out.();
+			/*
 			int newQuality = getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(task, ag);
 			if (newQuality>currentQuality)
 			{
 				currentQuality = newQuality;
 				selectedAgent = ag;
 			}
+			*/
 		}
 		return (Agent) selectedAgent;
 	}
+	
+	
 	
 	private int getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(Task task, IAgent agent)
 	{
@@ -496,10 +505,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 
 	@Override
-	public void AddChildAgent(IAgent agent){
+	public void AddChildAgent(String agentName){
 		if (agentsUnderManagement==null)
 			Main.Message(debugFlag, "Child Agent being added to non-managing agent");
-		this.agentsUnderManagement.add(agent);
+		this.agentsUnderManagement.add(agentName);
 	}
 
 	@Override
@@ -537,7 +546,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (event.commandType==SchedulingCommandType.NEGOTIATE && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			Main.Message(debugFlag, "Task " + event.params.TaskName + " recieved for negotiation");
+			Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
 			this.negotiateAssignmentOfTask(task);
 		}
