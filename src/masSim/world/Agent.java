@@ -130,6 +130,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	private boolean IsManagingAgent()
 	{
+		if(agentsUnderManagement == null) return false;
+		else
 		return this.agentsUnderManagement.size()>0;
 	}
 	
@@ -175,20 +177,24 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	public void ProcessCostBroadcast(String taskName, String agentName, String data)
-	{
-		String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
-		MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
-		calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
-		if (calc.IsDataCollectionComplete())
-		{
-			String selectedAgentName = calc.GetBestAgent();
-			SchedulingEventParams params = new SchedulingEventParams()
-			.AddTaskName(taskName)
-			.AddAgentId(selectedAgentName);
-			SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
-			mq.PublishMessage(event);
+	{	
+		if(IsManagingAgent()) {
+			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
+			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
+			if(calc == null) {
+				System.out.println("calc is null");
+			}
+			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+			if (calc.IsDataCollectionComplete())
+			{
+				String selectedAgentName = calc.GetBestAgent();
+				SchedulingEventParams params = new SchedulingEventParams()
+				.AddTaskName(taskName)
+				.AddAgentId(selectedAgentName);
+				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
+				mq.PublishMessage(event);
+			}
 		}
-		
 	}
 	
 	private int[] CalculateIncrementalQualitiesForTask(Task task)
