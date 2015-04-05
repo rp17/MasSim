@@ -6,6 +6,7 @@ public class SchedulingEventParams {
 	public String MethodId;
 	public String XCoordinate;
 	public String YCoordinate;
+	public String Data;
 	public String TaskName;
 	
 	public SchedulingEventParams()
@@ -47,6 +48,12 @@ public class SchedulingEventParams {
 		return this;
 	}
 	
+	public SchedulingEventParams AddData(String data)
+	{
+		this.Data = data + "";
+		return this;
+	}
+	
 	public SchedulingEventParams AddYCoord(double yCoord)
 	{
 		this.YCoordinate = yCoord + "";
@@ -83,6 +90,10 @@ public class SchedulingEventParams {
 		{
 			params.TaskName = dataItems[4];
 		}
+		if (dataItems.length>=6)
+		{
+			params.Data = dataItems[5];
+		}
 		return params;
 	}
 	
@@ -99,6 +110,8 @@ public class SchedulingEventParams {
 		if (this.MethodId!=null) result += this.MethodId;
 		result += "-";
 		if (this.TaskName!=null) result += this.TaskName;
+		result += "-";
+		if (this.Data!=null) result += this.Data;
 		return result;
 	}
 }
