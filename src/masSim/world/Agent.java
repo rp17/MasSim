@@ -136,7 +136,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void CalculateCost(Task task)
 	{
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
-		String costsString = costs[0] + "," + costs[1];
+		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
 		SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
 		.AddAgentId(getName())
@@ -176,7 +176,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void ProcessCostBroadcast(String taskName, String agentName, String data)
 	{
-		String[] arr = data.split(",");
+		String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
 		MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 		calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
 		if (calc.IsDataCollectionComplete())
