@@ -8,7 +8,7 @@ public class SchedulingEventParams {
 	public String YCoordinate;
 	public String Data;
 	public String TaskName;
-	public static String DataItemSeparator = "|";
+	public static String DataItemSeparator = "w";
 	
 	public SchedulingEventParams()
 	{}
