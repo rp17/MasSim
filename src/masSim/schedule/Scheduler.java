@@ -67,7 +67,6 @@ public class Scheduler implements Runnable {
 				if (newTask.agent.equals(agent)){
 					synchronized(Task.Lock)
 					{
-						Main.Message(true, "entered lock 2");
 						agent.GetCurrentTasks().addTask(newTask);
 					}
 					Main.Message(true, "exited lock 2");

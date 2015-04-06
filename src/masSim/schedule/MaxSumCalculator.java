@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
+import raven.Main;
+
 public class MaxSumCalculator {
 
 	private String negotiatedTaskName = "";
@@ -38,6 +40,7 @@ public class MaxSumCalculator {
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
 			int improvement = ql.incremental - ql.base;
+			Main.Message(true, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
 			if (improvement > maxImprovement)
 			{
 				maxImprovement = improvement;

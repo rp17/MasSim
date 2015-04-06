@@ -6,6 +6,6 @@
 		<Method id="A2M4T3" name="PatrolPointD" Quality="500" Duration="10" XCoord="300" YCoord="300"></Method>
 	</Task>
 	<Task id="T5" name="RespondToAccident" qaf="SumAll" >
-		<Method id="A2M6T5" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="50"></Method>
+		<Method id="A2M6T5" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="350"></Method>
 	</Task>
 </Taems>

@@ -138,7 +138,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void CalculateCost(Task task, String requestingAgent)
 	{
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
-		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
+		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1] + SchedulingEventParams.DataItemSeparator + this.label;
 		SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
 		.AddAgentId(requestingAgent)
@@ -178,15 +178,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return null;
 	}
 	
-	public void ProcessCostBroadcast(String taskName, String agentName, String data)
+	public void ProcessCostBroadcast(String taskName, String data)
 	{	
 		if(IsManagingAgent()) {
-			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
+			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,3);
+			String sendingAgentWhoseCostHasBeenRecieved = arr[2];
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
 				System.out.println("calc is null");
 			}
-			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+			calc.AddCostData(sendingAgentWhoseCostHasBeenRecieved, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
 			if (calc.IsDataCollectionComplete())
 			{
 				String selectedAgentName = calc.GetBestAgent();
@@ -492,7 +493,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			ProcessCostBroadcast(event.params.TaskName, event.params.Data, event.params.Data);
+			ProcessCostBroadcast(event.params.TaskName, event.params.Data);
 		}
 		
 		
