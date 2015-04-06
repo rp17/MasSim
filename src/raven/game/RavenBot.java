@@ -189,7 +189,67 @@ public class RavenBot extends MovingEntity implements IRavenBot {
 
 	// ////////////////
 	// Public methods
+	public RavenBot(Vector2D position, Goal.GoalType mode) {
+		super(position,
+				RavenScript.getDouble("Bot_Scale"),
+				new Vector2D(0, 0),
+				RavenScript.getDouble("Bot_MaxSpeed"),
+				new Vector2D(1, 0),
+				RavenScript.getDouble("Bot_Mass"),
+				new Vector2D(RavenScript.getDouble("Bot_Scale"), RavenScript.getDouble("Bot_Scale")),
+				RavenScript.getDouble("Bot_MaxHeadTurnRate"),
+				RavenScript.getDouble("Bot_MaxForce"));
+		//maxHealth = RavenScript.getInt("Bot_MaxHealth");
+		//health = RavenScript.getInt("Bot_MaxHealth");
+		//numSecondsHitPersistant = RavenScript.getDouble("HitFlashTime");
+		//hit = false;
+		//score = 0;
+		status = Status.SPAWNING;
+		possessed = false;
+		fieldOfView = Math.toRadians(RavenScript.getDouble("Bot_FOV"));
 
+		setEntityType(RavenObject.BOT);
+
+		//setUpVertexBuffer();
+
+		// a bot starts off facing in the direction it is heading
+		facing = heading;
+
+		// create the navigation module
+		//pathPlanner = new RavenPathPlanner(this);
+
+		// create the steering behavior class
+		steering = new RavenSteering(world, this);
+
+		// create the regulators
+		/*
+		weaponSelectionRegulator = new Regulator(
+				RavenScript.getDouble("Bot_WeaponSelectionFrequency"));
+		goalArbitrationRegulator = new Regulator(
+				RavenScript.getDouble("Bot_GoalAppraisalUpdateFreq"));
+		targetSelectionRegulator = new Regulator(
+				RavenScript.getDouble("Bot_TargetingUpdateFreq"));
+		triggerTestRegulator = new Regulator(
+				RavenScript.getDouble("Bot_TriggerUpdateFreq"));
+		*/
+		// create the goal queue
+		brain = new GoalThink(this, mode);
+
+		// create the targeting system
+		/*
+		targSys = new RavenTargetingSystem(this);
+
+		weaponSys = new RavenWeaponSystem(this,
+				RavenScript.getDouble("Bot_ReactionTime"),
+				RavenScript.getDouble("Bot_AimAccuracy"),
+				RavenScript.getDouble("Bot_AimPersistance"));
+
+		sensoryMem = new RavenSensoryMemory(this,
+				RavenScript.getDouble("Bot_MemorySpan"));
+		*/
+		mq = MqttMessagingProvider.GetMqttProvider();
+	}
+	
 	public RavenBot(RavenGame world, Vector2D position, Goal.GoalType mode) {
 		super(position,
 				RavenScript.getDouble("Bot_Scale"),
