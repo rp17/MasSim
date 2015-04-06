@@ -160,6 +160,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(task.getLabel())
 				.AddAgentId(ag.getName());
+				Main.Message(this, true, ag.getName() + " asked to calculate cost for " + task.label);
 				SchedulingEvent event = new SchedulingEvent(ag.getName(), SchedulingCommandType.CALCULATECOST, params);
 				mq.PublishMessage(event);
 			}

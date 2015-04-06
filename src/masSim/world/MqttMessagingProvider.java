@@ -12,6 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.sample.MQTTAgent;
 
+import raven.Main;
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
@@ -223,6 +224,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	private void ProcessArrivedMessage(String message)
 	{
+		Main.Message(this, true, "Processing newly arrived Mqtt Message: " + message);
 		SchedulingEvent event = SchedulingEvent.Parse(message);
 		//System.out.println("Message Recieved :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate

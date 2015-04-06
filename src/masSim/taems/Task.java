@@ -149,7 +149,6 @@ public class Task extends Node {
 		{
 			synchronized(Task.Lock)
 			{
-				Main.Message(true, "entered lock 1");
 				for(Node n : children)
 				{
 					if (n!=null)
@@ -174,7 +173,6 @@ public class Task extends Node {
 					}
 				}
 			}
-			Main.Message(true, "exited lock 1");
 		}
 	}
 	
