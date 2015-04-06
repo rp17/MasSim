@@ -42,7 +42,7 @@ public class DijkstraAlgorithm {
     unSettledNodes = new HashSet<Method>();
     distance = new HashMap<Method, DijkstraDistance>();
     predecessors = new HashMap<Method, Method>();
-    distance.put(source, new DijkstraDistance(0,0, source.x, source.y));
+    distance.put(source, new DijkstraDistance(this.agentPos.x, this.agentPos.y, source.x, source.y));
     unSettledNodes.add(source);
     while (unSettledNodes.size() > 0) {
     	Method node = getMaximumUtility(unSettledNodes);

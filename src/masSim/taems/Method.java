@@ -106,6 +106,7 @@ public class Method extends Node implements IMethod {
 				d.quality = Long.MIN_VALUE;
 			}
 			d.duration = this.outcome.duration;
+			this.outcome.quality = d.quality;
 			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}
 		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + d.quality );

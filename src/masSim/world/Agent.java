@@ -135,15 +135,15 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return this.agentsUnderManagement.size()>0;
 	}
 	
-	public void CalculateCost(Task task)
+	public void CalculateCost(Task task, String requestingAgent)
 	{
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
 		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
 		SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
-		.AddAgentId(getName())
+		.AddAgentId(requestingAgent)
 		.AddData(costsString);
-		SchedulingEvent event = new SchedulingEvent(this.getName(), SchedulingCommandType.COSTBROADCAST, params);
+		SchedulingEvent event = new SchedulingEvent(requestingAgent, SchedulingCommandType.COSTBROADCAST, params);
 		mq.PublishMessage(event);
 	}
 	
@@ -159,7 +159,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			{
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(task.getLabel())
-				.AddAgentId(ag.getName());
+				.AddAgentId(ag.getName())
+				.AddData(this.label);
 				Main.Message(this, true, ag.getName() + " asked to calculate cost for " + task.label);
 				SchedulingEvent event = new SchedulingEvent(ag.getName(), SchedulingCommandType.CALCULATECOST, params);
 				mq.PublishMessage(event);
@@ -205,10 +206,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if (task==null) throw new Exception ("Calculate Incremental Qualities called for a null task");
 			IAgent previousAgent = task.agent;//Save previous agent, because assignment of agent will change while calculating costs and need to be reset
 			task.agent = this;
-			int base = GetScheduleCostSync(task, this).TotalQuality;
+			int incremental = GetScheduleCostSync(task, this).TotalQuality;
 			//Reset agent change for done for calculation
 			task.agent = previousAgent;
-			int incremental = GetScheduleCostSync(null, this).TotalQuality;
+			int base = GetScheduleCostSync(null, this).TotalQuality;
 			Main.Message(debugFlag, getName() + " for task " + task.getLabel() + " Base " + base + " Incremental " + incremental);
 			return new int[]{base,incremental};	
 		}
@@ -487,11 +488,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
-			CalculateCost(task);
+			CalculateCost(task, event.params.Data);
 		}
 		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
+			ProcessCostBroadcast(event.params.TaskName, event.params.Data, event.params.Data);
 		}
 		
 		
