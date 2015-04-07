@@ -6,9 +6,10 @@ public class SchedulingEventParams {
 	public String MethodId;
 	public String XCoordinate;
 	public String YCoordinate;
-	public String Data;
+	public String BaseCost;
+	public String IncrementalCost;
+	public String OriginatingAgent;
 	public String TaskName;
-	public static String DataItemSeparator = "w";
 	
 	public SchedulingEventParams()
 	{}
@@ -49,9 +50,21 @@ public class SchedulingEventParams {
 		return this;
 	}
 	
-	public SchedulingEventParams AddData(String data)
+	public SchedulingEventParams AddBaseCost(int baseCost)
 	{
-		this.Data = data + "";
+		this.BaseCost = baseCost + "";
+		return this;
+	}
+	
+	public SchedulingEventParams AddIncrementalCost(int incrementalCost)
+	{
+		this.IncrementalCost = incrementalCost + "";
+		return this;
+	}
+	
+	public SchedulingEventParams AddOriginatingAgent(String originatingAgent)
+	{
+		this.OriginatingAgent = originatingAgent + "";
 		return this;
 	}
 	
@@ -59,15 +72,6 @@ public class SchedulingEventParams {
 	{
 		this.YCoordinate = yCoord + "";
 		return this;
-	}
-	
-	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord, String taskName)
-	{
-		this.AgentId = subjectAgentId;
-		this.MethodId = methodId;
-		this.XCoordinate = xCoord;
-		this.YCoordinate = yCoord;
-		this.TaskName = taskName;
 	}
 	
 	public static SchedulingEventParams Parse(String paramsRaw)
@@ -93,7 +97,15 @@ public class SchedulingEventParams {
 		}
 		if (dataItems.length>=6)
 		{
-			params.Data = dataItems[5];
+			params.BaseCost = dataItems[5];
+		}
+		if (dataItems.length>=7)
+		{
+			params.IncrementalCost = dataItems[6];
+		}
+		if (dataItems.length>=8)
+		{
+			params.OriginatingAgent = dataItems[7];
 		}
 		return params;
 	}
@@ -112,7 +124,11 @@ public class SchedulingEventParams {
 		result += "-";
 		if (this.TaskName!=null) result += this.TaskName;
 		result += "-";
-		if (this.Data!=null) result += this.Data;
+		if (this.BaseCost!=null) result += this.BaseCost;
+		result += "-";
+		if (this.IncrementalCost!=null) result += this.IncrementalCost;
+		result += "-";
+		if (this.OriginatingAgent!=null) result += this.OriginatingAgent;
 		return result;
 	}
 }

@@ -100,6 +100,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y){
 		this.code = newCode;
 		this.label = label;
+		if (label.contains("-")) Main.Message(this, true, "Error: Agent name cannot contain a dash");
 		taskInd = 0;
 		status = Status.EMPTY;
 		flagScheduleRecalculateRequired = true;
@@ -137,12 +138,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void CalculateCost(Task task, String requestingAgent)
 	{
-		int[] costs = CalculateIncrementalQualitiesForTask(task);
-		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1] + SchedulingEventParams.DataItemSeparator + this.label;
-		SchedulingEventParams params = new SchedulingEventParams()
+		int[] costs = CalculateIncrementalQualitiesForTask(task);SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
 		.AddAgentId(requestingAgent)
-		.AddData(costsString);
+		.AddBaseCost(costs[0])
+		.AddIncrementalCost(costs[1])
+		.AddOriginatingAgent(this.label);
 		SchedulingEvent event = new SchedulingEvent(requestingAgent, SchedulingCommandType.COSTBROADCAST, params);
 		mq.PublishMessage(event);
 	}
@@ -160,7 +161,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(task.getLabel())
 				.AddAgentId(ag.getName())
-				.AddData(this.label);
+				.AddOriginatingAgent(this.label);
 				Main.Message(this, true, ag.getName() + " asked to calculate cost for " + task.label);
 				SchedulingEvent event = new SchedulingEvent(ag.getName(), SchedulingCommandType.CALCULATECOST, params);
 				mq.PublishMessage(event);
@@ -178,16 +179,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return null;
 	}
 	
-	public void ProcessCostBroadcast(String taskName, String data)
+	public void ProcessCostBroadcast(String taskName, String baseCost, String incrementalCost, String sendingAgentWhoseCostHasBeenRecieved)
 	{	
 		if(IsManagingAgent()) {
-			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,3);
-			String sendingAgentWhoseCostHasBeenRecieved = arr[2];
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
 				System.out.println("calc is null");
 			}
-			calc.AddCostData(sendingAgentWhoseCostHasBeenRecieved, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+			calc.AddCostData(sendingAgentWhoseCostHasBeenRecieved, Integer.parseInt(baseCost), Integer.parseInt(incrementalCost));
 			if (calc.IsDataCollectionComplete())
 			{
 				String selectedAgentName = calc.GetBestAgent();
@@ -339,7 +338,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
-		SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
+		SchedulingEventParams params = new SchedulingEventParams().AddAgentId(subjectAgentId).AddMethodId(methodId)
+				.AddXCoord(x2).AddYCoord(y2).AddTaskName("");
 		SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
         mq.PublishMessage(worldEvent);
     }
@@ -489,11 +489,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
-			CalculateCost(task, event.params.Data);
+			CalculateCost(task, event.params.OriginatingAgent);
 		}
 		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			ProcessCostBroadcast(event.params.TaskName, event.params.Data);
+			ProcessCostBroadcast(event.params.TaskName, event.params.BaseCost, event.params.IncrementalCost, event.params.OriginatingAgent);
 		}
 		
 		
