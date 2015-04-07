@@ -182,6 +182,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{	
 		if(IsManagingAgent()) {
 			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,3);
+			System.out.println("arr size = " + arr.length);
 			String sendingAgentWhoseCostHasBeenRecieved = arr[2];
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
