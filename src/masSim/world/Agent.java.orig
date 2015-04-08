@@ -182,6 +182,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void ProcessCostBroadcast(String taskName, String baseCost, String incrementalCost, String sendingAgentWhoseCostHasBeenRecieved)
 	{	
 		if(IsManagingAgent()) {
+<<<<<<< HEAD
+=======
+			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,3);
+			System.out.println("arr size = " + arr.length);
+			String sendingAgentWhoseCostHasBeenRecieved = arr[2];
+>>>>>>> 672193ceba7073a095b0b44d55d7e171da985495
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
 				System.out.println("calc is null");
