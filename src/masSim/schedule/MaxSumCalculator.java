@@ -35,7 +35,7 @@ public class MaxSumCalculator {
 		//		selectedAgent = ent.getKey();
 		//	}
 		//}
-		int maxImprovement = 0;
+		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{

@@ -10,6 +10,7 @@ public class SchedulingEventParams {
 	public String IncrementalCost;
 	public String OriginatingAgent;
 	public String TaskName;
+	public static String SEPARATOR = ":";
 	
 	public SchedulingEventParams()
 	{}
@@ -77,7 +78,7 @@ public class SchedulingEventParams {
 	public static SchedulingEventParams Parse(String paramsRaw)
 	{
 		SchedulingEventParams params = new SchedulingEventParams();
-		String[] dataItems = paramsRaw.split("-");
+		String[] dataItems = paramsRaw.split(SEPARATOR);
 		if (dataItems.length>=2)
 		{
 			params.XCoordinate = dataItems[0];
@@ -115,19 +116,19 @@ public class SchedulingEventParams {
 	{
 		String result = "";
 		if (this.XCoordinate!=null) result += this.XCoordinate;
-		result += "-";
+		result += SEPARATOR;
 		if (this.YCoordinate!=null) result += this.YCoordinate;
-		result += "-";
+		result += SEPARATOR;
 		if (this.AgentId!=null) result += this.AgentId;
-		result += "-";
+		result += SEPARATOR;
 		if (this.MethodId!=null) result += this.MethodId;
-		result += "-";
+		result += SEPARATOR;
 		if (this.TaskName!=null) result += this.TaskName;
-		result += "-";
+		result += SEPARATOR;
 		if (this.BaseCost!=null) result += this.BaseCost;
-		result += "-";
+		result += SEPARATOR;
 		if (this.IncrementalCost!=null) result += this.IncrementalCost;
-		result += "-";
+		result += SEPARATOR;
 		if (this.OriginatingAgent!=null) result += this.OriginatingAgent;
 		return result;
 	}

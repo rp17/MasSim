@@ -138,7 +138,7 @@ public class Task extends Node {
 		{
 			Main.Message(debugFlag, "Reissuing recurring task " + this.label);
 			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider();
-			mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
+			mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,::::" + this.label);
 		}
 	}
 	
