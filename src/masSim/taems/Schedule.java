@@ -43,6 +43,7 @@ public class Schedule {
 		ScheduleElement first = null;
 		ScheduleElement last = null;
 		Queue<ScheduleElement> mergedList = new ConcurrentLinkedQueue<ScheduleElement>();
+		List<ScheduleElement> oldElementsList = new ArrayList<ScheduleElement>();
 		List<ScheduleElement> cachedNewList = new ArrayList<ScheduleElement>();
 		List<ScheduleElement> removedList = new ArrayList<ScheduleElement>();
 		//First, loop through all elements of new schedule
@@ -91,7 +92,7 @@ public class Schedule {
 				}
 				else
 				{
-					mergedList.add(el);//Add all elements of old schedule
+					oldElementsList.add(el);//Add all elements of old schedule
 				}
 			}
 		}
@@ -99,6 +100,11 @@ public class Schedule {
 		if (!ContainsSameMethod(mergedList,first))
 		{
 			mergedList.add(first);
+		}
+		//Now add old elements core items
+		for(ScheduleElement el : oldElementsList)
+		{
+			mergedList.add(el);
 		}
 		//Now that we are done adding all elements of old schedule, along with a first, add new elements and last
 		for(ScheduleElement el : cachedNewList)
@@ -108,7 +114,7 @@ public class Schedule {
 		//Finally add the last method
 		mergedList.add(last);
 		this.items = mergedList;
-		Main.Message(true, "New Schedule " + this.hashCode() + " : " + this.toString());
+		Main.Message(false, "New Schedule " + this.hashCode() + " : " + this.toString());
 	}
 	
 	private boolean ContainsSameMethod(Collection<ScheduleElement> one, ScheduleElement two)

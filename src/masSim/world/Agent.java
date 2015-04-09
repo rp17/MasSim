@@ -138,7 +138,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void CalculateCost(Task task, String requestingAgent)
 	{
-		int[] costs = CalculateIncrementalQualitiesForTask(task);SchedulingEventParams params = new SchedulingEventParams()
+		int[] costs = CalculateIncrementalQualitiesForTask(task);
+		SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
 		.AddAgentId(requestingAgent)
 		.AddBaseCost(costs[0])
@@ -352,6 +353,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void UpdateSchedule(Schedule newSchedule)
 	{
 		this.currentSchedule.Merge(newSchedule);
+		Main.Message(true, this.label + " updated schedule: " + this.currentSchedule.toString());
 	}
 	
 	private void executeNextTask() {
@@ -362,7 +364,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
 				if(el.hasNext())
 				{
-					Main.Message(true, "Executing tasks from schedule " + currentSchedule.hashCode());
 					ScheduleElement e = el.next();
 					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
 						e = el.next();

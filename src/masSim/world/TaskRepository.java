@@ -48,7 +48,7 @@ public class TaskRepository {
 	{
 		try {
 			File file = new File(repositoryFolderPath + "\\" + fileName);
-			System.out.print(file.getAbsolutePath());
+			Main.Message(false, file.getAbsolutePath());
 			FileInputStream fis = null;
 			fis = new FileInputStream(file);
 			//Get the DOM Builder Factory

@@ -20,7 +20,7 @@ public class DijkstraAlgorithm {
 	    QUALITY,  DURATION
 	}
 	
-  private boolean debugFlag = false;
+  private boolean debugFlag = true;
   private final List<Method> nodes;
   private final List<MethodTransition> edges;
   private Set<Method> settledNodes;
@@ -30,7 +30,7 @@ public class DijkstraAlgorithm {
   private Vector2D agentPos;
   private final OptimizationMode optimizationMode = OptimizationMode.QUALITY;
 
-  public DijkstraAlgorithm(Graph graph, Vector2D agentPos) {
+  public DijkstraAlgorithm(Graph graph) {
     // create a copy of the array so that we can operate on this array
     this.nodes = new ArrayList<Method>(graph.getMethods());
     this.edges = new ArrayList<MethodTransition>(graph.getTransitions());
@@ -42,10 +42,10 @@ public class DijkstraAlgorithm {
     unSettledNodes = new HashSet<Method>();
     distance = new HashMap<Method, DijkstraDistance>();
     predecessors = new HashMap<Method, Method>();
-    distance.put(source, new DijkstraDistance(this.agentPos.x, this.agentPos.y, source.x, source.y));
+    distance.put(source, new DijkstraDistance(source.getOutcome().getQuality(), source.getOutcome().getDuration(), source.x, source.y, source.label));
     unSettledNodes.add(source);
     while (unSettledNodes.size() > 0) {
-    	Method node = getMaximumUtility(unSettledNodes);
+    	Method node = getMaximumUtility(unSettledNodes, source);
       settledNodes.add(node);
       unSettledNodes.remove(node);
       findMaximumUtilities(node);
@@ -60,13 +60,29 @@ public class DijkstraAlgorithm {
       DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, highestUtilityToNode);
       DijkstraDistance currentHighestUtilityFromNodeToTarget = getHighestUtility(target);
       DijkstraDistance newUtilityFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
-      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget)) {
-    	Main.Message(debugFlag, "[DijkstraAlgorithm 55] Adding route " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + currentHighestUtilityFromNodeToTarget.quality);
-        distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
-        predecessors.put(target, node);
+      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget, node) || (target.label==Method.FinalPoint)) {
+    	Main.Message(true, "[DijkstraAlgorithm 55] Adding route " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + currentHighestUtilityFromNodeToTarget.quality);
+        target.DijkstraSavedQualityTillThisStep = node.DijkstraSavedQualityTillThisStep + newUtilityFromNodeToTargetFromCurrentRoute.quality;
+    	distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
+    	Main.Message(true, "Added predecessor " + node.toStringLong() + " for " + target.toStringLong());
+        PutPredecessor(target, node);
         unSettledNodes.add(target);
       }
     }
+  }
+  
+  private void PutPredecessor(Method target, Method node)
+  {
+	  Method current = predecessors.get(target);
+	  if (current!=null)
+	  {
+		  if (node.DijkstraSavedQualityTillThisStep>current.DijkstraSavedQualityTillThisStep)
+			  predecessors.put(target,node);
+	  }
+	  else
+	  {
+		  predecessors.put(target,node);
+	  }
   }
 
   private DijkstraDistance getDistance(Method node, Method target, DijkstraDistance distanceTillPreviousNode) {
@@ -92,20 +108,27 @@ public class DijkstraAlgorithm {
           }
           else
           {
-        	  if (debugFlag) System.out.println("[DijkstraAlgorithm 93] neighbor: " + dest.label + " already added");
+        	  if (dest.label==Method.FinalPoint)
+        	  {
+        		  neighbors.add(dest);
+        	  }
+        	  else
+        	  {
+        		  if (debugFlag) System.out.println("[DijkstraAlgorithm 93] neighbor: " + dest.label + " already added");
+        	  }
     	  }
       }
     }
     return neighbors;
   }
 
-  private Method getMaximumUtility(Set<Method> vertexes) {
+  private Method getMaximumUtility(Set<Method> vertexes, Method sourceNode) {
 	  Method maximum = null;
     for (Method vertex : vertexes) {
       if (maximum == null) {
         maximum = vertex;
       } else {
-        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum))) {
+        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum),sourceNode)) {
           maximum = vertex;
         }
       }
@@ -120,7 +143,7 @@ public class DijkstraAlgorithm {
   private DijkstraDistance getHighestUtility(Method destination) {
     DijkstraDistance d = distance.get(destination);
     if (d == null) {
-      return new DijkstraDistance(Long.MIN_VALUE,0,destination.x, destination.y);
+      return new DijkstraDistance(Long.MIN_VALUE,0,destination.x, destination.y, destination.label);
     } else {
       return d;
     }

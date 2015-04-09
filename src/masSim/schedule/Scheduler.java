@@ -47,7 +47,9 @@ public class Scheduler implements Runnable {
 			}
 			Schedule schedule = CalculateSchedule();
 			if (schedule!=null)
-				this.agent.UpdateSchedule(schedule);	
+				this.agent.UpdateSchedule(schedule);
+			else
+				Main.Message(true, this.agent.getName() + " schedule came out to be null");
 		}
 	}
 		
@@ -69,7 +71,6 @@ public class Scheduler implements Runnable {
 					{
 						agent.GetCurrentTasks().addTask(newTask);
 					}
-					Main.Message(true, "exited lock 2");
 				}
 			}
 			//Remove completed tasks
@@ -122,7 +123,7 @@ public class Scheduler implements Runnable {
 		//Create a Graph of these methods and run Dijkstra Algorithm on it
 		Graph graph = new Graph(nodes, edges);
 		graph.Print();
-	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph, agentPos);
+	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
 	    dijkstra.execute(initialMethod);
 	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
 	    //Print the determined schedule
@@ -168,7 +169,7 @@ public class Scheduler implements Runnable {
 		{
 			m += s.label + " > ";
 		}
-		Main.Message(debugFlag, "[Scheduler 185] Node Methods: " + m );
+		Main.Message(false, "[Scheduler 185] Node Methods: " + m );
 	}
 	
 	//A helper method used internally by CalculateScheduleFromTaems method

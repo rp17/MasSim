@@ -40,7 +40,7 @@ public class MaxSumCalculator {
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
 			int improvement = ql.incremental - ql.base;
-			Main.Message(true, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
+			Main.Message(false, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
 			if (improvement > maxImprovement)
 			{
 				maxImprovement = improvement;

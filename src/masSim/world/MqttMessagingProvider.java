@@ -224,7 +224,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	private void ProcessArrivedMessage(String message)
 	{
-		Main.Message(this, true, "Processing newly arrived Mqtt Message: " + message);
+		Main.Message(this, true, "Mqtt message recieved: " + message);
 		SchedulingEvent event = SchedulingEvent.Parse(message);
 		//System.out.println("Message Recieved :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate
