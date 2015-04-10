@@ -188,7 +188,6 @@ public class Scheduler implements Runnable {
 					m = new Method((Method)task);
 				else
 					m = (Method)task;
-				m.AddObserver(Parent);
 				nodes.add(m);
 				MethodTransition t = new MethodTransition("From " + lastMethod.label + " to " + m.label, lastMethod, m);
 				edges.add(t);
@@ -198,9 +197,6 @@ public class Scheduler implements Runnable {
 			{
 				Method[] localLastMethodList = new Method[]{lastMethod};
 				Task tk = (Task)task;
-				//Main.Message(debugFlag, "[Scheduler 212] Node is Task. Enumerating children for " + tk.label);
-				//Designate a parent for this task, which can be used for completion notifications up the hierarchy
-				if (Parent!=null) tk.AddObserver(Parent);
 				masSim.taems.QAF qaf = tk.getQAF();
 				if (qaf instanceof SeqSumQAF)
 				{

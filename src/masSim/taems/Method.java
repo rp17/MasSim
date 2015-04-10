@@ -76,8 +76,6 @@ public class Method extends Node implements IMethod {
 	{
 		super.MarkCompleted();
 		WorldState.CompletedMethods.add(this);
-		//Only print if its an actual task, and not an FSM connective created by the scheduler
-		this.NotifyAll();
 	}
 	
 	public DijkstraDistance getPathUtilityRepresentedAsDistance(DijkstraDistance distanceTillPreviousNode, Vector2D agentPos)

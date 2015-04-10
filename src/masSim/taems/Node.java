@@ -8,7 +8,7 @@ import java.util.Vector;
 
 import masSim.world.MqttMessagingProvider;
 
-public abstract class Node extends Element  implements IObserver {
+public abstract class Node extends Element {
 	public static final int    EXECUTING = 1;
 	public static final int    COMPLETED = 2;
 	public static final int    ACTIVE = 3;
@@ -16,7 +16,7 @@ public abstract class Node extends Element  implements IObserver {
 	protected boolean recurring = false;
 	protected transient int status;
 	protected List<Node> children;
-	public ArrayList<Node> Observers = new ArrayList<Node>();
+	public ArrayList<Node> Observers1 = new ArrayList<Node>();
 	public abstract boolean IsTask();
 	public Iterator<Node> getSubtasks(){
 		return children.iterator();
@@ -210,38 +210,7 @@ public abstract class Node extends Element  implements IObserver {
 			this.status = COMPLETED;
 		}
 	    
-		@Override
-		public void NotifyAll() {
-			for(Node b : this.Observers)
-			{
-				b.Update((Node)this);
-			}
-		}
 
-		@Override
-		public void Update(Node observedTask) {
-			synchronized(Task.Lock){
-			Node matchingTask = null;
-			for(Node b: this.children)
-			{
-				if (b.label.equals(observedTask.label))
-				{
-					matchingTask = b;
-				}
-			}
-			if (matchingTask!=null)
-				this.children.remove(matchingTask);
-			if (this.children.isEmpty() && !this.IsComplete())
-			{
-				MarkCompleted();
-			}}
-		}
-
-		@Override
-		public void AddObserver(Node observer) {
-			this.Observers.add(observer);
-		}
-		
 	    
 }
 

@@ -4,8 +4,8 @@
 		<Method id="A1M2T1" name="DropToHospital" Quality="500" Duration="10" XCoord="100" YCoord="200"></Method>
 	</Task>
 	<Task id="A1T2" name="DropPatient" qaf="SeqSum" >
-		<Method id="A1M1T2" name="PickFromHospital" Quality="500" Duration="10" XCoord="300" YCoord="150"></Method>
-		<Method id="A1M2T2" name="DropToHouse" Quality="500" Duration="10" XCoord="300" YCoord="200"></Method>
+		<Method id="A1M1T2" name="PickFromHospital" Quality="500" Duration="10" XCoord="400" YCoord="150"></Method>
+		<Method id="A1M2T2" name="DropToHouse" Quality="500" Duration="10" XCoord="400" YCoord="200"></Method>
 	</Task>
 	<Task id="T3" name="RespondToAccident" qaf="SumAll" >
 		<Method id="A1M1T3" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="350"></Method>

@@ -23,8 +23,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		mq = MqttMessagingProvider.GetMqttProvider();
 		mq.SubscribeForAgent(getName());
 		//Create list of tasks to be executed in a loop
-		//MasterTaskList.add("Ambulance,ASSIGNTASK,::::PickPatient");
-		//MasterTaskList.add("Ambulance,ASSIGNTASK,::::DropPatient");
+		MasterTaskList.add("Ambulance,ASSIGNTASK,::::PickPatient");
+		MasterTaskList.add("Ambulance,ASSIGNTASK,::::DropPatient");
 		MasterTaskList.add("Police,ASSIGNTASK,::::Patrol");
 		//MasterTaskList.add("Police,NEGOTIATE,::::RespondToAccident");
 	}

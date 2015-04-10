@@ -128,7 +128,6 @@ public class Task extends Node {
 		super.MarkCompleted();
 		Main.Message(debugFlag, "[Task 63] Task " + label + " completed.");
 		WorldState.CompletedTasks.add(this);
-		this.NotifyAll();
 		//ReIssueIfNecessary();
 	}
 	
