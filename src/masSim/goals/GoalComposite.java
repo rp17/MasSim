@@ -11,7 +11,8 @@ import raven.math.Vector2D;
 abstract public class GoalComposite extends Goal {
 	
 	protected ArrayList <Goal> m_SubGoals;
-	public boolean LaunchedByMasSim = false;
+	//public boolean LaunchedByMasSim = false;
+	public boolean LaunchedByMasSim = true; // masSim.goals.GoalComposite can only be launched by MasSim
 	public GoalComposite(SimBot PE, masSim.goals.Goal.GoalType type) {
 		super(PE, type);
 		m_SubGoals = new ArrayList<Goal>();

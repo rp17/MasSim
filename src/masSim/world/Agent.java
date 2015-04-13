@@ -26,12 +26,21 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import raven.Main;
+import raven.game.RoverBot;
+//import raven.game.RoverBot;
+import raven.game.Waypoints;
+import raven.game.Waypoints.Wpt;
+import masSim.goals.GoalComposite;
 import raven.math.Vector2D;
-import raven.ui.RavenUI;
+//import raven.ui.RavenUI;
 import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
+	private SimBot simBot;
+	Waypoints wpts = new Waypoints();
+	private final static String schedulingEventListenerName = "RavenUI";
+	public boolean noUI = true;
 	private boolean debugFlag = true;
 	private boolean errorFlag = true;
 	private static int GloballyUniqueAgentId = 1;
@@ -119,6 +128,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		localScheduler = new Scheduler(this);
 	}
 	
+	public void setBot(SimBot bot) {
+		this.simBot = bot;
+	}
 	//A public method to feed new tasks to the scheduler
 	public void AssignTask(String taskName)
 	{
@@ -347,9 +359,54 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
-			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
+			
+			// the event SchedulingCommandType.DISPLAYTASKEXECUTION make RavenUI assign a pid traverse goal to a bot
+			// instead, this assignment must be done directly to SimBot associated with this Agent
+			
+			Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
+			GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
+			
+			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
+			
+			
+			
 			this.flagScheduleRecalculateRequired = false;
 		}
+	}
+	
+	public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)
+	{
+		//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
+		Vector2D currentPosition = bot.pos();
+		Waypoints local = new Waypoints();
+		String waypointNamesForDebugging = "";
+		
+		/* why this loop ? HashMap much better
+		for(int i=0;i<wpts.size();i++)
+		{
+			Waypoints.Wpt wp = wpts.get(i);
+			waypointNamesForDebugging += wp.name + ".";
+			//Main.Message(debugFlag, "[RavenGame 790] Testing waypoint " + wp.name );
+			if (wp.name.equals(methodName))
+			{
+				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
+				local.addWpt(new Vector2D(wp.x, wp.y));
+				break;
+			}
+		}
+		*/
+		
+		Wpt wpt = wpts.get(methodName);
+		if(wpt != null) {
+			local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
+			local.addWpt(new Vector2D(wpt.x, wpt.y));
+		}
+		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
+		{
+			waypointNamesForDebugging = "Possible Error: " + methodName + " not found in " + waypointNamesForDebugging + " by " + bot.name;
+			Main.Message(this, true, waypointNamesForDebugging);
+		}
+		return local;
 	}
 	
 	@Override
@@ -376,16 +433,21 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					}
 				}
 			}
-			this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+			wpts.removeWpt(currentMethod.label);
+			this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
 			flagScheduleRecalculateRequired = true;
 			status=Status.PROCESSNG;
 		}
 	}
 	
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
-		SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
-		SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
-        mq.PublishMessage(worldEvent);
+		
+		if(destinationAgentId == Agent.schedulingEventListenerName && noUI) {return;} // since schedulingEventListenerName String is final static, reference comparison is enough
+		else {
+			SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
+			SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
+			mq.PublishMessage(worldEvent);
+		}
     }
 	
 	// Returns identifying code, specific for this agent
@@ -427,7 +489,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
-			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
+			wpts.addWpt(new Vector2D(method.x, method.y), method.getLabel());
+			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
 		}
 		else
 		{
@@ -457,7 +520,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public void run() {
-		fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
+		fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
 		RunSchedular();
 		status=Status.PROCESSNG;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
@@ -514,6 +577,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	@Override
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
+		System.out.println("Agent.ProcessSchedulingEvent " + label + " received event " + event.commandType);
 		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			AssignTask(event.params.TaskName);

@@ -7,9 +7,10 @@ import java.util.List;
 
 import masSim.goals.Goal;
 import masSim.goals.GoalComposite;
-import masSim.goals.GoalRoverThink;
+import masSim.goals.GoalThink;
+//import masSim.goals.GoalRoverThink;
 import masSim.goals.Goal_PIDFollowPath;
-import raven.game.RoverBot;
+//import raven.game.RoverBot;
 import raven.game.Waypoints;
 import raven.game.interfaces.IBot;
 import raven.game.navigation.NavGraphEdge;
@@ -65,11 +66,12 @@ public class SimBot implements IBot{
 	/**
 	 * this object handles the arbitration and processing of high level goals
 	 */
-	protected GoalRoverThink brain;
+	protected GoalThink brain;
 	
 	
 	public SimBot(IAgent agent, Vector2D position, Goal.GoalType mode) {
 		this.agent = agent;
+		name = agent.getName();
 		this.position = position;
 		velocity = new Vector2D(0,0);
 		maxSpeed = RavenScript.getDouble("Bot_MaxSpeed");
@@ -78,10 +80,12 @@ public class SimBot implements IBot{
 		maxTurnRate = RavenScript.getDouble("Bot_MaxHeadTurnRate");
 		maxForce = RavenScript.getDouble("Bot_MaxForce");
 		
-		
+		// create the goal queue
+		brain = new GoalThink(this, mode);
 	}
 	
 	public GoalComposite addWptsGoal(Waypoints wpts, String methodName){
+		System.out.println("SimBot.addWptsGoal " + name + " assigned wpt " + methodName);
 		if(wpts.size() > 1) {
 			List<PathEdge>  m_Path = new ArrayList<PathEdge>();
 			Vector2D src = wpts.get(0).pos;
@@ -97,8 +101,10 @@ public class SimBot implements IBot{
 			//Goal_SeekToPosition g = new Goal_SeekToPosition(this,new Vector2D(m_Path.get(0).Destination()));
 			//brain.AddSubgoal(g);
 			brain.ClearAndAddSubgoal(g);
+			System.out.println("SimBot.addWptsGoal " + name + " assigned Goal_PIDFollowPath " + methodName);
 			return g;
 		}
+		System.out.println("SimBot.addWptsGoal " + name + " received waypoint list with size " + wpts.size() + "! Should be > 1");
 		return null;
 	}
 	/*
@@ -135,7 +141,7 @@ public class SimBot implements IBot{
 	
 	protected void updateMovement(double delta) { // delta in seconds
 		
-		
+		//System.out.println("Bot " + getName() + " update movement, delta = " + delta + " secs");
 		// (2do) pid control, acceleration, deceleration depending on doPID value
 		
 		if(!doPID && speed == 0) return;

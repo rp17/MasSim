@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import raven.math.Vector2D;
 import masSim.schedule.Scheduler;
 import masSim.world.AgentMode;
+import masSim.world.SimBot;
 
 public interface IAgent {
 	List<Task> getPendingTasks();
@@ -25,4 +26,5 @@ public interface IAgent {
 	public Task GetCurrentTasks();
 	public void RegisterChildrenWithUI(Node node);
 	public ArrayList<String> getAgentsUnderManagement();
+	void setBot(SimBot bot);
 }

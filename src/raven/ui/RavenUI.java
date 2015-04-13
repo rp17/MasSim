@@ -462,8 +462,9 @@ public class RavenUI extends JFrame implements KeyListener, MouseInputListener, 
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYREMOVEMETHOD)
 		{ 
-			Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
-			game.removeWpt(popupLoc, event.params.MethodId);
+			//Vector2D popupLoc = new Vector2D(event.params.XCoordinate, event.params.YCoordinate);
+			//game.removeWpt(popupLoc, event.params.MethodId);
+			game.removeWpt(event.params.MethodId);
 		}
 		if (event.commandType==SchedulingCommandType.DISPLAYADDAGENT)
 		{ 

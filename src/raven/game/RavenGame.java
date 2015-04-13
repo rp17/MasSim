@@ -773,6 +773,9 @@ public class RavenGame {
 	public void removeWpt(Vector2D pos, String name){
 		wpts.removeWpt(pos, name);
 	}
+	public void removeWpt(String name){
+		wpts.removeWpt(name);
+	}
 	public void clearWpts(){
 		wpts.clearWpts();
 	}
@@ -783,6 +786,8 @@ public class RavenGame {
 		Vector2D currentPosition = bot.pos();
 		Waypoints local = new Waypoints();
 		String waypointNamesForDebugging = "";
+		
+		/*
 		for(int i=0;i<wpts.size();i++)
 		{
 			Waypoints.Wpt wp = wpts.get(i);
@@ -794,6 +799,12 @@ public class RavenGame {
 				local.addWpt(new Vector2D(wp.x, wp.y));
 				break;
 			}
+		}
+		*/
+		Wpt wpt = wpts.get(methodName);
+		if(wpt != null) {
+			local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
+			local.addWpt(new Vector2D(wpt.x, wpt.y));
 		}
 		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
 		{

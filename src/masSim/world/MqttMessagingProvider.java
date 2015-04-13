@@ -37,7 +37,7 @@ import java.util.Enumeration;
 
 public class MqttMessagingProvider implements MqttCallback {
 
-	private boolean simulationMode = true;
+	private boolean simulationMode = false;
 	private String baseTopic;
 	private int qos;
 	private String broker;
@@ -224,10 +224,10 @@ public class MqttMessagingProvider implements MqttCallback {
 	private void ProcessArrivedMessage(String message)
 	{
 		SchedulingEvent event = SchedulingEvent.Parse(message);
-		//System.out.println("Message Recieved :" + event);
+		//System.out.println("Message Received :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate
 		//the running of separate mqtt listeners in each agent thread, because the same TCP port number gets tied down.
-		//However, the logic expects that not all events go to all listeners, hence a filtering is being done here
+		//However, the logic expects that not all events go to all listeners, hence filtering is being done here
 		for(SchedulingEventListener listener : schedulingEventListeners)
 		{
 			if (event.agentName.equals(listener.getName()) || listener.IsGlobalListener())

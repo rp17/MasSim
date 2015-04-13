@@ -2,6 +2,8 @@ package raven.game;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +14,8 @@ import raven.ui.GameCanvas;
 
 public class Waypoints {
 	private List<Wpt> wpts = new ArrayList<Wpt>(10);
+	private Map<String, Wpt> wptsMap = new HashMap<String, Wpt>();
+	private static int nextNum = 0;
 	public class Wpt {
 		public Vector2D pos;
 		public String name;
@@ -27,36 +31,35 @@ public class Waypoints {
 		}
 	}
 	public void addWpt(Vector2D pos) {
-		wpts.add(new Wpt(pos));
+		String nextWptName = "selfGenWaypoint" + nextNum;
+		nextNum++;
+		Wpt wpt = new Wpt(pos, nextWptName);
+		wpts.add(wpt);
+		wptsMap.put(nextWptName, wpt);
 	}
 	public void addWpt(Vector2D pos, String name) {
-		wpts.add(new Wpt(pos, name));
+		Wpt wpt = new Wpt(pos, name);
+		wpts.add(wpt);
+		wptsMap.put(name, wpt);
+	}
+	public void removeWpt(String name) {
+		Wpt wpt = wptsMap.get(name);
+		if(wpt != null) {
+			wpts.remove(wpt);
+			wptsMap.remove(name);
+		}
 	}
 	public void removeWpt(Vector2D pos, String name) {
-		Wpt selectedWp = null;
-		for(Wpt wp: wpts)
-		{
-			if (wp.name.equals(name))
-			{
-				selectedWp = wp;
-			}
-		}
-		wpts.remove(selectedWp);
+		removeWpt(name);
 	}
+	
 	public void clearWpts(){
 		wpts.clear();
+		wptsMap.clear();
 	}
 	public int size(){return wpts.size();}
 	public Waypoints.Wpt get(int i) {return wpts.get(i);}
-	public Waypoints.Wpt get(String name)
-	{
-		for(Waypoints.Wpt wp: wpts)
-		{
-			if (wp.name==name)
-				return wp;
-		}
-		return null;
-	}
+	public Waypoints.Wpt get(String name) {return wptsMap.get(name);}
 	public synchronized void render() {		
 		GameCanvas.bluePen();
 		for (Wpt wpt : wpts) {

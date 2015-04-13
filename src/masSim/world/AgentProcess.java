@@ -46,6 +46,7 @@ public class AgentProcess {
 		this.agent = new Agent(name, isManagingAgent, x, y, mq);
 		Vector2D pos = new Vector2D(x, y);
 		this.bot = new SimBot(agent, pos, Goal.GoalType.goal_roverthink);
+		agent.setBot(bot);
 		botRunnable = new BotRunnable(bot);
 	}
 	public IAgent getAgent() {return agent;}
@@ -133,6 +134,7 @@ public class AgentProcess {
 			}
 			
 			agentProc.startBot();
+			System.out.println("Started agent " + agent.getName());
 			
 		}
 	}

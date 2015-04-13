@@ -148,7 +148,7 @@ public class GoalThink extends GoalComposite {
 		
 		return true;
 	}
-	
+	/*
 	public void queueGoal_moveToPosition(Vector2D pos) {
 		m_SubGoals.add(new Goal_MoveToPosition(m_pOwner, pos));
 		Log.debug("GoalThink", "Queued new Goal_MoveToPosition to bot " + m_pOwner.ID());
@@ -158,7 +158,7 @@ public class GoalThink extends GoalComposite {
 		AddSubgoal( new Goal_MoveToPosition(m_pOwner, pos));
 		Log.debug("GoalThink", "Added new Goal_MoveToPosition to bot " + m_pOwner.ID());
 	}
-/*
+
 	public void addGoal_explore() {
 		if (notPresent(GoalType.goal_explore)) {
 			removeAllSubgoals();
@@ -191,12 +191,12 @@ public class GoalThink extends GoalComposite {
 	}
 
 	public void renderEvaluations(Integer left, Integer top){ }
-	 */
+	 
 	public void queueGoal_moveToPosition(Vector2D pos, Vector2D p) {
 		m_SubGoals.add(new Goal_MoveToPosition(m_pOwner, p));
 		Log.debug("GoalThink", "Queued new Goal_MoveToPosition to bot " + m_pOwner.ID());
 	}
-
+	 */
 	@Override
 	public void terminate() {}
 }

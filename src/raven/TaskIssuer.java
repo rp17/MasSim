@@ -26,7 +26,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
 		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
-		MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
+		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 	}
 	
