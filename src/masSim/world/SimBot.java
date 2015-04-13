@@ -118,6 +118,9 @@ public class SimBot implements IBot{
 	}
 	
 	public void update(double delta) {
+		if(brain == null) {
+			System.out.println("SimBot: brain is null");
+		}
 		brain.process(delta);
 		// Calculate the steering force and update the bot's velocity and
 		// position

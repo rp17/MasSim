@@ -90,7 +90,9 @@ public class AgentProcess {
 			System.out.println("Command line should contain: name, true|false, x, y");
 		}
 		else {
-			
+			for(int i = 0; i<args.length; i++) {
+				System.out.println("AgentProcess: args[" + i + "] = " + args[i]);
+			}
 			String name = args[0];
 			String isManagingS = args[1];
 			String xS = args[2];
@@ -130,7 +132,7 @@ public class AgentProcess {
 	    		}
 			}
 			
-			
+			agentProc.startBot();
 			
 		}
 	}
