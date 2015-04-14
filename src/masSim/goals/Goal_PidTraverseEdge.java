@@ -5,13 +5,12 @@ import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventParams;
 import masSim.world.MqttMessagingProvider;
 import masSim.world.SimBot;
-
 import raven.game.navigation.NavGraphEdge;
 import raven.game.navigation.PathEdge;
 import raven.script.RavenScript;
-
 import raven.math.Vector2D;
 import raven.Main;
+import raven.TaskIssuer;
 
 public class Goal_PidTraverseEdge extends GoalComposite {
 	private static double distTolerance = 350.0;
@@ -96,14 +95,18 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 		//System.out.println("Distance from destination: " + dist);
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
+				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, coords: " + m_pOwner.pos());
 				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
-				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
+				//SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
+				m_pOwner.getAgent().MarkMethodCompleted(m_Edge.MethodRepresentedByEdge());
+				
+				//SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.METHODCOMPLETED, params);
 				LaunchedByMasSim = false;
 				if(mq == null) {
 					Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
 				}
 				else {
-					mq.PublishMessage(event);
+					//mq.asyncPublishMessage(event);
 				}
 			}
 		//}

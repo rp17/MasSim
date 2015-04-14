@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 public class AgentProcess {
 
 	private final ExecutorService botUpdatePool = Executors.newSingleThreadExecutor();
+	private final ExecutorService agentPool = Executors.newSingleThreadExecutor();
     private MQTTAgent client;
     private SimBot bot;
     private IAgent agent;
@@ -48,9 +49,16 @@ public class AgentProcess {
 		this.bot = new SimBot(agent, pos, Goal.GoalType.goal_roverthink);
 		agent.setBot(bot);
 		botRunnable = new BotRunnable(bot);
+		
 	}
 	public IAgent getAgent() {return agent;}
 	public SimBot getBot() {return bot;}
+	public void startAgent(){
+		agentPool.execute(agent);
+	}
+	public void stopAgent() {
+		agentPool.shutdown();
+	}
 	public void startBot() {
 		botUpdatePool.execute(botRunnable);
 	}
@@ -134,6 +142,8 @@ public class AgentProcess {
 			}
 			
 			agentProc.startBot();
+			agentProc.startAgent();
+			agent.startEventProcessing();
 			System.out.println("Started agent " + agent.getName());
 			
 		}

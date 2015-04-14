@@ -9,7 +9,7 @@ import masSim.schedule.Scheduler;
 import masSim.world.AgentMode;
 import masSim.world.SimBot;
 
-public interface IAgent {
+public interface IAgent extends Runnable {
 	List<Task> getPendingTasks();
 	public int getCode();
 	public void AddChildAgent(String agentName);
@@ -27,4 +27,5 @@ public interface IAgent {
 	public void RegisterChildrenWithUI(Node node);
 	public ArrayList<String> getAgentsUnderManagement();
 	void setBot(SimBot bot);
+	public void startEventProcessing();
 }

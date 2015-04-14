@@ -37,7 +37,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		Main.Message(this, true, ": have added tasks");
 	}
 	
-	private void initSubscribe() {
+	private void asyncInitSubscribe() {
 		commsPool.execute( new Runnable(){
 	 		@Override
 	 		public void run() {
@@ -47,13 +47,26 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	 			SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
 	 			mq.PublishMessage(evt);
 	 			Main.Message(this, true, ": about to SubscribeForAgent");
-	 			mq.SubscribeForAgent(ambName);
+	 			//mq.SubscribeForAgent(ambName);
+	 			mq.SubscribeForAgent(TaskIssuerName);
 	 			Main.Message(this, true, ": about to add tasks");
 	 		}
 		});
 	}
 
-	
+	private void initSubscribe() {
+		
+	 			Main.Message(this, true, ": about to GetMqttProvider");
+	 			mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName);
+	 			Main.Message(this, true, ": about to publish");
+	 			SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
+	 			mq.PublishMessage(evt);
+	 			Main.Message(this, true, ": about to SubscribeForAgent");
+	 			//mq.SubscribeForAgent(ambName);
+	 			mq.SubscribeForAgent(TaskIssuerName);
+	 			Main.Message(this, true, ": about to add tasks");
+	 		
+	}
 	@Override
 	public void run() {
 
@@ -63,12 +76,13 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			// need to invoke this method once the previous scenario is finished - then no need to sleep for 5 sec
 			Thread.sleep(5000);
 			//RelaunchExecutionLoop();
-			AsyncRelaunchExecutionLoop();
+			RelaunchExecutionLoop();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		/*
 		System.out.println("TaskIssuer started. Hit enter to exit.");
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		//String commandText = null;	
@@ -77,6 +91,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		} 
 		catch (IOException ioe) {}
 		System.exit(0);
+		*/
 	}
 
 	private void AsyncRelaunchExecutionLoop()
@@ -103,11 +118,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	 			{
 	 				Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
 	 				final String msg = taskMessage;
-	 				commsPool.execute( new Runnable(){
-	 			 		@Override
-	 			 		public void run() {
-	 			 			mq.PublishMessage(msg);
-	 			 		}});
+	 			 	mq.PublishMessage(msg);	
 	 			}
 	 		
 	}

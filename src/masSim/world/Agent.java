@@ -10,33 +10,35 @@ import masSim.schedule.SchedulingEventListener;
 import masSim.schedule.SchedulingEventParams;
 import masSim.taems.*;
 
-import java.io.IOException;
+//import java.io.IOException;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
+//import java.util.AbstractMap.SimpleEntry;
+//import java.util.concurrent.Callable;
+//import java.util.concurrent.ConcurrentHashMap;
+//import java.util.concurrent.ConcurrentLinkedQueue;
+//import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
+//import java.util.concurrent.Future;
+//import java.util.concurrent.FutureTask;
+//import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeoutException;
+//import java.util.concurrent.atomic.AtomicReference;
 
 import raven.Main;
-import raven.game.RoverBot;
+import raven.TaskIssuer;
+//import raven.game.RoverBot;
 //import raven.game.RoverBot;
 import raven.game.Waypoints;
 import raven.game.Waypoints.Wpt;
 import masSim.goals.GoalComposite;
 import raven.math.Vector2D;
 //import raven.ui.RavenUI;
-import raven.utils.SchedulingLog;
+//import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
+	
 	private SimBot simBot;
 	Waypoints wpts = new Waypoints();
 	private final static String schedulingEventListenerName = "RavenUI";
@@ -118,17 +120,23 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<String>(2);
-		this.mq = mq;
-		//this.mq = MqttMessagingProvider.GetMqttProvider();
-		this.mq.SubscribeForAgent(getName());
-		this.mq.AddListener(this);
+		
+		
+		//this.mq.SubscribeForAgent(TaskIssuer.TaskIssuerName); 
+		
 		//schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
 		this.schedulerPool = Executors.newFixedThreadPool(5);
 		localScheduler = new Scheduler(this);
+		this.mq = mq;
 	}
-	
+	public void startEventProcessing() {
+		
+		this.mq.AddListener(this); // start listening for events from its own instance of MqttMessagingProvider
+		//this.mq = MqttMessagingProvider.GetMqttProvider();
+		this.mq.SubscribeForAgent(label);// needs to listen to topic of the agent's own name to which TaskIssuer posts task assignments
+	}
 	public void setBot(SimBot bot) {
 		this.simBot = bot;
 	}
@@ -351,6 +359,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void ExecuteTask(Method m) throws InterruptedException
 	{
+		System.out.println("Agent.ExecuteTask: starting execution of " + m.label);
 		while (!AreEnablersInPlace(m))
 		{
 			Main.Message(debugFlag, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
@@ -436,7 +445,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 			}
 			wpts.removeWpt(currentMethod.label);
-			this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+			
+			//this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+			
 			flagScheduleRecalculateRequired = true;
 			status=Status.PROCESSNG;
 		}
@@ -465,6 +476,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private void executeNextTask() {
 		try
 		{
+			Main.Message(true, "Agent.executeNextTask ");
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
@@ -525,9 +537,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
 		RunSchedular();
 		status=Status.PROCESSNG;
+		int i = 0;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
 		while(true)
 		{
+			//Main.Message(this, true, this.label + " run() while loop iteration " + i + " status " + status);
+			i++;
 			if (status==Status.PROCESSNG){
 				executeNextTask();
 			}
