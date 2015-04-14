@@ -43,23 +43,16 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	 		public void run() {
 	 			Main.Message(this, true, ": about to GetMqttProvider");
 	 			mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName);
-	 			mq.createCallback();
 	 			Main.Message(this, true, ": about to publish");
 	 			SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
 	 			mq.PublishMessage(evt);
-	 			//Main.Message(this, true, ": about to SubscribeForAgent");
-	 			//mq.SubscribeForAgent(ambName);
+	 			Main.Message(this, true, ": about to SubscribeForAgent");
+	 			mq.SubscribeForAgent(ambName);
 	 			Main.Message(this, true, ": about to add tasks");
 	 		}
 		});
 	}
-	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus
-	//have its own main entry point.
-	public static void main(String[] args) {
-		TaskIssuer cc = new TaskIssuer();
-		cc.initSubscribe();
-		cc.run();
-	}
+
 	
 	@Override
 	public void run() {
@@ -141,5 +134,12 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	@Override
 	public boolean IsGlobalListener() {
 		return true;
+	}
+	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus
+	//have its own main entry point.
+	public static void main(String[] args) {
+		TaskIssuer cc = new TaskIssuer();
+		cc.initSubscribe();
+		cc.run();
 	}
 }

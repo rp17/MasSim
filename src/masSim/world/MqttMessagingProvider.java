@@ -35,7 +35,7 @@ import raven.Main;
 //import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 //import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
-public class MqttMessagingProvider implements MqttCallback {
+public class MqttMessagingProvider {
 
 	private boolean simulationMode = false;
 	private String baseTopic = "";
@@ -46,7 +46,8 @@ public class MqttMessagingProvider implements MqttCallback {
 	private String clientName;
 	private String callbackName;
 	private static MqttMessagingProvider provider;
-	private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
+	private static MqttMessagingCallback callback;
+	//private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
 	
 	public static synchronized MqttMessagingProvider GetMqttProvider(){return provider;}
 	
@@ -71,8 +72,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	public void AddListener(SchedulingEventListener listener)
 	{
-		if(!schedulingEventListeners.contains(listener))
-			schedulingEventListeners.add(listener);
+		callback.AddListener(listener);
 	}
 	
 	private MqttMessagingProvider(String name) throws MqttException
@@ -94,7 +94,8 @@ public class MqttMessagingProvider implements MqttCallback {
 					String publishMessage = "Node: " + nodeID + " Time: " + dateFormat.format(cal.getTime());
 					
 					client = new MQTTAgent(url,nodeID,false, true, null, null);
-					//client.setCallBack(this);
+					callback = new MqttMessagingCallback(callbackName);
+					client.setCallBack(callback);
 					
 					//QoS (0-means FireAndForget which is fastest; 1- means StoreAndForwardWithDuplicate which is bit slow; 2- means StoreAndForwardWithoutDuplciate which is slowest
 					
@@ -118,7 +119,7 @@ public class MqttMessagingProvider implements MqttCallback {
 				e.printStackTrace();
 			}
 	}
-	
+	/*
 	public void createCallback() {
 		try {
 			client.setCallBack(new MqttMessagingProvider(callbackName));
@@ -126,6 +127,7 @@ public class MqttMessagingProvider implements MqttCallback {
 			DisplayMqttException(e);
 		}
 	}
+	*/
 	public void SubscribeForAgent(String agentName)
 	{
 		if (!this.simulationMode)
@@ -214,7 +216,7 @@ public class MqttMessagingProvider implements MqttCallback {
 		}
 		else
 		{
-			ProcessArrivedMessage(messageString);
+			callback.ProcessArrivedMessage(messageString);
 		}
 	}
 
@@ -235,6 +237,7 @@ public class MqttMessagingProvider implements MqttCallback {
         me.printStackTrace();
 	}
 	
+/*
 	@Override
 	public void connectionLost(Throwable arg0) {
 		System.out.println("Connection has been lost " + arg0.toString());
@@ -269,4 +272,5 @@ public class MqttMessagingProvider implements MqttCallback {
 				listener.ProcessSchedulingEvent(event);
 		}
 	}
+	*/
 }
