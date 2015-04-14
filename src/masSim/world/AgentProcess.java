@@ -123,7 +123,7 @@ public class AgentProcess {
 		    	System.err.println(e.getMessage() + ", boolean isManaging cannot be parsed to boolean");
 		    }
 			
-			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider();
+			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider(name);
 	    	AgentProcess agentProc = new AgentProcess(name, isManaging, x, y, mq);
 	    	IAgent agent = agentProc.getAgent();
 	    	if(args.length > 4) {

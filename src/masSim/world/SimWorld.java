@@ -23,13 +23,13 @@ public class SimWorld {
 	private IAgent agentPolice;
 	private MqttMessagingProvider mq;
 	private ExecutorService agentPool;
-	
+	private String clientName = "simWorld";
 	public SimWorld(RavenUI ui, ExecutorService threadPool)
 	{
 		this.agentPool = threadPool;
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
-		mq = MqttMessagingProvider.GetMqttProvider();
+		mq = MqttMessagingProvider.GetMqttProvider(clientName);
 		mq.AddListener(ui);
 	}
 	

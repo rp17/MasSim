@@ -99,17 +99,17 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	/** alive, dead or spawning? */
 	private Status status;
-	
+	/*
 	public Agent(int newCode){
 		this(newCode,"Agent"+newCode,false,0,0);
 	}
-	
+	*/
 	public Agent(String name, boolean isManagingAgent, int x, int y,
 			MqttMessagingProvider mq){
-		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y);
+		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, mq);
 	}
 	
-	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y){
+	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, MqttMessagingProvider mq){
 		this.code = newCode;
 		this.label = label;
 		taskInd = 0;
@@ -118,7 +118,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<String>(2);
-		this.mq = MqttMessagingProvider.GetMqttProvider();
+		this.mq = mq;
+		//this.mq = MqttMessagingProvider.GetMqttProvider();
 		this.mq.SubscribeForAgent(getName());
 		this.mq.AddListener(this);
 		//schedulerPool = Executors.newFixedThreadPool(3);
@@ -293,7 +294,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			tempTaskGroup.addTask(task);
 		}
-		tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
+		//tempTaskGroup.Cleanup(MqttMessagingProvider.GetMqttProvider());
+		tempTaskGroup.Cleanup(mq);
 		this.schedule = this.localScheduler.CalculateScheduleFromTaems(tempTaskGroup);
 		//send schedule quality back to mqtt
 		//this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.PUBLISHCOST, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());

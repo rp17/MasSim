@@ -24,7 +24,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 
-
+import raven.Main;
 //import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 //import org.eclipse.paho.client.mqttv3.MqttCallback;
 //import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -38,19 +38,28 @@ import java.util.Enumeration;
 public class MqttMessagingProvider implements MqttCallback {
 
 	private boolean simulationMode = false;
-	private String baseTopic;
+	private String baseTopic = "";
 	private int qos;
 	private String broker;
 	//private MemoryPersistence persistence;
 	private MQTTAgent client;
+	private String clientName;
+	private String callbackName;
 	private static MqttMessagingProvider provider;
 	private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
 	
-	public static synchronized MqttMessagingProvider GetMqttProvider()
+	public static synchronized MqttMessagingProvider GetMqttProvider(){return provider;}
+	
+	public static synchronized MqttMessagingProvider GetMqttProvider(String name)
 	{
 		if (provider==null){
+			if(name == null) {
+				Main.Message(true, "MqttMessagingProvider.GetMqttProvider: no client name passed, returning null");
+				//System.exit(0);
+				return null;
+			}
 			try {
-				provider = new MqttMessagingProvider();
+				provider = new MqttMessagingProvider(name);
 			} catch (MqttException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -66,12 +75,14 @@ public class MqttMessagingProvider implements MqttCallback {
 			schedulingEventListeners.add(listener);
 	}
 	
-	private MqttMessagingProvider() throws MqttException
+	private MqttMessagingProvider(String name) throws MqttException
 	{
+		clientName = name;
+		callbackName = name + "_callback";
 		if (!simulationMode)
 			try {
-					String nodeID = getNodeMacAddress();
-					String brokerIPAddress =  "127.0.0.1"; //broken in this case is running in the same computer, it can be running in a different machine 
+					String nodeID = getNodeMacAddress() + "_" + name;
+					String brokerIPAddress =  "127.0.0.1"; //broker in this case is running in the same computer, it can be running in a different machine 
 					int brokerPort = 1883; //default port for Really Small Message Broker - RSMB https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=d5bedadd-e46f-4c97-af89-22d65ffee070
 					String topic = "txstate/rp/masSim/"; //each MQTT agent can subscribe to multiple topics.  MacAddress + "In" is a default topic for each agent
 					//String brokerUrl, String clientId, boolean cleanSession, boolean quietMode, String userName, String password
@@ -83,7 +94,7 @@ public class MqttMessagingProvider implements MqttCallback {
 					String publishMessage = "Node: " + nodeID + " Time: " + dateFormat.format(cal.getTime());
 					
 					client = new MQTTAgent(url,nodeID,false, true, null, null);
-					client.setCallBack(this);
+					//client.setCallBack(this);
 					
 					//QoS (0-means FireAndForget which is fastest; 1- means StoreAndForwardWithDuplicate which is bit slow; 2- means StoreAndForwardWithoutDuplciate which is slowest
 					
@@ -108,12 +119,23 @@ public class MqttMessagingProvider implements MqttCallback {
 			}
 	}
 	
+	public void createCallback() {
+		try {
+			client.setCallBack(new MqttMessagingProvider(callbackName));
+		} catch (MqttException e) {
+			DisplayMqttException(e);
+		}
+	}
 	public void SubscribeForAgent(String agentName)
 	{
 		if (!this.simulationMode)
 		{
 			try {
-				client.subscribe(GetAgentSpecificTopic(agentName), 1);
+				String topic = GetAgentSpecificTopic(agentName);
+				Main.Message(true, "MqttMessagingProvider.GetMqttProvider: client.subscribe to topic " + topic);
+				
+				client.subscribe(topic, 1);
+				Main.Message(true, "MqttMessagingProvider.GetMqttProvider: have subscribed to client");
 			} catch(MqttException me) {
 	        	DisplayMqttException(me);
 	        }
@@ -161,7 +183,18 @@ public class MqttMessagingProvider implements MqttCallback {
 	{
 		PublishMessage(event.agentName, event.commandType, event.params.toString());
 	}
+	public void publishMsg(String agentName, String msg) {
+		try {
 	
+	        MqttMessage message = new MqttMessage();
+	        message.setPayload(msg.getBytes());
+	        message.setQos(qos);
+	        String topicForAgent = baseTopic + agentName;
+	        client.publish(topicForAgent, 1, msg.getBytes());
+	    } catch (MqttException e) {
+	        e.printStackTrace();
+	    }
+	}
 	public void PublishMessage(String messageString)
 	{
 		if (!simulationMode)
@@ -172,7 +205,9 @@ public class MqttMessagingProvider implements MqttCallback {
 		        message.setPayload(messageString.getBytes());
 		        message.setQos(qos);
 		        String topicForAgent = baseTopic + agentName;
+		        Main.Message(this, true, ": about to client.publish " + messageString + " to topic " + topicForAgent);
 		        client.publish(topicForAgent, 1, messageString.getBytes());
+		        Main.Message(this, true, ": have published " + messageString + " to topic " + topicForAgent);
 		    } catch (MqttException e) {
 		        e.printStackTrace();
 		    }

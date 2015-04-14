@@ -11,6 +11,7 @@ import raven.game.navigation.PathEdge;
 import raven.script.RavenScript;
 
 import raven.math.Vector2D;
+import raven.Main;
 
 public class Goal_PidTraverseEdge extends GoalComposite {
 	private static double distTolerance = 350.0;
@@ -31,10 +32,10 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 	//this records the time this goal was activated
 	double     elapsedTime;
 	
-	public Goal_PidTraverseEdge(SimBot roverBot, PathEdge edge, boolean lastedgeinpath) {
+	public Goal_PidTraverseEdge(SimBot simBot, PathEdge edge, boolean lastedgeinpath) {
 
 		// Goal<Raven_Bot>(pBot, goal_traverse_edge),
-		super(roverBot, Goal.GoalType.goal_traverse_edge);
+		super(simBot, Goal.GoalType.goal_traverse_edge);
 		m_Edge = edge;
 		m_dTimeExpected = 0.0;
 		m_bLastEdgeInPath = lastedgeinpath;
@@ -98,7 +99,12 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
 				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
 				LaunchedByMasSim = false;
-				mq.PublishMessage(event);
+				if(mq == null) {
+					Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
+				}
+				else {
+					mq.PublishMessage(event);
+				}
 			}
 		//}
 		return m_iStatus;

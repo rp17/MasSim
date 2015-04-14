@@ -4,6 +4,7 @@ import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventParams;
 import masSim.world.MqttMessagingProvider;
+import raven.Main;
 import raven.game.RavenBot;
 import raven.game.RoverBot;
 import raven.game.navigation.NavGraphEdge;
@@ -109,7 +110,12 @@ public class Goal_PidTraverseEdge extends GoalComposite<RoverBot> {
 				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
 				SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
 				LaunchedByMasSim = false;
-				mq.PublishMessage(event);
+				if(mq == null) {
+					Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
+				}
+				else {
+					mq.PublishMessage(event);
+				}
 			}
 		//}
 		return m_iStatus;

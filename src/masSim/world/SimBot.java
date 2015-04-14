@@ -25,7 +25,7 @@ import masSim.taems.IAgent;
 public class SimBot implements IBot{
 	protected String name;
 	protected Vector2D position;
-	protected MqttMessagingProvider mq;
+	//protected MqttMessagingProvider mq;
 	
 	protected Vector2D velocity;
 	

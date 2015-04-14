@@ -138,7 +138,12 @@ public class Task extends Node {
 		{
 			Main.Message(debugFlag, "Reissuing recurring task " + this.label);
 			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider();
-			mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
+			if(mq == null) {
+				Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
+			}
+			else {
+				mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
+			}	
 		}
 	}
 	
