@@ -4,6 +4,7 @@ import raven.Main;
 import raven.math.Vector2D;
 
 public class DijkstraDistance {
+	public boolean debugFlag = false;
 	public double quality = 0;
 	public double duration = 0;
 	public Vector2D position;
@@ -29,7 +30,7 @@ public class DijkstraDistance {
 		boolean result = thisQuality>d2Quality;
 		if (result)
 		{
-			Main.Message(true, "Utility " + source.label + "-" + nodeName + " (" + thisQuality + ")>"
+			Main.Message(debugFlag, "[DijkstraDistance] Utility " + source.label + "-" + nodeName + " (" + thisQuality + ")>"
 					+ source.label + "-" + d2.nodeName + "(" + d2Quality + ")");
 		}
 		return result;

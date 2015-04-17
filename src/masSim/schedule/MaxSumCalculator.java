@@ -9,6 +9,7 @@ import raven.Main;
 
 public class MaxSumCalculator {
 
+	private boolean debugFlag = true;
 	private String negotiatedTaskName = "";
 	private int numberOfAgentsInNegotiation = 0;
 	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
@@ -37,14 +38,31 @@ public class MaxSumCalculator {
 		//}
 		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
+		boolean compareIdleAgentsOnly = false;
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
+			if (!compareIdleAgentsOnly && ql.base==0)
+			{
+				//Found an idle agent, so this agent must be given preference over non idle ones
+				compareIdleAgentsOnly = true;
+			}
 			int improvement = ql.incremental - ql.base;
-			Main.Message(false, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
+			Main.Message(debugFlag, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
 			if (improvement > maxImprovement)
 			{
-				maxImprovement = improvement;
-				selectedQuality = ql;
+				if (compareIdleAgentsOnly)
+				{	
+					if (ql.base==0)
+					{
+						maxImprovement = improvement;
+						selectedQuality = ql;	
+					}
+				}
+				else
+				{
+					maxImprovement = improvement;
+					selectedQuality = ql;
+				}
 			}
 		}
 		return this.agentsIndex.get(selectedQuality.agentVariableId);

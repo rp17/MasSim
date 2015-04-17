@@ -38,6 +38,7 @@ import java.util.Enumeration;
 
 public class MqttMessagingProvider implements MqttCallback {
 
+	private boolean debugFlag = false;
 	private boolean simulationMode = true;
 	private String baseTopic;
 	private int qos;
@@ -209,7 +210,7 @@ public class MqttMessagingProvider implements MqttCallback {
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		System.out.println("Message delivered successfully");
+		Main.Message(debugFlag, "Message delivered successfully");
 	}
 
 	@Override
@@ -224,7 +225,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	private void ProcessArrivedMessage(String message)
 	{
-		Main.Message(this, true, "Mqtt message recieved: " + message);
+		Main.Message(this, debugFlag, "Mqtt message received: " + message);
 		SchedulingEvent event = SchedulingEvent.Parse(message);
 		//System.out.println("Message Recieved :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate

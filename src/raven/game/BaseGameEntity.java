@@ -16,12 +16,7 @@ public abstract class BaseGameEntity {
 	transient private static int nextValidID;
 	
 	private void setID(int val) {
-		if (val < nextValidID)
-			throw new RuntimeException("Invalid ID during creation!");
-		
 		ID = val;
-		
-		nextValidID++;
 	}
 	
 	protected Vector2D position;
@@ -39,7 +34,7 @@ public abstract class BaseGameEntity {
 	
 	public boolean handleMessage(final Telegram msg) { return false; }
 	
-	public static int getNextValidID() { return nextValidID; }
+	public static int getNextValidID() { return nextValidID++; }
 	
 	public static void resetNextValidID() { nextValidID = 0; }
 	

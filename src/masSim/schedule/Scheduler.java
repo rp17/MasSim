@@ -125,6 +125,7 @@ public class Scheduler implements Runnable {
 		graph.Print();
 	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
 	    dijkstra.execute(initialMethod);
+	    dijkstra.getGraph().Print();
 	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
 	    //Print the determined schedule
 	    int totalquality = 0;
@@ -235,7 +236,7 @@ public class Scheduler implements Runnable {
 						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
 						//only one, then for aesthetic purposes, we can have the same object repeated
 						boolean multiplePermutationRequringUniqueMethodsForGraph = true;
-						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
+						//if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
 						for(int i=0;i<s.length;i++)
 						{
 							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk, multiplePermutationRequringUniqueMethodsForGraph);

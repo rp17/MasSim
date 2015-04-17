@@ -34,7 +34,7 @@ public class Graph {
 	  o += "node [shape = point ]; "+Method.StartingPoint + "_1" + System.lineSeparator();
 	  o += "node [shape = circle];" + System.lineSeparator();
 	  for (Method m : methods) {
-		  o += m.label.replaceAll(" ", "_") + "_" + m.getIndex() + " [label=\"" + m.label.replaceAll(" ", "_") + "\"];" + System.lineSeparator();
+		  o += m.label.replaceAll(" ", "_") + "_" + m.getIndex() + " [label=\"" + m.label.replaceAll(" ", "_") + "(" + m.DijkstraSavedQualityTillThisStep + ")" + "\"];" + System.lineSeparator();
 	  }
 	  for (MethodTransition t : transitions) {
 		  Method s = t.getSource();

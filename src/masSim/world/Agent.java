@@ -41,6 +41,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean resetScheduleExecutionFlag = false;
 	private ArrayList<IAgent> agentsUnderManagement = null;
 	ArrayList<MaxSumCalculator> negotiations = new ArrayList<MaxSumCalculator>();
+	private ConcurrentHashMap<String,String> completedMethods = new ConcurrentHashMap<String,String>();
 	private AgentMode mode;
 	public double x;
 	public double y;
@@ -112,7 +113,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.mq.AddListener(this);
 		//schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
-		taskRepository.ReadTaskDescriptions(getName()+".xml");
+		taskRepository.ReadTaskDescriptions("TaskDetails.xml");
 		this.schedulerPool = Executors.newFixedThreadPool(5);
 		localScheduler = new Scheduler(this);
 	}
@@ -316,20 +317,27 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			//schedule.get().RemoveElement(e);Does this need to be done?
 			currentMethod.MarkCompleted();
 			WorldState.CompletedMethods.add(currentMethod);
+			this.completedMethods.put(methodName, methodName);
 			Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
-				if(el.hasNext())
+				boolean successfullyRemovedCompletedMethod = false;
+				while(el.hasNext())
 				{
 					ScheduleElement e = el.next();
 					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
 						e = el.next();
-					if (currentMethod.equals(e.getMethod()))
+					if (currentMethod.label.equals(e.getMethod().label))
 					{
 						currentSchedule.RemoveElement(e);
 						Main.Message(debugFlag, "[Agent 135] Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
-					}
+						successfullyRemovedCompletedMethod = true;
+					}	
+				}
+				if (!successfullyRemovedCompletedMethod)
+				{
+					Main.Message(debugFlag, "[Agent 136] Could not remove " + currentMethod.label + " from schedule " + currentSchedule.hashCode());
 				}
 			}
 			this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
@@ -352,7 +360,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void UpdateSchedule(Schedule newSchedule)
 	{
-		this.currentSchedule.Merge(newSchedule);
+		this.currentSchedule.Merge(newSchedule, this.completedMethods);
 		Main.Message(true, this.label + " updated schedule: " + this.currentSchedule.toString());
 	}
 	
@@ -384,6 +392,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		if (!node.IsTask())
 		{
 			Method method = (Method)node;
+			completedMethods.remove(method.label);//Remove previously completed task from list because of new issuance of same task
 			fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
 		}
 		else
@@ -435,7 +444,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public void HandleScheduleEvent(ScheduleUpdateEvent scheduleUpdateEvent) {
 		if (currentSchedule!=null)
-			currentSchedule.Merge(scheduleUpdateEvent.Schedule);
+			currentSchedule.Merge(scheduleUpdateEvent.Schedule, this.completedMethods);
 		else
 			currentSchedule = scheduleUpdateEvent.Schedule;
 		Main.Message(this, true, this.label + " schedule updated with tasks " + currentSchedule.toString());
@@ -483,7 +492,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		if (event.commandType==SchedulingCommandType.NEGOTIATE && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			Main.Message(debugFlag, "Task " + event.params.TaskName + " recieved for negotiation");
+			Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
 			this.Negotiate(task);
 		}

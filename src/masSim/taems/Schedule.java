@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
 
 import raven.Main;
 
 public class Schedule {
+	private boolean debugFlag = false;
 	private Queue<ScheduleElement> items;
 	public int TotalQuality = 0;
 	public Schedule() {
@@ -36,10 +38,10 @@ public class Schedule {
 	public Iterator<ScheduleElement> getItems() {
 		return items.iterator();
 	}
-	public synchronized void Merge(Schedule sch)
+	public synchronized void Merge(Schedule sch, ConcurrentHashMap<String,String> completedMethods)
 	{
-		Main.Message(true, "Old Schedule " + this.hashCode() + " : " + this.toString());
-		Main.Message(true, "Merge Candidate " + sch.hashCode() + " : " + sch.toString());
+		Main.Message(debugFlag, "Old Schedule " + this.hashCode() + " : " + this.toString());
+		Main.Message(debugFlag, "Merge Candidate " + sch.hashCode() + " : " + sch.toString());
 		ScheduleElement first = null;
 		ScheduleElement last = null;
 		Queue<ScheduleElement> mergedList = new ConcurrentLinkedQueue<ScheduleElement>();
@@ -62,7 +64,8 @@ public class Schedule {
 			else
 			{
 				//Cache these new elements
-				cachedNewList.add(el);
+				if (!completedMethods.containsKey(el.getMethod().getLabel()))
+					cachedNewList.add(el);
 			}
 			//Remove all those elements from the old schedule, which are also present in new one 
 			//since they'd be the updated versions of those same methods
@@ -92,7 +95,8 @@ public class Schedule {
 				}
 				else
 				{
-					oldElementsList.add(el);//Add all elements of old schedule
+					if (!completedMethods.containsKey(el.getMethod().getLabel()))
+						oldElementsList.add(el);//Add all elements of old schedule
 				}
 			}
 		}
