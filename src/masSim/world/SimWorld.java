@@ -29,7 +29,7 @@ public class SimWorld {
 		this.agentPool = threadPool;
 		agents = new ArrayList<IAgent>();
 		tasks = new ArrayList<Task>();
-		mq = MqttMessagingProvider.GetMqttProvider(clientName);
+		mq = MqttMessagingProvider.GetMqttProvider(clientName, "127.0.0.1", 1883);
 		mq.AddListener(ui);
 	}
 	

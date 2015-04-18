@@ -50,6 +50,8 @@ public class MqttMessagingProvider implements MqttCallback {
 	//private MemoryPersistence persistence;
 	private MQTTAgent client;
 	private String clientName;
+	private String ipAddress;
+	private int port;
 	private static MqttMessagingProvider provider;
 
 	private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
@@ -57,7 +59,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	public static synchronized MqttMessagingProvider GetMqttProvider(){return provider;}
 	
-	public static synchronized MqttMessagingProvider GetMqttProvider(String name)
+	public static synchronized MqttMessagingProvider GetMqttProvider(String name, String ipAddress, int port)
 	{
 		if (provider==null){
 			if(name == null) {
@@ -66,7 +68,7 @@ public class MqttMessagingProvider implements MqttCallback {
 				return null;
 			}
 			try {
-				provider = new MqttMessagingProvider(name);
+				provider = new MqttMessagingProvider(name, ipAddress, port);
 			} catch (MqttException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -84,18 +86,20 @@ public class MqttMessagingProvider implements MqttCallback {
 	}
 	public String getName() {return clientName;}
 	public MQTTAgent getClient() {return client;}
-	private MqttMessagingProvider(String name) throws MqttException
+	private MqttMessagingProvider(String name, String ipAddress, int port) throws MqttException
 	{
 		clientName = name;
+		this.ipAddress = ipAddress;
+		this.port = port;
 		if (!simulationMode)
 			try {
 					String nodeID = getNodeMacAddress() + "_" + name;
-					String brokerIPAddress =  "127.0.0.1"; //broker in this case is running in the same computer, it can be running in a different machine 
-					int brokerPort = 1883; //default port for Really Small Message Broker - RSMB https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=d5bedadd-e46f-4c97-af89-22d65ffee070
+					//String brokerIPAddress =  "127.0.0.1"; //broker in this case is running in the same computer, it can be running in a different machine 
+					//int brokerPort = 1883; //default port for Really Small Message Broker - RSMB https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=d5bedadd-e46f-4c97-af89-22d65ffee070
 					//String topic = "txstate/rp/masSim/"; //each MQTT agent can subscribe to multiple topics.  MacAddress + "In" is a default topic for each agent
 					//String brokerUrl, String clientId, boolean cleanSession, boolean quietMode, String userName, String password
 					String protocol = "tcp://";
-					String url = protocol + brokerIPAddress + ":" + brokerPort;
+					String url = protocol + ipAddress + ":" + port;
 					client = new MQTTAgent(url,nodeID,false, true, null, null);
 					client.setCallBack(this);
 					
@@ -132,18 +136,18 @@ public class MqttMessagingProvider implements MqttCallback {
 	*/
 	public void SubscribeForAgent(String agentName)
 	{
-		if (!this.simulationMode)
-		{
+		
 			try {
-				String topic = GetAgentSpecificTopic(agentName);
-				Main.Message(true, "MqttMessagingProvider.GetMqttProvider: client.subscribe to topic " + topic);
+				//String topic = GetAgentSpecificTopic(agentName);
+				String topic = agentName;
+				//Main.Message(true, "MqttMessagingProvider.GetMqttProvider: client.subscribe to topic " + topic);
 				
 				client.subscribe(topic, 1);
-				Main.Message(true, "MqttMessagingProvider.GetMqttProvider: have subscribed to client");
+				//Main.Message(true, "MqttMessagingProvider.GetMqttProvider: have subscribed to client");
 			} catch(MqttException me) {
 	        	DisplayMqttException(me);
 	        }
-		}
+		
 	}
 	
 	public static String getNodeMacAddress(){
@@ -358,7 +362,7 @@ public class MqttMessagingProvider implements MqttCallback {
 		String publishMessage = "Node: " + nodeID + " Time: " + dateFormat.format(cal.getTime());
 		
 		//MQTTAgent mqAgent = new MQTTAgent(url,nodeID,false, true, null, null );
-		MqttMessagingProvider providerMqtt = new MqttMessagingProvider(nodeID);
+		MqttMessagingProvider providerMqtt = new MqttMessagingProvider(nodeID, brokerIPAddress, brokerPort);
 		//MQTTAgent mqAgent = providerMqtt.getClient();
 		//mqAgent.setCallBack(providerMqtt);
 		//QoS (0-means FireAndForget which is fastest; 1- means StoreAndForwardWithDuplicate which is bit slow; 2- means StoreAndForwardWithoutDuplciate which is slowest

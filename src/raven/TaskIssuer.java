@@ -23,10 +23,19 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	private String ambName = "Ambulance";
 	private String polName = "Police";
 	public static String TaskIssuerName = "TaskIssuer";
-	private final ExecutorService commsPool = Executors.newSingleThreadExecutor();
+	private final static ExecutorService commsPool = Executors.newSingleThreadExecutor();
+	private final static ExecutorService issuerPool = Executors.newSingleThreadExecutor();
+	private volatile boolean paused = false;
+	public volatile boolean active = true;
+	private Object pauseLock = new Object();
 	
-	public TaskIssuer()
+	private String ipAddress;
+	private int port;
+	
+	public TaskIssuer(String ipAddress, int port)
 	{
+		this.ipAddress = ipAddress;
+		this.port = port;
 		
 		//Create list of tasks to be executed in a loop
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
@@ -41,15 +50,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		commsPool.execute( new Runnable(){
 	 		@Override
 	 		public void run() {
-	 			Main.Message(this, true, ": about to GetMqttProvider");
-	 			mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName);
-	 			Main.Message(this, true, ": about to publish");
-	 			SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
-	 			mq.PublishMessage(evt);
-	 			Main.Message(this, true, ": about to SubscribeForAgent");
-	 			//mq.SubscribeForAgent(ambName);
-	 			mq.SubscribeForAgent(TaskIssuerName);
-	 			Main.Message(this, true, ": about to add tasks");
+	 			initSubscribe();
 	 		}
 		});
 	}
@@ -57,14 +58,16 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	private void initSubscribe() {
 		
 	 			Main.Message(this, true, ": about to GetMqttProvider");
-	 			mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName);
+	 			mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName, ipAddress, port);
 	 			Main.Message(this, true, ": about to publish");
 	 			SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
 	 			mq.PublishMessage(evt);
-	 			Main.Message(this, true, ": about to SubscribeForAgent");
+	 			//Main.Message(this, true, ": about to SubscribeForAgent");
 	 			//mq.SubscribeForAgent(ambName);
-	 			mq.SubscribeForAgent(TaskIssuerName);
-	 			Main.Message(this, true, ": about to add tasks");
+	 			
+	 			//mq.SubscribeForAgent(TaskIssuerName);
+	 			
+	 			//Main.Message(this, true, ": about to add tasks");
 	 		
 	}
 	@Override
@@ -72,28 +75,50 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
-		try {
-			// need to invoke this method once the previous scenario is finished - then no need to sleep for 5 sec
-			Thread.sleep(5000);
-			//RelaunchExecutionLoop();
-			RelaunchExecutionLoop();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
-		/*
-		System.out.println("TaskIssuer started. Hit enter to exit.");
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		//String commandText = null;	
-		try {
-			br.readLine();
-		} 
-		catch (IOException ioe) {}
-		System.exit(0);
-		*/
+		while(active) {
+			Main.Message(this, true, "TaskIssuer.run()");
+			synchronized (pauseLock) {
+				
+                while (paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                    	System.out.println("Thread " + Thread.currentThread().getName() + " interrupted");
+                    }
+                }
+                
+            }
+		
+		    /*
+			try {
+				// need to invoke this method once the previous scenario is finished - then no need to sleep for 5 sec
+				Thread.sleep(10);
+				RelaunchExecutionLoop();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			*/
+			RelaunchExecutionLoop();
+			onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
+		}
 	}
+	public void onPause() {
+        synchronized (pauseLock) {
+            paused = true;
+        }
+    }
 
+    public void onResume() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notify();
+        }
+    }
+    private void startIssuer() {
+    	Main.Message(this, true, "starting Issuer thread");
+    	issuerPool.execute( this );
+    }
 	private void AsyncRelaunchExecutionLoop()
 	{
 		commsPool.execute( new Runnable(){
@@ -132,7 +157,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		}
 		if (TasksPendingCompletion.isEmpty())
 		{
-			RelaunchExecutionLoop();
+			//RelaunchExecutionLoop();
+			onResume(); // unpause the thread with TaskIssuer run method
 		}
 		return null;
 	}
@@ -149,8 +175,27 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus
 	//have its own main entry point.
 	public static void main(String[] args) {
-		TaskIssuer cc = new TaskIssuer();
-		cc.initSubscribe();
-		cc.run();
+		
+		if(args.length < 2) {
+			System.out.println("Command line should contain: IPaddress, port");
+		}
+		else {
+			
+			String ipAddress = args[0];
+			String portS = args[1];
+			int port = 1883;
+			try {
+				port = Integer.parseInt(portS);
+		    }
+		    catch(NumberFormatException e) {
+		    	System.err.println(e.getMessage() + ", port " + portS + " cannot be parsed to integer");
+		    	System.exit(0);
+		    }
+			
+			TaskIssuer cc = new TaskIssuer(ipAddress, port);
+			cc.initSubscribe();
+			//cc.run();
+			cc.startIssuer();
+		}
 	}
 }

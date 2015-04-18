@@ -476,7 +476,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private void executeNextTask() {
 		try
 		{
-			Main.Message(true, "Agent.executeNextTask ");
+			//Main.Message(true, "Agent.executeNextTask ");
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();

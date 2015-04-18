@@ -95,8 +95,8 @@ public class AgentProcess {
 	}
 	public static void main(String[] args) {
 		
-		if(args.length < 4) {
-			System.out.println("Command line should contain: name, true|false, x, y");
+		if(args.length < 6) {
+			System.out.println("Command line should contain: name, true|false, x, y, ipAddress, port, child agent names if any");
 		}
 		else {
 			for(int i = 0; i<args.length; i++) {
@@ -107,6 +107,9 @@ public class AgentProcess {
 			String xS = args[2];
 			String yS = args[3];
 			
+			String ipAddress = args[4];
+			String portS = args[5];
+			int port = 1883;
 			int x = 0;
 			int y = 0;
 			
@@ -116,26 +119,35 @@ public class AgentProcess {
 		    }
 		    catch(NumberFormatException e) {
 		    	System.err.println(e.getMessage() + ", X coord cannot be parsed to integer");
+		    	System.exit(0);
 		    }
 			try {
 				y = Integer.parseInt(yS);
 		    }
 		    catch(NumberFormatException e) {
 		    	System.err.println(e.getMessage() + ", Y coord cannot be parsed to integer");
+		    	System.exit(0);
 		    }
-			
+			try {
+				port = Integer.parseInt(portS);
+		    }
+		    catch(NumberFormatException e) {
+		    	System.err.println(e.getMessage() + ", port " + portS + " cannot be parsed to integer");
+		    	System.exit(0);
+		    }
 			try {
 				isManaging = Boolean.parseBoolean(isManagingS);
 		    }
 		    catch(NumberFormatException e) {
 		    	System.err.println(e.getMessage() + ", boolean isManaging cannot be parsed to boolean");
+		    	System.exit(0);
 		    }
 			
-			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider(name);
+			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider(name, ipAddress, port);
 	    	AgentProcess agentProc = new AgentProcess(name, isManaging, x, y, mq);
 	    	IAgent agent = agentProc.getAgent();
-	    	if(args.length > 4) {
-	    		for(int i = 4; i < args.length; i++) {
+	    	if(args.length > 6) {
+	    		for(int i = 6; i < args.length; i++) {
 	    			String childAgentName = args[i];
 	    			agent.AddChildAgent(childAgentName);
 	    		}

@@ -19,7 +19,7 @@ public class UIProcess {
 	
 	public static void main(String[] args) {
     	//Launch a new thread containing a console window to issue commands to agents via mqtt
-    	new Thread(new TaskIssuer()).start();
+    	new Thread(new TaskIssuer("127.0.0.1", 1883)).start();
     	
     	Log.setLevel(Level.DEBUG);
     	SchedulingLog.setLevel(Level.INFO);
