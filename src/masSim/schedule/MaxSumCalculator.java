@@ -27,6 +27,7 @@ public class MaxSumCalculator {
 	{
 		String selectedAgent = "";
 		//Commenting out maxsum calculation, to do a manual one for now.
+		/*
 		test.Main jmaxMain = new test.Main();
 		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.toString());
 		for(SimpleEntry<String,String> ent : result)
@@ -36,6 +37,7 @@ public class MaxSumCalculator {
 				selectedAgent = ent.getKey();
 			}
 		}
+		*/
 		return selectedAgent;
 	}
 	
