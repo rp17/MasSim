@@ -23,19 +23,24 @@ public class MaxSumCalculator {
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
-	public String GetBestAgent()
+	public String GetBestAgentFromMaxSum()
 	{
 		String selectedAgent = "";
 		//Commenting out maxsum calculation, to do a manual one for now.
-		//test.Main jmaxMain = new test.Main();
-		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(calc.toString());
-		//for(SimpleEntry<String,String> ent : result)
-		//{
-		//	if (ent.getValue().equals("1"))
-		//	{
-		//		selectedAgent = ent.getKey();
-		//	}
-		//}
+		test.Main jmaxMain = new test.Main();
+		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.toString());
+		for(SimpleEntry<String,String> ent : result)
+		{
+			if (ent.getValue().equals("1"))
+			{
+				selectedAgent = ent.getKey();
+			}
+		}
+		return selectedAgent;
+	}
+	
+	public String GetBestAgent()
+	{
 		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
 		boolean compareIdleAgentsOnly = false;
@@ -55,7 +60,7 @@ public class MaxSumCalculator {
 					if (ql.base==0)
 					{
 						maxImprovement = improvement;
-						selectedQuality = ql;	
+						selectedQuality = ql;
 					}
 				}
 				else
@@ -129,6 +134,7 @@ public class MaxSumCalculator {
 				f.append( (i==ql.agentVariableId) ? "1 " : "0 " );
 			}
 			f.append(ql.incremental);
+			f.append(System.lineSeparator());
 		}
 		return f.toString();
 	}
