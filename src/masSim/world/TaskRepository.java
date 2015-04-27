@@ -35,19 +35,20 @@ public class TaskRepository {
 	
 	public TaskRepository()
 	{
-		this("D:\\wspacesEcl43\\MasSim\\TaskRepository");
+		this("TaskRepository");
 	}
 			
 	public TaskRepository(String repositoryFolderPath)
 	{
 		this.repositoryFolderPath = repositoryFolderPath;
-		this.taskDefinitions = new HashMap<String,Task>();
+		this.taskDefinitions= new HashMap<String,Task>();
 	}
 	
 	public Task ReadTaskDescriptions(String fileName)
 	{
 		try {
 			File file = new File(repositoryFolderPath + "\\" + fileName);
+			Main.Message(false, file.getAbsolutePath());
 			FileInputStream fis = null;
 			fis = new FileInputStream(file);
 			//Get the DOM Builder Factory
@@ -74,6 +75,10 @@ public class TaskRepository {
 	
 	public Task GetTask(String name)
 	{
+		if (!this.taskDefinitions.containsKey(name))
+		{
+			Main.Message(true, "Possible Error: Task " + name + " not found in repository");
+		}
 		return this.taskDefinitions.get(name);
 	}
 	
