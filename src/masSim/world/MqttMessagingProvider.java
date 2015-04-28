@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -56,6 +59,7 @@ public class MqttMessagingProvider implements MqttCallback {
 
 	private List<SchedulingEventListener> schedulingEventListeners = new ArrayList<SchedulingEventListener>();
 	private final ExecutorService evtPool = Executors.newSingleThreadExecutor();
+	protected volatile int publishCounter;
 	
 	public static synchronized MqttMessagingProvider GetMqttProvider(){return provider;}
 	
@@ -181,15 +185,16 @@ public class MqttMessagingProvider implements MqttCallback {
 		  }
 	}
 
-	
+	/*
 	public void PublishMessage(String agentName, SchedulingCommandType commandType, String commandText)
 	{
 		PublishMessage(agentName+","+commandType+","+commandText);
 	}
-	
+	*/
 	public void PublishMessage(SchedulingEvent event)
 	{
-		PublishMessage(event.agentName, event.commandType, event.params.toString());
+		//PublishMessage(event.agentName, event.commandType, event.params.toString());
+		PublishMessage(event.rawMessage);
 	}
 	
 	public void asyncPublishMessage(final SchedulingEvent event)
@@ -197,10 +202,12 @@ public class MqttMessagingProvider implements MqttCallback {
 		evtPool.execute( new Runnable(){
 	 		@Override
 	 		public void run() {
-	 			PublishMessage(event.agentName, event.commandType, event.params.toString());
+	 			//PublishMessage(event.agentName, event.commandType, event.params.toString());
+	 			PublishMessage(event);
 	 		}
 		});
 	}
+	/*
 	public void publishMsg(String agentName, String msg) {
 		try {
 	
@@ -213,6 +220,9 @@ public class MqttMessagingProvider implements MqttCallback {
 	        e.printStackTrace();
 	    }
 	}
+	*/
+	
+	/*
 	public void PublishMessage(String messageString)
 	{
 		if (!simulationMode)
@@ -235,7 +245,14 @@ public class MqttMessagingProvider implements MqttCallback {
 			ProcessArrivedMessage(messageString);
 		}
 	}
-
+	 */
+	
+	public void PublishMessage(String messageString)
+	{
+		publishMessage(messageString);
+	}
+	
+	/*
 	public void asyncPublishMessage(final String messageString){
 		evtPool.execute( new Runnable(){
 	 		@Override
@@ -254,6 +271,16 @@ public class MqttMessagingProvider implements MqttCallback {
 	 			}
 	 		}
 		});
+	}
+	*/
+	public void asyncPublishMessage(final String messageString){
+		evtPool.execute( new Runnable(){
+	 		@Override
+	 		public void run() {
+	 			publishMessage(messageString);
+	 		}
+	 		
+	 	});
 	}
 	private String GetAgentSpecificTopic(String agentName)
 	{
@@ -298,6 +325,44 @@ public class MqttMessagingProvider implements MqttCallback {
 		}
 	}
 	
+	// James' async publish message
+	private void publishMessage(String message) {
+		//UUID clientUID = UUID.randomUUID();
+		// mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName , ipAddress, port);
+		// //Main.Message(this, true, ": about to publish");
+		// mq.PublishMessage(message);
+		//
+		final String eventMessage = message;
+		//quick fix to implement asynchornous way of sending
+		try {
+			final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
+			client.connect( null, new IMqttActionListener() {
+				@Override
+				public void onSuccess(IMqttToken asyncActionToken) {
+					// while (true) {
+					try{
+						publishCounter++;
+						String agentName = eventMessage.substring(0, eventMessage.indexOf(","));
+						client.publish(agentName, eventMessage.getBytes(), 1, false);
+						System.out.println("publish #" + publishCounter);
+					}
+					catch (MqttException e) {
+						e.printStackTrace();
+					}
+					// }
+				}
+			
+				@Override
+				public void onFailure(IMqttToken arg0, Throwable arg1) {
+					// TODO Auto-generated method stub
+
+				}
+			});
+			} catch (MqttException me) {
+				//e.printStackTrace();
+				DisplayMqttException(me);
+			}
+		}
 	/*
 	@Override
 	public void messageArrived(String arg0, MqttMessage arg1) throws Exception {
