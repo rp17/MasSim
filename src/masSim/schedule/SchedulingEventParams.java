@@ -6,9 +6,11 @@ public class SchedulingEventParams {
 	public String MethodId;
 	public String XCoordinate;
 	public String YCoordinate;
-	public String Data;
+	public String BaseCost;
+	public String IncrementalCost;
+	public String OriginatingAgent;
 	public String TaskName;
-	public static String DataItemSeparator = "w";
+	public static String SEPARATOR = ":";
 	
 	public SchedulingEventParams()
 	{}
@@ -49,9 +51,21 @@ public class SchedulingEventParams {
 		return this;
 	}
 	
-	public SchedulingEventParams AddData(String data)
+	public SchedulingEventParams AddBaseCost(int baseCost)
 	{
-		this.Data = data + "";
+		this.BaseCost = baseCost + "";
+		return this;
+	}
+	
+	public SchedulingEventParams AddIncrementalCost(int incrementalCost)
+	{
+		this.IncrementalCost = incrementalCost + "";
+		return this;
+	}
+	
+	public SchedulingEventParams AddOriginatingAgent(String originatingAgent)
+	{
+		this.OriginatingAgent = originatingAgent + "";
 		return this;
 	}
 	
@@ -61,19 +75,10 @@ public class SchedulingEventParams {
 		return this;
 	}
 	
-	public SchedulingEventParams(String subjectAgentId, String methodId, String xCoord, String yCoord, String taskName)
-	{
-		this.AgentId = subjectAgentId;
-		this.MethodId = methodId;
-		this.XCoordinate = xCoord;
-		this.YCoordinate = yCoord;
-		this.TaskName = taskName;
-	}
-	
 	public static SchedulingEventParams Parse(String paramsRaw)
 	{
 		SchedulingEventParams params = new SchedulingEventParams();
-		String[] dataItems = paramsRaw.split("-");
+		String[] dataItems = paramsRaw.split(SEPARATOR);
 		if (dataItems.length>=2)
 		{
 			params.XCoordinate = dataItems[0];
@@ -93,7 +98,15 @@ public class SchedulingEventParams {
 		}
 		if (dataItems.length>=6)
 		{
-			params.Data = dataItems[5];
+			params.BaseCost = dataItems[5];
+		}
+		if (dataItems.length>=7)
+		{
+			params.IncrementalCost = dataItems[6];
+		}
+		if (dataItems.length>=8)
+		{
+			params.OriginatingAgent = dataItems[7];
 		}
 		return params;
 	}
@@ -103,16 +116,20 @@ public class SchedulingEventParams {
 	{
 		String result = "";
 		if (this.XCoordinate!=null) result += this.XCoordinate;
-		result += "-";
+		result += SEPARATOR;
 		if (this.YCoordinate!=null) result += this.YCoordinate;
-		result += "-";
+		result += SEPARATOR;
 		if (this.AgentId!=null) result += this.AgentId;
-		result += "-";
+		result += SEPARATOR;
 		if (this.MethodId!=null) result += this.MethodId;
-		result += "-";
+		result += SEPARATOR;
 		if (this.TaskName!=null) result += this.TaskName;
-		result += "-";
-		if (this.Data!=null) result += this.Data;
+		result += SEPARATOR;
+		if (this.BaseCost!=null) result += this.BaseCost;
+		result += SEPARATOR;
+		if (this.IncrementalCost!=null) result += this.IncrementalCost;
+		result += SEPARATOR;
+		if (this.OriginatingAgent!=null) result += this.OriginatingAgent;
 		return result;
 	}
 }

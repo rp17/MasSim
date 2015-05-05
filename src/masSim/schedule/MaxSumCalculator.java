@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
+import raven.Main;
+
 public class MaxSumCalculator {
 
+	private boolean debugFlag = true;
 	private String negotiatedTaskName = "";
 	private int numberOfAgentsInNegotiation = 0;
 	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
@@ -20,28 +23,53 @@ public class MaxSumCalculator {
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
-	public String GetBestAgent()
+	public String GetBestAgentFromMaxSum()
 	{
 		String selectedAgent = "";
 		//Commenting out maxsum calculation, to do a manual one for now.
-		//test.Main jmaxMain = new test.Main();
-		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(calc.toString());
-		//for(SimpleEntry<String,String> ent : result)
-		//{
-		//	if (ent.getValue().equals("1"))
-		//	{
-		//		selectedAgent = ent.getKey();
-		//	}
-		//}
-		int maxImprovement = 0;
+		/*
+		test.Main jmaxMain = new test.Main();
+		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.toString());
+		for(SimpleEntry<String,String> ent : result)
+		{
+			if (ent.getValue().equals("1"))
+			{
+				selectedAgent = ent.getKey();
+			}
+		}
+		*/
+		return selectedAgent;
+	}
+	
+	public String GetBestAgent()
+	{
+		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
+		boolean compareIdleAgentsOnly = false;
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
+			if (!compareIdleAgentsOnly && ql.base==0)
+			{
+				//Found an idle agent, so this agent must be given preference over non idle ones
+				compareIdleAgentsOnly = true;
+			}
 			int improvement = ql.incremental - ql.base;
+			Main.Message(debugFlag, "Quality Improvement for " + this.negotiatedTaskName + " with " + this.agentsIndex.get(ql.agentVariableId) + " is " + improvement);
 			if (improvement > maxImprovement)
 			{
-				maxImprovement = improvement;
-				selectedQuality = ql;
+				if (compareIdleAgentsOnly)
+				{	
+					if (ql.base==0)
+					{
+						maxImprovement = improvement;
+						selectedQuality = ql;
+					}
+				}
+				else
+				{
+					maxImprovement = improvement;
+					selectedQuality = ql;
+				}
 			}
 		}
 		return this.agentsIndex.get(selectedQuality.agentVariableId);
@@ -108,6 +136,7 @@ public class MaxSumCalculator {
 				f.append( (i==ql.agentVariableId) ? "1 " : "0 " );
 			}
 			f.append(ql.incremental);
+			f.append(System.lineSeparator());
 		}
 		return f.toString();
 	}

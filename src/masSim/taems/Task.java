@@ -53,7 +53,7 @@ public class Task extends Node {
 	
 	public void AssignAgent(IAgent ag)
 	{
-		Main.Message(this, debugFlag, "Assigning " + this.label + " to " + ag.getName());
+		Main.Message(this, false, "Assigning " + this.label + " to " + ag.getName());
 		this.agent=ag;
 		synchronized(Task.Lock){
 		for(Node n: children)
@@ -128,7 +128,6 @@ public class Task extends Node {
 		super.MarkCompleted();
 		Main.Message(debugFlag, "[Task 63] Task " + label + " completed.");
 		WorldState.CompletedTasks.add(this);
-		this.NotifyAll();
 		//ReIssueIfNecessary();
 	}
 	
@@ -138,11 +137,13 @@ public class Task extends Node {
 		{
 			Main.Message(debugFlag, "Reissuing recurring task " + this.label);
 			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider();
+
 			if(mq == null) {
 				Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
 			}
 			else {
-				mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
+				mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,::::" + this.label);
+				//mq.PublishMessage(this.agent.getName() + ",ASSIGNTASK,----" + this.label);
 			}	
 		}
 	}
@@ -154,7 +155,6 @@ public class Task extends Node {
 		{
 			synchronized(Task.Lock)
 			{
-				Main.Message(true, "entered lock 1");
 				for(Node n : children)
 				{
 					if (n!=null)
@@ -179,7 +179,6 @@ public class Task extends Node {
 					}
 				}
 			}
-			Main.Message(true, "exited lock 1");
 		}
 	}
 	

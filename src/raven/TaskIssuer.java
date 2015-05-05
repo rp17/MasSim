@@ -39,9 +39,15 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		this.ipAddress = ipAddress;
 		this.port = port;
 		//Create list of tasks to be executed in a loop
-		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
-		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
-		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
+
+		//MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
+		//MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
+		//MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
+		
+		MasterTaskList.add("Police,NEGOTIATE,::::PickPatient");
+		MasterTaskList.add("Police,NEGOTIATE,::::DropPatient");
+		MasterTaskList.add("Police,NEGOTIATE,::::Patrol");
+		MasterTaskList.add("Police,NEGOTIATE,::::RespondToAccident");
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		Main.Message(this, true, ": have added tasks");
@@ -72,7 +78,6 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			}
 		});
 	
-		//Main.Message(this, true, ": about to add tasks");
 	}
 	
 	private void publishSchedulingEvent(SchedulingEvent evt) {

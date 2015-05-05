@@ -96,7 +96,17 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
 				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, coords: " + m_pOwner.pos());
-				SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
+				
+				// is AddAgentId taking the destination agent ? can taskIssuer be an agent ?
+				SchedulingEventParams params = new SchedulingEventParams()
+				.AddTaskName(m_Edge.MethodRepresentedByEdge())
+				.AddAgentId(TaskIssuer.TaskIssuerName)
+				.AddOriginatingAgent(this.m_pOwner.getName());
+				
+				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.METHODCOMPLETED, params);
+				//SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
+				// what are "0", "0", "" for ? dummy vals for coordinates ?
+				
 				//SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
 				m_pOwner.getAgent().MarkMethodCompleted(m_Edge.MethodRepresentedByEdge());
 				
@@ -106,7 +116,8 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 					Main.Message(this, true, ": mq provider is null, cannot publish METHODCOMPLETED event");
 				}
 				else {
-					//mq.asyncPublishMessage(event);
+					//mq.PublishMessage(event);
+					//mq.asyncPublishMessage(event); - pre James update async publish message method
 				}
 			}
 		//}
