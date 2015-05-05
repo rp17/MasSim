@@ -1,0 +1,5 @@
+In Agent
+Given All
+When chosen to reach a way-point
+Then Eventually containWaypoint With schedule And task
+

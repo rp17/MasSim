@@ -1,0 +1,8 @@
+In Agent
+Set ActiveAgent
+Join assigned to reach a way-point
+
+In Agent
+Given Global
+When Exactly one Agent (AssignedAgent) assigned to reach a way-point (ChosenPoint)
+Then Sum of (messages required to reach consensus With ChosenPoint in AssignedAgent And theconsensus in ActiveAgent) Less Than 5
