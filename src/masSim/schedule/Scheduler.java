@@ -13,6 +13,18 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+<<<<<<< HEAD
+=======
+import Aspect.PredicateParameterFilter;
+import Aspect.StatementEvent;
+import BAEventMonitor.Execution;
+import BAEventMonitor.Param;
+import BAEventMonitor.Params;
+import BAEventMonitor.Predicate;
+import BAEventMonitor.Execution.ExecutionMode;
+import BAEventMonitor.Param.StoreMode;
+
+>>>>>>> MasDistributed/master
 import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
@@ -46,11 +58,19 @@ public class Scheduler implements Runnable {
 				Main.Message(this, debugFlag, "Pending task " + pendingTasks.get(i).label + " found for agent " + this.agent.getName());
 			}
 			Schedule schedule = CalculateSchedule();
-			if (schedule!=null)
+			StatementEvent.evaluateScheduleOptimal(schedule);
+			if (schedule!=null) {
 				this.agent.UpdateSchedule(schedule);	
+				//Instrumentation
+				StatementEvent.getExecutionPlan(schedule);
+			}
 		}
 	}
+	
 		
+	@Params({@Param(name="schedule", variable="schedule", pred="containWaypoint", mode=StoreMode.Single), @Param(name="task", variable="newTask", pred="containWaypoint", mode=StoreMode.List)})
+	@Execution(name="containWaypoint", mode=ExecutionMode.After)
+	@Param(name="task", variable="newTask", pred="reachWaypoint", mode=StoreMode.List)
 	public synchronized Schedule CalculateSchedule()
 	{
 		try {
@@ -69,6 +89,8 @@ public class Scheduler implements Runnable {
 					{
 						Main.Message(true, "entered lock 2");
 						agent.GetCurrentTasks().addTask(newTask);
+						//instrumentation
+						PredicateParameterFilter.addTask(newTask);
 					}
 					Main.Message(true, "exited lock 2");
 				}
@@ -79,6 +101,10 @@ public class Scheduler implements Runnable {
 			if(agent.GetCurrentTasks().hasChildren())
 			{
 				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
+				//instrumentation
+				PredicateParameterFilter.addSchedule(schedule);
+				//instrumentation
+				StatementEvent.executeScheduleContainsTask();
 				return schedule;
 			}
 			Thread.sleep(10000);

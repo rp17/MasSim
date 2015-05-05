@@ -19,6 +19,15 @@ import java.util.*;
 //import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import Aspect.PredicateParameterFilter;
+import Aspect.StatementEvent;
+import BAEventMonitor.Event;
+import BAEventMonitor.Execution;
+import BAEventMonitor.Param;
+import BAEventMonitor.Execution.ExecutionMode;
+import BAEventMonitor.Param.StoreMode;
+
 //import java.util.concurrent.Future;
 //import java.util.concurrent.FutureTask;
 //import java.util.concurrent.TimeUnit;
@@ -47,7 +56,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean errorFlag = true;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
-	private Schedule currentSchedule = new Schedule();
+
+	//private Schedule currentSchedule = new Schedule();
+
+	public Schedule currentSchedule = new Schedule();
+
 	private int taskInd;
 	private boolean resetScheduleExecutionFlag = false;
 
@@ -140,15 +153,27 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void setBot(SimBot bot) {
 		this.simBot = bot;
 	}
+
 	//A public method to feed new tasks to the scheduler
+	@Event(name="agent was chosen to reach a way-point")
+	@Param(name="choice", variable="task", pred="scheduleOptimal", mode=StoreMode.List)
 	public void AssignTask(String taskName)
 	{
 		Main.Message(this, debugFlag, "[Scheduler 62] Added Pending task " + taskName + " to Scheduler " + this.label);
 		Task task = this.taskRepository.GetTask(taskName);
+
+		//Instrumentation
+		PredicateParameterFilter.addChoiceTask(task);
+
 		if (task==null) Main.Message(true, "Error: Task " + taskName + " not found in tasks repository");
 		task.AssignAgent(this);
 		RegisterChildrenWithUI(task);
 		this.pendingTasks.add(task);
+
+		schedulerPool.execute(localScheduler);
+
+		//Instrumentation for distributed event
+		StatementEvent.addTasks(task);
 		schedulerPool.execute(localScheduler);
 	}
 	
@@ -421,12 +446,28 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	@Override
+
+	@Execution(name="reachWaypoint", mode=ExecutionMode.After)
+	@Param(name="execution", variable="currentMethod", pred="reachWaypoint", mode=StoreMode.List)
+
 	public void MarkMethodCompleted(String methodName)
 	{
 		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
 		{
+
 			//schedule.get().RemoveElement(e);Does this need to be done?
 			currentMethod.MarkCompleted();
+
+			//instrumentation
+			PredicateParameterFilter.addMethod(currentMethod);
+			
+			//schedule.get().RemoveElement(e);Does this need to be done?
+			currentMethod.MarkCompleted();
+			
+			//instrumentation
+			//spec 2
+			StatementEvent.evaluateReachAWayPoint();
+			
 			WorldState.CompletedMethods.add(currentMethod);
 			Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
 			if (currentSchedule!=null)
@@ -593,31 +634,52 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	}
 	
 	@Override
+
+	@Event(name="a task is added")
+
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		System.out.println("Agent.ProcessSchedulingEvent " + label + " received event " + event.commandType);
 		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
 		{
+			StatementEvent.assignchoice();
+			
+			//Instrumentation
+			StatementEvent.getConsensus(event.params.TaskName);
 			AssignTask(event.params.TaskName);
+			
 		}
 		if (event.commandType==SchedulingCommandType.METHODCOMPLETED && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			String completedMethodName = event.params.MethodId;
-			if (completedMethodName!=null)
+
+			if (completedMethodName!=null) {
 				MarkMethodCompleted(completedMethodName);
+				//Instrumentation
+				StatementEvent.getCompletedTasks(completedMethodName);
+			}
+
 		}
 		if (event.commandType==SchedulingCommandType.NEGOTIATE && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
+
+			//Instrumentation
+			StatementEvent.getConsensus(event.params.TaskName);
 			this.Negotiate(task);
 		}
 		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
 			Task task = this.taskRepository.GetTask(event.params.TaskName);
+
+			//Instrumentation
+			StatementEvent.getConsensus(event.params.TaskName);
 			CalculateCost(task);
 		}
 		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
 		{
+			//Instrumentation
+			StatementEvent.getConsensus(event.params.TaskName);
 			ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
 		}
 		

@@ -31,6 +31,10 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 
 	//test the limits for "too many publishes in progress" error
 	private volatile int publishCounter = 0;
+
+	private volatile static int numberOfIteration = 0;
+	private volatile static int currentIteration = 0;
+
 	private Object pauseLock = new Object();
 	private String ipAddress;
 	private int port;
@@ -45,6 +49,11 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		Main.Message(this, true, ": have added tasks");
+		MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
+		//TasksToExecute.add("");
+		Main.Message(this, true, ": have added tasks");
+		
+		currentIteration++;
 	}
 	private void asyncInitSubscribe() {
 		commsPool.execute( new Runnable(){
@@ -68,6 +77,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			public void run() {
 				mqReceiver = MqttMessagingProvider.GetMqttProvider(TaskIssuerName + "Subscriber", ipAddress, port);
 				mqReceiver.SubscribeForAgent(TaskIssuerName);
+				mqReceiver.SubscribeForAgent(polName);
 				mqReceiver.SubscribeForAgent(ambName);
 			}
 		});
@@ -174,7 +184,12 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				e.printStackTrace();
 			}
 			*/
-			RelaunchExecutionLoop();
+
+			if ( currentIteration < numberOfIteration ) {
+				RelaunchExecutionLoop();
+				currentIteration++;
+			}
+			
 			onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
 		}
 	}
@@ -251,12 +266,15 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus
 	//have its own main entry point.
 	public static void main(String[] args) {
-		if(args.length < 2) {
-			System.out.println("Command line should contain: IPaddress, port");
+
+		if(args.length < 3) {
+			System.out.println("Command line should contain: IPaddress, port, and number of iterations");
+
 		}
 		else {
 			String ipAddress = args[0];
 			String portS = args[1];
+			numberOfIteration = Integer.parseInt( args[2] );
 			int port = 1883;
 			try {
 				port = Integer.parseInt(portS);

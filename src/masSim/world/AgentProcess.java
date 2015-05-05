@@ -25,6 +25,9 @@ import java.util.Properties;
 
 import org.eclipse.paho.client.sample.MQTTAgent;
 
+import Aspect.LocalErrorController;
+import Aspect.SurgeCreator;
+
 import masSim.world.SimBot;
 import raven.game.interfaces.IBot;
 import masSim.goals.Goal;
@@ -95,8 +98,8 @@ public class AgentProcess {
 	}
 	public static void main(String[] args) {
 		
-		if(args.length < 6) {
-			System.out.println("Command line should contain: name, true|false, x, y, ipAddress, port, child agent names if any");
+		if(args.length < 8) {
+			System.out.println("Command line should contain: name, true|false, x, y, ipAddress, port, number of surged events per second, and number of injected local error, and child agent names if any");
 		}
 		else {
 			for(int i = 0; i<args.length; i++) {
@@ -109,6 +112,12 @@ public class AgentProcess {
 			
 			String ipAddress = args[4];
 			String portS = args[5];
+			String surgeEventsPerSecond = args[6];
+			String localInjectedErrors = args[7];
+			
+			SurgeCreator.assignSurge(Integer.parseInt(surgeEventsPerSecond));
+			LocalErrorController.setInjectedErrors(Integer.parseInt(localInjectedErrors));
+			
 			int port = 1883;
 			int x = 0;
 			int y = 0;
@@ -146,8 +155,9 @@ public class AgentProcess {
 			MqttMessagingProvider mq = MqttMessagingProvider.GetMqttProvider(name, ipAddress, port);
 	    	AgentProcess agentProc = new AgentProcess(name, isManaging, x, y, mq);
 	    	IAgent agent = agentProc.getAgent();
-	    	if(args.length > 6) {
-	    		for(int i = 6; i < args.length; i++) {
+
+	    	if(args.length > 8) {
+	    		for(int i = 8; i < args.length; i++) {
 	    			String childAgentName = args[i];
 	    			agent.AddChildAgent(childAgentName);
 	    		}

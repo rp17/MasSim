@@ -1,0 +1,10 @@
+In Agent
+Given All
+When chosen to reach a way-point
+Then Eventually containWaypoint With schedule And task
+
+In Agent
+Given chosen to reach a way-point
+When Within 40 seconds After 
+Then reachWaypoint With task and execution
+

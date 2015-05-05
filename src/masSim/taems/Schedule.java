@@ -24,6 +24,7 @@ public class Schedule {
 	{
 		items.remove(item);
 	}
+
 	public ScheduleElement poll(){
 		return items.poll();
 	}
