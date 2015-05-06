@@ -19,7 +19,8 @@ public class Main {
 	
 	public static void Message(Object o, boolean flag, String message)
 	{
-		if (debug && flag) System.out.println("[" + o.getClass().getName() + "]" + message);
+		//if (debug && flag) System.out.println("[" + o.getClass().getName() + "]" + message);
+		if (debug && flag) System.out.println(message);
 	}
 	
 	public static void Message(boolean flag, String message)

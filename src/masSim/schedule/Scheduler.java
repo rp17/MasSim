@@ -13,8 +13,6 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-<<<<<<< HEAD
-=======
 import Aspect.PredicateParameterFilter;
 import Aspect.StatementEvent;
 import BAEventMonitor.Execution;
@@ -24,7 +22,6 @@ import BAEventMonitor.Predicate;
 import BAEventMonitor.Execution.ExecutionMode;
 import BAEventMonitor.Param.StoreMode;
 
->>>>>>> MasDistributed/master
 import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
@@ -64,6 +61,9 @@ public class Scheduler implements Runnable {
 				//Instrumentation
 				StatementEvent.getExecutionPlan(schedule);
 			}
+			else {
+				Main.Message(true, this.agent.getName() + " schedule came out to be null");
+			}
 		}
 	}
 	
@@ -87,12 +87,10 @@ public class Scheduler implements Runnable {
 				if (newTask.agent.equals(agent)){
 					synchronized(Task.Lock)
 					{
-						Main.Message(true, "entered lock 2");
 						agent.GetCurrentTasks().addTask(newTask);
 						//instrumentation
 						PredicateParameterFilter.addTask(newTask);
 					}
-					Main.Message(true, "exited lock 2");
 				}
 			}
 			//Remove completed tasks
@@ -149,8 +147,9 @@ public class Scheduler implements Runnable {
 		//Create a Graph of these methods and run Dijkstra Algorithm on it
 		Graph graph = new Graph(nodes, edges);
 		graph.Print();
-	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph, agentPos);
+	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
 	    dijkstra.execute(initialMethod);
+	    dijkstra.getGraph().Print();
 	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
 	    //Print the determined schedule
 	    int totalquality = 0;
@@ -195,7 +194,7 @@ public class Scheduler implements Runnable {
 		{
 			m += s.label + " > ";
 		}
-		Main.Message(debugFlag, "[Scheduler 185] Node Methods: " + m );
+		Main.Message(false, "[Scheduler 185] Node Methods: " + m );
 	}
 	
 	//A helper method used internally by CalculateScheduleFromTaems method
@@ -214,7 +213,6 @@ public class Scheduler implements Runnable {
 					m = new Method((Method)task);
 				else
 					m = (Method)task;
-				m.AddObserver(Parent);
 				nodes.add(m);
 				MethodTransition t = new MethodTransition("From " + lastMethod.label + " to " + m.label, lastMethod, m);
 				edges.add(t);
@@ -224,9 +222,6 @@ public class Scheduler implements Runnable {
 			{
 				Method[] localLastMethodList = new Method[]{lastMethod};
 				Task tk = (Task)task;
-				//Main.Message(debugFlag, "[Scheduler 212] Node is Task. Enumerating children for " + tk.label);
-				//Designate a parent for this task, which can be used for completion notifications up the hierarchy
-				if (Parent!=null) tk.AddObserver(Parent);
 				masSim.taems.QAF qaf = tk.getQAF();
 				if (qaf instanceof SeqSumQAF)
 				{
@@ -265,7 +260,7 @@ public class Scheduler implements Runnable {
 						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
 						//only one, then for aesthetic purposes, we can have the same object repeated
 						boolean multiplePermutationRequringUniqueMethodsForGraph = true;
-						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
+						//if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
 						for(int i=0;i<s.length;i++)
 						{
 							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk, multiplePermutationRequringUniqueMethodsForGraph);

@@ -21,8 +21,7 @@ public class DijkstraAlgorithm {
 	}
 	
   private boolean debugFlag = false;
-  private final List<Method> nodes;
-  private final List<MethodTransition> edges;
+  private final Graph graph;
   private Set<Method> settledNodes;
   private Set<Method> unSettledNodes;
   private Map<Method, Method> predecessors;
@@ -30,11 +29,15 @@ public class DijkstraAlgorithm {
   private Vector2D agentPos;
   private final OptimizationMode optimizationMode = OptimizationMode.QUALITY;
 
-  public DijkstraAlgorithm(Graph graph, Vector2D agentPos) {
+  public DijkstraAlgorithm(Graph graph) {
     // create a copy of the array so that we can operate on this array
-    this.nodes = new ArrayList<Method>(graph.getMethods());
-    this.edges = new ArrayList<MethodTransition>(graph.getTransitions());
+    this.graph = graph;
     this.agentPos = agentPos;
+  }
+  
+  public Graph getGraph()
+  {
+	  return this.graph;
   }
  
   public void execute(Method source) {
@@ -42,10 +45,10 @@ public class DijkstraAlgorithm {
     unSettledNodes = new HashSet<Method>();
     distance = new HashMap<Method, DijkstraDistance>();
     predecessors = new HashMap<Method, Method>();
-    distance.put(source, new DijkstraDistance(0,0, source.x, source.y));
+    distance.put(source, new DijkstraDistance(source.getOutcome().getQuality(), source.getOutcome().getDuration(), source.x, source.y, source.label));
     unSettledNodes.add(source);
     while (unSettledNodes.size() > 0) {
-    	Method node = getMaximumUtility(unSettledNodes);
+    	Method node = getMaximumUtility(unSettledNodes, source);
       settledNodes.add(node);
       unSettledNodes.remove(node);
       findMaximumUtilities(node);
@@ -60,17 +63,40 @@ public class DijkstraAlgorithm {
       DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, highestUtilityToNode);
       DijkstraDistance currentHighestUtilityFromNodeToTarget = getHighestUtility(target);
       DijkstraDistance newUtilityFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
-      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget)) {
+      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget, node) || (target.label==Method.FinalPoint)) {
     	Main.Message(debugFlag, "[DijkstraAlgorithm 55] Adding route " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + currentHighestUtilityFromNodeToTarget.quality);
-        distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
-        predecessors.put(target, node);
+        target.DijkstraSavedQualityTillThisStep = node.DijkstraSavedQualityTillThisStep + newUtilityFromNodeToTargetFromCurrentRoute.quality;
+    	distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
+        PutPredecessor(target, node);
         unSettledNodes.add(target);
       }
     }
   }
+  
+  private void PutPredecessor(Method target, Method node)
+  {
+	  Method current = predecessors.get(target);
+	  if (current!=null)
+	  {
+		  if (node.DijkstraSavedQualityTillThisStep>current.DijkstraSavedQualityTillThisStep){
+			  Method previous = predecessors.get(target);
+			  String debugMessage = " none ";
+			  if (previous !=null)
+			  {
+				  debugMessage = " " + previous.label + " (" + previous.DijkstraSavedQualityTillThisStep + ") ";
+			  }
+			  Main.Message(debugFlag,"Replacing Predecessor" + debugMessage + " with " + node.label + " (" + node.DijkstraSavedQualityTillThisStep + ")");
+			  predecessors.put(target,node);
+		  }
+	  }
+	  else
+	  {
+		  predecessors.put(target,node);
+	  }
+  }
 
   private DijkstraDistance getDistance(Method node, Method target, DijkstraDistance distanceTillPreviousNode) {
-    for (MethodTransition edge : edges) {
+    for (MethodTransition edge : graph.getTransitions()) {
       if (edge.getSource().equals(node)
           && edge.getDestination().equals(target)) {
         return edge.getPathUtility(distanceTillPreviousNode, agentPos);
@@ -81,7 +107,7 @@ public class DijkstraAlgorithm {
 
   private List<Method> getNeighbors(Method node) {
     List<Method> neighbors = new ArrayList<Method>();
-    for (MethodTransition edge : edges) {
+    for (MethodTransition edge : graph.getTransitions()) {
       Method source = edge.getSource();
       //if (debugFlag) System.out.println("Checking if edge " + source.label + " belongs to node " + node.label);
       if (source.equals(node)){
@@ -92,20 +118,27 @@ public class DijkstraAlgorithm {
           }
           else
           {
-        	  if (debugFlag) System.out.println("[DijkstraAlgorithm 93] neighbor: " + dest.label + " already added");
+        	  if (dest.label==Method.FinalPoint)
+        	  {
+        		  neighbors.add(dest);
+        	  }
+        	  else
+        	  {
+        		  if (debugFlag) System.out.println("[DijkstraAlgorithm 93] neighbor: " + dest.label + " already added");
+        	  }
     	  }
       }
     }
     return neighbors;
   }
 
-  private Method getMaximumUtility(Set<Method> vertexes) {
+  private Method getMaximumUtility(Set<Method> vertexes, Method sourceNode) {
 	  Method maximum = null;
     for (Method vertex : vertexes) {
       if (maximum == null) {
         maximum = vertex;
       } else {
-        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum))) {
+        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum),sourceNode)) {
           maximum = vertex;
         }
       }
@@ -120,7 +153,7 @@ public class DijkstraAlgorithm {
   private DijkstraDistance getHighestUtility(Method destination) {
     DijkstraDistance d = distance.get(destination);
     if (d == null) {
-      return new DijkstraDistance(Long.MIN_VALUE,0,destination.x, destination.y);
+      return new DijkstraDistance(Long.MIN_VALUE,0,destination.x, destination.y, destination.label);
     } else {
       return d;
     }

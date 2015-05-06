@@ -24,13 +24,15 @@ public class Method extends Node implements IMethod {
 	public static String FinalPoint = "Finish";
 	public static String StartingPoint = "Start";
 	public ArrayList<Interrelationship> Interrelationships;
+	public double DijkstraSavedQualityTillThisStep = 0;
 	// Constructor
 	public Method(String nm, double outcomeQuality, double x2, double y2){
-		this(nm,outcomeQuality, -1, x2, y2, 0, null);
+		this(nm,outcomeQuality, 0, x2, y2, 0, null);
 	}
 	
 	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
+		if (nm.contains("-")) Main.Message(this, true, "Error: Method name cannot contain a dash");
 		outcome = new Outcome(outcomeQuality, outcomeDuration, 0);
 		if (nm == StartingPoint) index = 1;
 		else if (nm == FinalPoint) index = 2;
@@ -74,14 +76,12 @@ public class Method extends Node implements IMethod {
 	{
 		super.MarkCompleted();
 		WorldState.CompletedMethods.add(this);
-		//Only print if its an actual task, and not an FSM connective created by the scheduler
-		this.NotifyAll();
 	}
 	
 	public DijkstraDistance getPathUtilityRepresentedAsDistance(DijkstraDistance distanceTillPreviousNode, Vector2D agentPos)
 	{
 		//This is distance calculation for this step only. Previous distance used for calculation, but not appended
-		DijkstraDistance d = new DijkstraDistance(0,0,this.x, this.y);
+		DijkstraDistance d = new DijkstraDistance(1,0,this.x, this.y, this.label);
 		if (this.label==Method.FinalPoint)
 		{
 			return d;
@@ -97,16 +97,17 @@ public class Method extends Node implements IMethod {
 		else
 		{
 			//Main.Message(debugFlag, "[Method 54] Deadline " + deadline + " will be met by " + totalDurationTillNow);
-			double distance = Math.round(agentPos.distance(new Vector2D(this.x, this.y)));
+			double distance = Math.round(distanceTillPreviousNode.position.distance(new Vector2D(this.x, this.y)));
 			d.quality = this.outcome.quality - distance;
-			Main.Message(true, "task distance = " + distance + " total quality = " + d.quality);
+			Main.Message(false, "task distance = " + distance + " total quality = " + d.quality);
 			if (d.quality>heuristicQuality)
 			{
 				//Revisit heuristic logic
 				d.quality = Long.MIN_VALUE;
 			}
-			d.duration = this.outcome.duration;
-			Main.Message(debugFlag, "[Method 57] Distance from (" + distanceTillPreviousNode.vector.x + ","+distanceTillPreviousNode.vector.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
+			d.duration = distance;
+			this.outcome.quality = d.quality;
+			Main.Message(false, "[Method 57] Distance from (" + distanceTillPreviousNode.position.x + ","+distanceTillPreviousNode.position.y+ ") to " + this.label + " ("+this.x+","+this.y+") ");
 		}
 		Main.Message(debugFlag, "[Method 66] Quality determined for " + this.label + " is " + d.quality );
 		return d;
