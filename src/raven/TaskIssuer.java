@@ -55,9 +55,9 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		Main.Message(this, true, ": have added tasks");
-		MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
+		//MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
 		//TasksToExecute.add("");
-		Main.Message(this, true, ": have added tasks");
+		//Main.Message(this, true, ": have added tasks");
 		
 		//currentIteration++;
 	}
