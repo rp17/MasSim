@@ -83,7 +83,7 @@ public aspect Spec1Aspect {
 				System.out.println("schedule added");
 				//Clone the schedule
 				Schedule newSchedule = new Schedule();
-				newSchedule.Merge(sh);
+				newSchedule.Merge(sh, mainInstance.getCompletedMethods());
 				
 				
 				EventClass.storePredicateParameter("containWaypoint", "schedule", newSchedule);

@@ -1,35 +1,35 @@
 package masSim.world;
 
-import java.util.List;
+//import java.util.List;
 
-import masSim.schedule.IScheduleUpdateEventListener;
-import masSim.schedule.ScheduleUpdateEvent;
-import masSim.schedule.Scheduler;
+//import masSim.schedule.IScheduleUpdateEventListener;
+//import masSim.schedule.ScheduleUpdateEvent;
+//import masSim.schedule.Scheduler;
 import masSim.taems.*;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Queue;
-import java.util.LinkedList;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicReference;
+//import java.util.List;
+//import java.util.ArrayList;
+//import java.util.Queue;
+//import java.util.LinkedList;
+//import java.util.Iterator;
+//import java.util.concurrent.atomic.AtomicReference;
 
-import raven.Main;
+//import raven.Main;
 import raven.math.Vector2D;
-import raven.ui.GameCanvas;
+//import raven.ui.GameCanvas;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.Properties;
+//import java.io.File;
+//import java.io.FileInputStream;
+//import java.io.FileOutputStream;
+//import java.util.Properties;
 
-import org.eclipse.paho.client.sample.MQTTAgent;
+//import org.eclipse.paho.client.sample.MQTTAgent;
 
 import Aspect.LocalErrorController;
 import Aspect.SurgeCreator;
 
 import masSim.world.SimBot;
-import raven.game.interfaces.IBot;
+//import raven.game.interfaces.IBot;
 import masSim.goals.Goal;
 
 import java.util.concurrent.ExecutorService;
@@ -39,7 +39,7 @@ public class AgentProcess {
 
 	private final ExecutorService botUpdatePool = Executors.newSingleThreadExecutor();
 	private final ExecutorService agentPool = Executors.newSingleThreadExecutor();
-    private MQTTAgent client;
+    //private MQTTAgent client;
     private SimBot bot;
     private IAgent agent;
     private volatile boolean active = true;
@@ -156,10 +156,12 @@ public class AgentProcess {
 	    	AgentProcess agentProc = new AgentProcess(name, isManaging, x, y, mq);
 	    	IAgent agent = agentProc.getAgent();
 
-	    	if(args.length > 8) {
+	    	if( isManaging && args.length > 8 ) {
+	    		
 	    		for(int i = 8; i < args.length; i++) {
 	    			String childAgentName = args[i];
 	    			agent.AddChildAgent(childAgentName);
+	    			System.out.println("Added child agent " + childAgentName);
 	    		}
 			}
 			

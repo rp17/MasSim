@@ -5,9 +5,9 @@ import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventParams;
 import masSim.world.MqttMessagingProvider;
 import masSim.world.SimBot;
-import raven.game.navigation.NavGraphEdge;
+//import raven.game.navigation.NavGraphEdge;
 import raven.game.navigation.PathEdge;
-import raven.script.RavenScript;
+//import raven.script.RavenScript;
 import raven.math.Vector2D;
 import raven.Main;
 import raven.TaskIssuer;
@@ -93,7 +93,7 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 		//System.out.println("Going to x = " + m_Edge.Destination().x + " y = " + m_Edge.Destination().y);
 		double dist = m_pOwner.pos().distanceSq(m_Edge.Destination());
 		//System.out.println("Distance from destination: " + dist);
-			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
+			if (dist < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
 				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, coords: " + m_pOwner.pos());
 				

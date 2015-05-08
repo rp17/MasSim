@@ -59,7 +59,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//TasksToExecute.add("");
 		Main.Message(this, true, ": have added tasks");
 		
-		currentIteration++;
+		//currentIteration++;
 	}
 	private void asyncInitSubscribe() {
 		commsPool.execute( new Runnable(){
@@ -97,7 +97,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//	mq.PublishMessage(evt);
 	
 		final SchedulingEvent messageEvt = evt;
-		//quick fix to implement asynchornous way of sending
+		//quick fix to implement asynchronous way of sending
 		try {
 			final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
 			client.connect( null, new IMqttActionListener() {
@@ -170,7 +170,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
 		while(active) {
-			Main.Message(this, true, "TaskIssuer.run()");
+			Main.Message(this, true, "TaskIssuer.run() numberOfIteration = " + numberOfIteration + " currentIteration " + currentIteration);
 			synchronized (pauseLock) {
 				while (paused) {
 					try {
