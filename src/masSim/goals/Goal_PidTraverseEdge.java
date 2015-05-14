@@ -95,7 +95,8 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 		//System.out.println("Distance from destination: " + dist);
 			if (dist < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
-				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, coords: " + m_pOwner.pos());
+				String methName = m_Edge.MethodRepresentedByEdge();
+				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, method " + methName + " coords: " + m_pOwner.pos());
 				
 				// is AddAgentId taking the destination agent ? can taskIssuer be an agent ?
 				SchedulingEventParams params = new SchedulingEventParams()

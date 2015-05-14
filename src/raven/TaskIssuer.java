@@ -18,6 +18,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 public class TaskIssuer implements Runnable, SchedulingEventListener {
 	private List<String> MasterTaskList = new ArrayList<String>();
 	private List<String> TasksPendingCompletion = new ArrayList<String>();
+	private List<String> MethodsPendingCompletion = new ArrayList<String>();
 	//private volatile MqttMessagingProvider mq;
 	private volatile MqttMessagingProvider mqReceiver;
 	//private String clientName = "taskIssuer";
@@ -191,6 +192,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			*/
 
 			if ( currentIteration < numberOfIteration ) {
+				Main.Message(this, true, "TaskIssuer.run() relaunching execution loop ");
 				RelaunchExecutionLoop();
 				currentIteration++;
 			}
@@ -250,9 +252,14 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType.equals(SchedulingCommandType.TASKCOMPLETED))
 		{
-			if (TasksPendingCompletion.contains("event.params.TaskName"))
+			System.out.println("TaskIssuer.ProcessSchedulingEvent received event " + event.params.TaskName + " completed");
+			if (TasksPendingCompletion.contains("event.params.TaskName")) {
 				TasksPendingCompletion.remove(event.params.TaskName);
-			System.out.println("[TaskIssuer 58] " + event.params.TaskName + " completed");
+				System.out.println("[TaskIssuer 58] " + event.params.TaskName + " completed");
+			}
+		}
+		else if (event.commandType.equals(SchedulingCommandType.METHODCOMPLETED)) {
+			System.out.println("TaskIssuer.ProcessSchedulingEvent received event " + event.params.TaskName + " completed");
 		}
 		if (TasksPendingCompletion.isEmpty())
 		{

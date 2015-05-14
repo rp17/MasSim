@@ -72,6 +72,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	private ConcurrentHashMap<String,String> completedMethods = new ConcurrentHashMap<String,String>();
 
+	private List<String> methodsList = new ArrayList<String>();
+	
 	private AgentMode mode;
 	public double x;
 	public double y;
@@ -179,7 +181,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 		//Instrumentation for distributed event
 		//StatementEvent.addTasks(task);
-		schedulerPool.execute(localScheduler);
+		//schedulerPool.execute(localScheduler);
 	}
 	
 	private boolean IsManagingAgent()
@@ -466,6 +468,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void MarkMethodCompleted(String methodName)
 	{
+		Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " notified of completion of method " + methodName + " from Goal_PidTraverseEdge"); 
 		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
 		{
 
@@ -507,6 +510,20 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 			}
 			wpts.removeWpt(currentMethod.label);
+			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());
+			for(int i = 0; i < wpts.size(); i++) {
+				Waypoints.Wpt wp = wpts.get(i);
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left waypoint " + i + " : " + wp.name);
+			}
+			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " methods left " + methodsList.size());
+			for(int i = 0; i < methodsList.size(); i++) {
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left method " + i + " : " + methodsList.get(i));
+			}
+			
+			
+			if(wpts.size() == 0) {
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " NO MORE WAYPOINTS ");
+			}
 			
 			//this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
 			
@@ -579,6 +596,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Method method = (Method)node;
 			wpts.addWpt(new Vector2D(method.x, method.y), method.getLabel());
 			completedMethods.remove(method.label);//Remove previously completed task from list because of new issuance of same task
+			methodsList.add(method.label);
+			Main.Message(debugFlag, "Agent.RegisterChidlrenWithUI " + label + " assigned method " + method.label);
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
 
 		}
