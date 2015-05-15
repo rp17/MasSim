@@ -13,8 +13,6 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-<<<<<<< HEAD
-=======
 import Aspect.PredicateParameterFilter;
 import Aspect.StatementEvent;
 import BAEventMonitor.Execution;
@@ -24,7 +22,6 @@ import BAEventMonitor.Predicate;
 import BAEventMonitor.Execution.ExecutionMode;
 import BAEventMonitor.Param.StoreMode;
 
->>>>>>> MasDistributed/master
 import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
@@ -58,11 +55,11 @@ public class Scheduler implements Runnable {
 				Main.Message(this, debugFlag, "Pending task " + pendingTasks.get(i).label + " found for agent " + this.agent.getName());
 			}
 			Schedule schedule = CalculateSchedule();
-			StatementEvent.evaluateScheduleOptimal(schedule);
+			//StatementEvent.evaluateScheduleOptimal(schedule);
 			if (schedule!=null) {
 				this.agent.UpdateSchedule(schedule);	
 				//Instrumentation
-				StatementEvent.getExecutionPlan(schedule);
+				//StatementEvent.getExecutionPlan(schedule);
 			}
 		}
 	}
@@ -90,7 +87,7 @@ public class Scheduler implements Runnable {
 						Main.Message(true, "entered lock 2");
 						agent.GetCurrentTasks().addTask(newTask);
 						//instrumentation
-						PredicateParameterFilter.addTask(newTask);
+						//PredicateParameterFilter.addTask(newTask);
 					}
 					Main.Message(true, "exited lock 2");
 				}
@@ -102,9 +99,9 @@ public class Scheduler implements Runnable {
 			{
 				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
 				//instrumentation
-				PredicateParameterFilter.addSchedule(schedule);
+				//PredicateParameterFilter.addSchedule(schedule);
 				//instrumentation
-				StatementEvent.executeScheduleContainsTask();
+				//StatementEvent.executeScheduleContainsTask();
 				return schedule;
 			}
 			Thread.sleep(10000);

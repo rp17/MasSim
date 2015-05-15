@@ -24,7 +24,7 @@ public interface IAgent extends Runnable {
 	public void setMode(AgentMode mode);
 	public void UpdateSchedule(Schedule schedule);
 	public Task GetCurrentTasks();
-	public void RegisterChildrenWithUI(Node node);
+	public void RegisterChildrenWithUI(Node node, List<String> methodNames);
 	public ArrayList<String> getAgentsUnderManagement();
 	void setBot(SimBot bot);
 	public void startEventProcessing();

@@ -48,12 +48,12 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
-		Main.Message(this, true, ": have added tasks");
-		MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
+		//Main.Message(this, true, ": have added tasks");
+		//MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
 		//TasksToExecute.add("");
 		Main.Message(this, true, ": have added tasks");
 		
-		currentIteration++;
+		//currentIteration++;
 	}
 	private void asyncInitSubscribe() {
 		commsPool.execute( new Runnable(){
@@ -165,7 +165,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
 		while(active) {
-			Main.Message(this, true, "TaskIssuer.run()");
+			//Main.Message(this, true, "TaskIssuer.run()");
+			Main.Message(this, true, "TaskIssuer.run() numberOfIteration = " + numberOfIteration + " currentIteration " + currentIteration);
 			synchronized (pauseLock) {
 				while (paused) {
 					try {
@@ -186,6 +187,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			*/
 
 			if ( currentIteration < numberOfIteration ) {
+				Main.Message(this, true, "TaskIssuer.run() relaunching execution loop ");
 				RelaunchExecutionLoop();
 				currentIteration++;
 			}
@@ -245,9 +247,10 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType.equals(SchedulingCommandType.TASKCOMPLETED))
 		{
-			if (TasksPendingCompletion.contains("event.params.TaskName"))
+			if (TasksPendingCompletion.contains("event.params.TaskName")) {
 				TasksPendingCompletion.remove(event.params.TaskName);
-			System.out.println("[TaskIssuer 58] " + event.params.TaskName + " completed");
+				System.out.println("[TaskIssuer 58] " + event.params.TaskName + " completed");
+			}
 		}
 		if (TasksPendingCompletion.isEmpty())
 		{
