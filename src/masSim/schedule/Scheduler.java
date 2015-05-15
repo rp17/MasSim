@@ -70,7 +70,7 @@ public class Scheduler implements Runnable {
 	@Param(name="task", variable="newTask", pred="reachWaypoint", mode=StoreMode.List)
 	public synchronized Schedule CalculateSchedule()
 	{
-		try {
+		//try {
 			//Read all new tasks
 			int numberOfPendingTasks = this.agent.getPendingTasks().size();
 			if (numberOfPendingTasks<=0) return null;
@@ -93,21 +93,29 @@ public class Scheduler implements Runnable {
 				}
 			}
 			//Remove completed tasks
+			/*
 			synchronized(Task.Lock){
-			agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());}
-			if(agent.GetCurrentTasks().hasChildren())
-			{
-				Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
-				//instrumentation
-				//PredicateParameterFilter.addSchedule(schedule);
-				//instrumentation
-				//StatementEvent.executeScheduleContainsTask();
-				return schedule;
+					agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
 			}
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			Main.Message(debugFlag, "[Schedular 109]" + e.toString());
-		}
+			*/
+			synchronized(Task.Lock){
+				agent.GetCurrentTasks().Cleanup();
+			}
+			if(agent.GetCurrentTasks().hasChildren())
+				{
+					Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
+					//instrumentation
+					//PredicateParameterFilter.addSchedule(schedule);
+					//instrumentation
+					//StatementEvent.executeScheduleContainsTask();
+					return schedule;
+				}
+				
+				//Thread.sleep(10000); // what is this sleep for ??
+				
+			//} catch (InterruptedException e) {
+				//Main.Message(debugFlag, "[Schedular 109]" + e.toString());
+			//}
 		return null;
 	}
 	

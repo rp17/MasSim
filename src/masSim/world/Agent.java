@@ -151,7 +151,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
-		this.schedulerPool = Executors.newFixedThreadPool(5);
+		this.schedulerPool = Executors.newFixedThreadPool(2);
 		localScheduler = new Scheduler(this);
 		this.mq = mq;
 		
@@ -537,7 +537,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				SchedulingEventParams params = new SchedulingEventParams().AddAgentId(label)
 						.AddTaskName(taskName);
 				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.TASKCOMPLETED, params);
-				mq.PublishMessage(event);
+				mq.publishMessage(event.rawMessage, 2);
 			}
 			
 			if(mapTaskToMethods.size() == 0) {

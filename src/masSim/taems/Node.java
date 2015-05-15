@@ -1,5 +1,6 @@
 package masSim.taems;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -15,7 +16,7 @@ public abstract class Node extends Element  implements IObserver {
 	protected int NodeType;
 	protected boolean recurring = false;
 	protected transient int status;
-	protected List<Node> children;
+	protected CopyOnWriteArrayList<Node> children;
 	public ArrayList<Node> Observers = new ArrayList<Node>();
 	public abstract boolean IsTask();
 	public Iterator<Node> getSubtasks(){

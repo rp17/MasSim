@@ -77,7 +77,7 @@ public class Task extends Node {
 	// Constructor
 	public Task(String label, QAF qaf, Date earliest_start, Date deadline, IAgent agent, Node[] m, boolean recurring){
 		this.label = label;
-		children = new ArrayList<Node>();
+		children = new java.util.concurrent.CopyOnWriteArrayList<Node>();
 		this.qaf = qaf;
 		this.earliest_start_time = earliest_start;
 		this.deadline = deadline;
@@ -155,6 +155,7 @@ public class Task extends Node {
 			synchronized(Task.Lock)
 			{
 				Main.Message(true, "entered lock 1");
+			
 				for(Node n : children)
 				{
 					if (n!=null)
@@ -183,6 +184,41 @@ public class Task extends Node {
 		}
 	}
 	
+	public synchronized void Cleanup()
+	{
+		if (this.hasChildren())
+		{
+			synchronized(Task.Lock)
+			{
+				Main.Message(true, "entered lock 1");
+			
+				for(Node n : children)
+				{
+					if (n!=null)
+					{
+						if (n.IsComplete())
+						{
+							children.remove(n);
+							//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+						}
+						else
+						{
+							if (n.IsTask())
+							{
+								//n.Cleanup();
+								if (n.IsComplete())//Recheck after cleanup
+								{
+									children.remove(n);
+									//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+								}
+							}
+						}
+					}
+				}
+			}
+			Main.Message(true, "exited lock 1");
+		}
+	}
 	public static Task CreateDefaultTask(int counter, double x, double y)
 	{
 		return new Task("Station " + counter,new SumAllQAF(), null, new Method[]{

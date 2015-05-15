@@ -327,42 +327,47 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	// James' async publish message
 	public void publishMessage(String message) {
-		//UUID clientUID = UUID.randomUUID();
-		// mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName , ipAddress, port);
-		// //Main.Message(this, true, ": about to publish");
-		// mq.PublishMessage(message);
-		//
-		final String eventMessage = message;
-		//quick fix to implement asynchronous way of sending
-		try {
-			final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
-			client.connect( null, new IMqttActionListener() {
-				@Override
-				public void onSuccess(IMqttToken asyncActionToken) {
-					// while (true) {
-					try{
-						publishCounter++;
-						String agentName = eventMessage.substring(0, eventMessage.indexOf(","));
-						client.publish(agentName, eventMessage.getBytes(), 1, false);
-						System.out.println("publish #" + publishCounter);
+		publishMessage(message, 1);
+	}
+	
+	// James' async publish message
+		public void publishMessage(String message, final int QOS) {
+			//UUID clientUID = UUID.randomUUID();
+			// mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName , ipAddress, port);
+			// //Main.Message(this, true, ": about to publish");
+			// mq.PublishMessage(message);
+			//
+			final String eventMessage = message;
+			//quick fix to implement asynchronous way of sending
+			try {
+				final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
+				client.connect( null, new IMqttActionListener() {
+					@Override
+					public void onSuccess(IMqttToken asyncActionToken) {
+						// while (true) {
+						try{
+							publishCounter++;
+							String agentName = eventMessage.substring(0, eventMessage.indexOf(","));
+							client.publish(agentName, eventMessage.getBytes(), QOS, false);
+							System.out.println("publish #" + publishCounter);
+						}
+						catch (MqttException e) {
+							e.printStackTrace();
+						}
+						// }
 					}
-					catch (MqttException e) {
-						e.printStackTrace();
-					}
-					// }
-				}
-			
-				@Override
-				public void onFailure(IMqttToken arg0, Throwable arg1) {
-					// TODO Auto-generated method stub
+				
+					@Override
+					public void onFailure(IMqttToken arg0, Throwable arg1) {
+						// TODO Auto-generated method stub
 
+					}
+				});
+				} catch (MqttException me) {
+					//e.printStackTrace();
+					DisplayMqttException(me);
 				}
-			});
-			} catch (MqttException me) {
-				//e.printStackTrace();
-				DisplayMqttException(me);
 			}
-		}
 	/*
 	@Override
 	public void messageArrived(String arg0, MqttMessage arg1) throws Exception {

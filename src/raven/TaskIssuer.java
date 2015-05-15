@@ -134,6 +134,9 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	}
 
 	private void publishMessage(String message) {
+		publishMessage(message, 1);
+	}
+	private void publishMessage(String message, final int QOS) {
 		//UUID clientUID = UUID.randomUUID();
 		//	mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName , ipAddress, port);
 		//	//Main.Message(this, true, ": about to publish");
@@ -150,7 +153,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 					try{
 						publishCounter++;
 						String agentName = eventMessage.substring(0, eventMessage.indexOf(","));
-						client.publish(agentName, eventMessage.getBytes(), 1, false);
+						client.publish(agentName, eventMessage.getBytes(), QOS, false);
 						System.out.println("publish #" + publishCounter);
 					}
 					catch (MqttException e) {
@@ -170,7 +173,6 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			e.printStackTrace();
 		}
 	}
-	
 	@Override
 	public void run() {
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
@@ -207,7 +209,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				Main.Message(this, true, "TaskIssuer.run() all " + numberOfIteration + " iterations completed, TaskIssuer shutting down");
 				active = false;
 				String ambShutdown = "Ambulance,SHUTDOWN,----PickPatient";
-				publishMessage(ambShutdown);
+				publishMessage(ambShutdown, 2);
 				try {
 					Thread.sleep(250);
 					shutdown();
@@ -272,7 +274,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				{
 					Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
 					//mq.PublishMessage(taskMessage);
-					publishMessage(taskMessage);
+					publishMessage(taskMessage, 2);
 				}
 			}
 		});
@@ -287,7 +289,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		{
 			Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
 			final String msg = taskMessage;
-			publishMessage(msg);
+			publishMessage(msg, 2);
 		}
 	}
 	
