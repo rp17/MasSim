@@ -326,14 +326,14 @@ public class MqttMessagingProvider implements MqttCallback {
 	}
 	
 	// James' async publish message
-	private void publishMessage(String message) {
+	public void publishMessage(String message) {
 		//UUID clientUID = UUID.randomUUID();
 		// mq = MqttMessagingProvider.GetMqttProvider(TaskIssuerName , ipAddress, port);
 		// //Main.Message(this, true, ": about to publish");
 		// mq.PublishMessage(message);
 		//
 		final String eventMessage = message;
-		//quick fix to implement asynchornous way of sending
+		//quick fix to implement asynchronous way of sending
 		try {
 			final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
 			client.connect( null, new IMqttActionListener() {
@@ -410,6 +410,7 @@ public class MqttMessagingProvider implements MqttCallback {
 		}
 	}
 	
+	// this main method is for testing
 	public static void main(String[] args) throws Exception {
 		//String nodeID = getNodeMacAddress();
 		String nodeID = "agentSub";

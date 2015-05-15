@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
@@ -17,7 +18,10 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class TaskIssuer implements Runnable, SchedulingEventListener {
 	private List<String> MasterTaskList = new ArrayList<String>();
-	private List<String> TasksPendingCompletion = new ArrayList<String>();
+	//private List<String> TasksPendingCompletion = new ArrayList<String>();
+	
+	private List<String> MasterTaskNameList = new ArrayList<String>();
+	private List<String> TaskNamesPendingCompletion = new ArrayList<String>();
 	//private volatile MqttMessagingProvider mq;
 	private volatile MqttMessagingProvider mqReceiver;
 	//private String clientName = "taskIssuer";
@@ -45,7 +49,12 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//Create list of tasks to be executed in a loop
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
-		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
+		
+		//MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
+		
+		MasterTaskNameList.add("PickPatient");
+		MasterTaskNameList.add("DropPatient");
+		
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		//Main.Message(this, true, ": have added tasks");
@@ -67,15 +76,17 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	private void initSubscribe() {
 		Main.Message(this, true, ": about to GetMqttProvider");
 
-		SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
+		//SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "started");
 	
-		publishSchedulingEvent(evt);
+		//publishSchedulingEvent(evt);
 		//Main.Message(this, true, ": about to SubscribeForAgent");
 		//mq.SubscribeForAgent(ambName);
+		final TaskIssuer taskIssuer = this;
 		commsPool.execute( new Runnable(){
 			@Override
 			public void run() {
 				mqReceiver = MqttMessagingProvider.GetMqttProvider(TaskIssuerName + "Subscriber", ipAddress, port);
+				mqReceiver.AddListener(taskIssuer);
 				mqReceiver.SubscribeForAgent(TaskIssuerName);
 				mqReceiver.SubscribeForAgent(polName);
 				mqReceiver.SubscribeForAgent(ambName);
@@ -129,7 +140,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//	mq.PublishMessage(message);
 		//	
 		final String eventMessage = message;
-		//quick fix to implement asynchornous way of sending
+		//quick fix to implement asynchronous way of sending
 		try {
 			final MqttAsyncClient client = new MqttAsyncClient("tcp://" + ipAddress + ":" + port, MqttAsyncClient.generateClientId());
 			client.connect( null, new IMqttActionListener() {
@@ -190,9 +201,22 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				Main.Message(this, true, "TaskIssuer.run() relaunching execution loop ");
 				RelaunchExecutionLoop();
 				currentIteration++;
+				onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
+			}
+			else {
+				Main.Message(this, true, "TaskIssuer.run() all " + numberOfIteration + " iterations completed, TaskIssuer shutting down");
+				active = false;
+				String ambShutdown = "Ambulance,SHUTDOWN,----PickPatient";
+				publishMessage(ambShutdown);
+				try {
+					Thread.sleep(250);
+					shutdown();
+				}
+				catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
 			}
 			
-			onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
 		}
 	}
 
@@ -214,13 +238,37 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		issuerPool.execute( this );
 	}
 	
+	private void shutdown() {
+		//shutdownAndAwaitTermination(issuerPool);
+		//shutdownAndAwaitTermination(commsPool);
+		commsPool.shutdown();
+		issuerPool.shutdown();
+		System.exit(0);
+	}
+	void shutdownAndAwaitTermination(ExecutorService pool) {
+		   pool.shutdown(); // Disable new tasks from being submitted
+		   try {
+		     // Wait a while for existing tasks to terminate
+		     if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+		       pool.shutdownNow(); // Cancel currently executing tasks
+		       // Wait a while for tasks to respond to being cancelled
+		       if (!pool.awaitTermination(60, TimeUnit.SECONDS))
+		           System.err.println("Pool did not terminate");
+		     }
+		   } catch (InterruptedException ie) {
+		     // (Re-)Cancel if current thread also interrupted
+		     pool.shutdownNow();
+		     // Preserve interrupt status
+		     Thread.currentThread().interrupt();
+		   }
+		 }
 	private void AsyncRelaunchExecutionLoop()
 	{
 		commsPool.execute( new Runnable(){
 			@Override
 			public void run() {
-				TasksPendingCompletion.addAll(MasterTaskList);
-				for(String taskMessage : TasksPendingCompletion)
+				//TasksPendingCompletion.addAll(MasterTaskList);
+				for(String taskMessage : MasterTaskList)
 				{
 					Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
 					//mq.PublishMessage(taskMessage);
@@ -232,10 +280,10 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	
 	private void RelaunchExecutionLoop()
 	{
-		TasksPendingCompletion.addAll(MasterTaskList);
-		//SchedulingEvent evt = new SchedulingEvent(TaskIssuerName, SchedulingCommandType.INITMSG, "test");
-		//mq.PublishMessage(evt);
-		for(String taskMessage : TasksPendingCompletion)
+		//TasksPendingCompletion.addAll(MasterTaskList);
+		TaskNamesPendingCompletion.addAll(MasterTaskNameList);
+		
+		for(String taskMessage : MasterTaskList)
 		{
 			Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
 			final String msg = taskMessage;
@@ -247,14 +295,17 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType.equals(SchedulingCommandType.TASKCOMPLETED))
 		{
-			if (TasksPendingCompletion.contains("event.params.TaskName")) {
-				TasksPendingCompletion.remove(event.params.TaskName);
+			Main.Message(true, "TaskIssuer.ProcessSchedulingEvent: received  " + event.params.TaskName);
+			
+			if (TaskNamesPendingCompletion.contains(event.params.TaskName)) {
+				TaskNamesPendingCompletion.remove(event.params.TaskName);
 				System.out.println("[TaskIssuer 58] " + event.params.TaskName + " completed");
 			}
 		}
-		if (TasksPendingCompletion.isEmpty())
+		if (TaskNamesPendingCompletion.isEmpty())
 		{
 			//RelaunchExecutionLoop();
+			Main.Message(true, "TaskIssuer.ProcessSchedulingEvent: all scenario tasks completed");
 			onResume(); // unpause the thread with TaskIssuer run method
 		}
 		return null;

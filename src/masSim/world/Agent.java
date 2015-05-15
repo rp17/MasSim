@@ -155,7 +155,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		localScheduler = new Scheduler(this);
 		this.mq = mq;
 		
-		
+		/*
 		commsPool.execute( new Runnable(){
 			@Override
 			public void run() {
@@ -164,6 +164,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				//mqReceiver.SubscribeForAgent(ambName);
 			}
 		});
+		*/
 		
 	}
 	public void startEventProcessing() {
@@ -535,7 +536,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				// sending an event about TASKCOMPLETION to TaskIssuer
 				SchedulingEventParams params = new SchedulingEventParams().AddAgentId(label)
 						.AddTaskName(taskName);
-				SchedulingEvent event = new SchedulingEvent(label, SchedulingCommandType.TASKCOMPLETED, params);
+				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.TASKCOMPLETED, params);
 				mq.PublishMessage(event);
 			}
 			
@@ -712,50 +713,55 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		System.out.println("Agent.ProcessSchedulingEvent " + label + " received event " + event.commandType);
-		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
-		{
-			//StatementEvent.assignchoice();
+		if(event.agentName.equalsIgnoreCase(this.getName())) {
+			if (event.commandType==SchedulingCommandType.ASSIGNTASK )
+			{
+				//StatementEvent.assignchoice();
 			
-			//Instrumentation
-			//StatementEvent.getConsensus(event.params.TaskName);
-			AssignTask(event.params.TaskName);
-			
-		}
-		if (event.commandType==SchedulingCommandType.METHODCOMPLETED && event.agentName.equalsIgnoreCase(this.getName()))
-		{
-			String completedMethodName = event.params.MethodId;
-
-			if (completedMethodName!=null) {
-				MarkMethodCompleted(completedMethodName);
 				//Instrumentation
-				//StatementEvent.getCompletedTasks(completedMethodName);
+				//StatementEvent.getConsensus(event.params.TaskName);
+				AssignTask(event.params.TaskName);
+			
 			}
+			if (event.commandType==SchedulingCommandType.METHODCOMPLETED )
+			{
+				String completedMethodName = event.params.MethodId;
 
-		}
-		if (event.commandType==SchedulingCommandType.NEGOTIATE && event.agentName.equalsIgnoreCase(this.getName()))
-		{
-			Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
-			Task task = this.taskRepository.GetTask(event.params.TaskName);
+				if (completedMethodName!=null) {
+					MarkMethodCompleted(completedMethodName);
+					//Instrumentation
+					//StatementEvent.getCompletedTasks(completedMethodName);
+				}
 
-			//Instrumentation
-			//StatementEvent.getConsensus(event.params.TaskName);
-			this.Negotiate(task);
-		}
-		if (event.commandType==SchedulingCommandType.CALCULATECOST && event.agentName.equalsIgnoreCase(this.getName()))
-		{
-			Task task = this.taskRepository.GetTask(event.params.TaskName);
+			}
+			if (event.commandType==SchedulingCommandType.NEGOTIATE )
+			{
+				Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
+				Task task = this.taskRepository.GetTask(event.params.TaskName);
 
-			//Instrumentation
-			//StatementEvent.getConsensus(event.params.TaskName);
-			CalculateCost(task);
+				//Instrumentation
+				//StatementEvent.getConsensus(event.params.TaskName);
+				this.Negotiate(task);
+			}
+			if (event.commandType==SchedulingCommandType.CALCULATECOST )
+			{
+				Task task = this.taskRepository.GetTask(event.params.TaskName);
+
+				//Instrumentation
+				//StatementEvent.getConsensus(event.params.TaskName);
+				CalculateCost(task);
+			}
+			if (event.commandType==SchedulingCommandType.COSTBROADCAST )
+			{
+				//Instrumentation
+				//StatementEvent.getConsensus(event.params.TaskName);
+				ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
+			}
+			if(event.commandType==SchedulingCommandType.SHUTDOWN) {
+				Main.Message(debugFlag, "Agent " + label + " shutting down");
+				System.exit(0);
+			}
 		}
-		if (event.commandType==SchedulingCommandType.COSTBROADCAST && event.agentName.equalsIgnoreCase(this.getName()))
-		{
-			//Instrumentation
-			//StatementEvent.getConsensus(event.params.TaskName);
-			ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
-		}
-		
 		
 		return null;
 	}
