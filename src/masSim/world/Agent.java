@@ -417,7 +417,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	
 	public void ExecuteTask(Method m) throws InterruptedException
 	{
-		System.out.println("Agent.ExecuteTask: starting execution of " + m.label);
+		System.out.println("Agent.ExecuteTask " + label + ": starting execution of " + m.label);
 		while (!AreEnablersInPlace(m))
 		{
 			Main.Message(debugFlag, "[Agent 88] " + m.label + " enabler not in place. Waiting...");
@@ -431,15 +431,26 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			
 			// the event SchedulingCommandType.DISPLAYTASKEXECUTION make RavenUI assign a pid traverse goal to a bot
 			// instead, this assignment must be done directly to SimBot associated with this Agent
+			/*
+			if(m.label.equals("Finish")) {
+				System.out.println("Agent.ExecuteTask " + label + ": IGNORING execution of " + m.label);
+				//this.currentMethod = null;
+				MarkMethodCompleted(m.label);
+			}
+			else {
+				Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
+				GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
 			
+				fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
+				this.flagScheduleRecalculateRequired = false;
+			}
+			*/
 			Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
 			GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
-			
+		
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
-			
-			
-			
 			this.flagScheduleRecalculateRequired = false;
+			
 		}
 	}
 	

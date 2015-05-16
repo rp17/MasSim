@@ -134,7 +134,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	}
 
 	private void publishMessage(String message) {
-		publishMessage(message, 1);
+		publishMessage(message, 2);
 	}
 	private void publishMessage(String message, final int QOS) {
 		//UUID clientUID = UUID.randomUUID();

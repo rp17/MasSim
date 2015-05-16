@@ -146,7 +146,7 @@ public class MqttMessagingProvider implements MqttCallback {
 				String topic = agentName;
 				//Main.Message(true, "MqttMessagingProvider.GetMqttProvider: client.subscribe to topic " + topic);
 				
-				client.subscribe(topic, 1);
+				client.subscribe(topic, 2);
 				//Main.Message(true, "MqttMessagingProvider.GetMqttProvider: have subscribed to client");
 			} catch(MqttException me) {
 	        	DisplayMqttException(me);
@@ -327,7 +327,7 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	// James' async publish message
 	public void publishMessage(String message) {
-		publishMessage(message, 1);
+		publishMessage(message, 2);
 	}
 	
 	// James' async publish message
