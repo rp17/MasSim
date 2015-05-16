@@ -57,6 +57,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public boolean noUI = true;
 	private boolean debugFlag = true;
 	private boolean errorFlag = true;
+	private boolean scenarioDone = false;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	
@@ -552,7 +553,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 			
 			if(mapTaskToMethods.size() == 0) {
-				
+				scenarioDone = true;
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
 			}
 			
@@ -769,8 +770,36 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
 			}
 			if(event.commandType==SchedulingCommandType.SHUTDOWN) {
-				Main.Message(debugFlag, "Agent " + label + " shutting down");
-				System.exit(0);
+				
+				//SchedulingEvent evt = new SchedulingEvent(label, SchedulingCommandType.INITMSG, "re-init");
+				//mq.publishMessage(evt.rawMessage, 2);
+				
+				/*
+				commsPool.execute( new Runnable(){
+					@Override
+					public void run() {
+						//SchedulingEvent evt = new SchedulingEvent(label, SchedulingCommandType.INITMSG, "re-init");
+						//Main.Message(debugFlag, "Agent " + label + " sending " + evt.rawMessage);
+						//mq.publishMessage(evt.rawMessage, 2);
+						Main.Message(debugFlag, "Agent " + label + " sending INITMSG");
+						mq.publishMessage("Ambulance,INITMSG,----re-init", 1);
+					}
+				});
+				*/
+				
+				if(scenarioDone) {
+					try {
+						Main.Message(debugFlag, "Agent " + label + " scneario done, SHUTDOWN received, shutting down");
+						Thread.sleep(250); // give time for message to be sent
+						System.exit(0);
+					}
+					catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+					}
+				}
+				else {
+					Main.Message(debugFlag, "Agent " + label + " scneario NOT done, SHUTDOWN received, but NOT shutting down");
+				}
 			}
 		}
 		
