@@ -786,10 +786,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					}
 				});
 				*/
-				
+				/*
 				if(scenarioDone) {
 					try {
-						Main.Message(debugFlag, "Agent " + label + " scneario done, SHUTDOWN received, shutting down");
+						Main.Message(debugFlag, "Agent " + label + " scenario done, SHUTDOWN received, shutting down");
 						Thread.sleep(250); // give time for message to be sent
 						System.exit(0);
 					}
@@ -798,8 +798,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					}
 				}
 				else {
-					Main.Message(debugFlag, "Agent " + label + " scneario NOT done, SHUTDOWN received, but NOT shutting down");
+					Main.Message(debugFlag, "Agent " + label + " scenario NOT done, SHUTDOWN received, but NOT shutting down");
 				}
+				*/
+				
+				Main.Message(debugFlag, "Agent " + label + " SHUTDOWN received, shutting down");
+				System.exit(0);
 			}
 		}
 		

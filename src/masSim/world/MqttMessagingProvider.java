@@ -104,7 +104,7 @@ public class MqttMessagingProvider implements MqttCallback {
 					//String brokerUrl, String clientId, boolean cleanSession, boolean quietMode, String userName, String password
 					String protocol = "tcp://";
 					String url = protocol + ipAddress + ":" + port;
-					client = new MQTTAgent(url,nodeID,false, true, null, null);
+					client = new MQTTAgent(url,nodeID,true, true, null, null); // clean messages
 					client.setCallBack(this);
 					
 					//QoS (0-means FireAndForget which is fastest; 1- means StoreAndForwardWithDuplicate which is bit slow; 2- means StoreAndForwardWithoutDuplciate which is slowest
