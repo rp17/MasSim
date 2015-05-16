@@ -183,7 +183,7 @@ public class Task extends Node {
 			Main.Message(true, "exited lock 1");
 		}
 	}
-	
+	/*
 	public synchronized void Cleanup()
 	{
 		if (this.hasChildren())
@@ -219,6 +219,38 @@ public class Task extends Node {
 			Main.Message(true, "exited lock 1");
 		}
 	}
+	*/
+	
+	public synchronized void Cleanup()
+	{
+		if (this.hasChildren())
+		{
+				for(Node n : children)
+				{
+					if (n!=null)
+					{
+						if (n.IsComplete())
+						{
+							children.remove(n);
+							//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+						}
+						else
+						{
+							if (n.IsTask())
+							{
+								n.Cleanup();
+								if (n.IsComplete())//Recheck after cleanup
+								{
+									children.remove(n);
+									//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,new SchedulingEventParams().AddTaskName(n.getLabel())));
+								}
+							}
+						}
+					}
+				}
+		}
+	}
+	
 	public static Task CreateDefaultTask(int counter, double x, double y)
 	{
 		return new Task("Station " + counter,new SumAllQAF(), null, new Method[]{

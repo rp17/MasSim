@@ -168,6 +168,20 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		*/
 		
 	}
+	
+	private void reinitAgent() {
+		taskInd = 0;
+		status = Status.EMPTY;
+		flagScheduleRecalculateRequired = true;
+		pendingTasks.clear();
+		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
+		currentSchedule = new Schedule();
+		
+		//localScheduler = new Scheduler(this);
+		
+		taskRepository.ReadTaskDescriptions(getName()+".xml");
+	}
+	
 	public void startEventProcessing() {
 		
 		this.mq.AddListener(this); // start listening for events from its own instance of MqttMessagingProvider
@@ -345,7 +359,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}	
 	}
 	
-	public Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
+	public synchronized Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
 	{
 		//Make a copy
 		if (task!=null) taskAgent = task.agent;
@@ -555,6 +569,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if(mapTaskToMethods.size() == 0) {
 				scenarioDone = true;
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " re-initializing");
+				reinitAgent();
 			}
 			
 			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());

@@ -23,10 +23,12 @@ public abstract class Node extends Element  implements IObserver {
 		return children.iterator();
 	}
 	
-	public void Cleanup(MqttMessagingProvider mq)
-	{}
+	//Proper traversal should be implemented
+	
+	public void Cleanup(MqttMessagingProvider mq){}
 
-
+	public void Cleanup(){}
+	
 	  /**
 	   * Default constructor
 	   * @param l The node's label
