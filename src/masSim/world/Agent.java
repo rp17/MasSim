@@ -176,9 +176,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		pendingTasks.clear();
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		currentSchedule = new Schedule();
-		
-		//localScheduler = new Scheduler(this);
-		
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
 	}
 	

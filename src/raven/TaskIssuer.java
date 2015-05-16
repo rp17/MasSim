@@ -50,10 +50,11 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
 		
-		//MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
+		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
 		
 		MasterTaskNameList.add("PickPatient");
 		MasterTaskNameList.add("DropPatient");
+		MasterTaskNameList.add("Patrol");
 		
 		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
@@ -209,7 +210,9 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				Main.Message(this, true, "TaskIssuer.run() all " + numberOfIteration + " iterations completed, TaskIssuer shutting down");
 				active = false;
 				String ambShutdown = "Ambulance,SHUTDOWN,----PickPatient";
+				String polShutdown = "Police,SHUTDOWN,----PickPatient";
 				publishMessage(ambShutdown, 2);
+				publishMessage(polShutdown, 2);
 				try {
 					Thread.sleep(250);
 					shutdown();
