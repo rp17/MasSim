@@ -519,7 +519,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			//PredicateParameterFilter.addMethod(currentMethod);
 			
 			//schedule.get().RemoveElement(e);Does this need to be done?
-			currentMethod.MarkCompleted();
+			//currentMethod.MarkCompleted();
 			
 			//instrumentation
 			//spec 2
