@@ -8,6 +8,7 @@ public class SchedulingEventParams {
 	public String YCoordinate;
 	public String Data;
 	public String TaskName;
+	private String AddOriginatingAgent;
 	public static String DataItemSeparator = "w";
 	
 	public SchedulingEventParams()
@@ -28,6 +29,11 @@ public class SchedulingEventParams {
 	public SchedulingEventParams AddMethodId(String methodId)
 	{
 		this.MethodId = methodId;
+		return this;
+	}
+
+	public SchedulingEventParams AddOriginatingAgent(String originatingAgent) {
+		this.AddOriginatingAgent = originatingAgent;
 		return this;
 	}
 	
@@ -115,4 +121,5 @@ public class SchedulingEventParams {
 		if (this.Data!=null) result += this.Data;
 		return result;
 	}
+
 }

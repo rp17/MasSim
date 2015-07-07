@@ -95,7 +95,18 @@ public class Goal_PidTraverseEdge extends GoalComposite {
 		//System.out.println("Distance from destination: " + dist);
 			if (m_pOwner.pos().distanceSq(m_Edge.Destination()) < distTolerance) {
 				m_iStatus = Goal.CurrentStatus.completed;
-				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED, coords: " + m_pOwner.pos());
+				Main.Message(this, true, ": agent " + this.m_pOwner.getName() + "  METHODCOMPLETED: " + m_Edge.MethodRepresentedByEdge() + " , coords: " + m_pOwner.pos());
+				
+				// is AddAgentId taking the destination agent ? can taskIssuer be an agent ?
+				SchedulingEventParams params = new SchedulingEventParams()
+				.AddTaskName(m_Edge.MethodRepresentedByEdge())
+				.AddAgentId(TaskIssuer.TaskIssuerName)
+				.AddOriginatingAgent(this.m_pOwner.getName());
+				
+				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.METHODCOMPLETED, params);
+				//SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
+				// what are "0", "0", "" for ? dummy vals for coordinates ?
+				
 				//SchedulingEventParams params = new SchedulingEventParams(this.m_pOwner.getName(), m_Edge.MethodRepresentedByEdge(), "0", "0", "");
 				//SchedulingEvent event = new SchedulingEvent(this.m_pOwner.getName(), SchedulingCommandType.METHODCOMPLETED, params);
 				m_pOwner.getAgent().MarkMethodCompleted(m_Edge.MethodRepresentedByEdge());

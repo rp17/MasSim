@@ -60,7 +60,7 @@ public class DijkstraAlgorithm {
       DijkstraDistance singleStepDistanceFromNodeToTarget = getDistance(node, target, highestUtilityToNode);
       DijkstraDistance currentHighestUtilityFromNodeToTarget = getHighestUtility(target);
       DijkstraDistance newUtilityFromNodeToTargetFromCurrentRoute = singleStepDistanceFromNodeToTarget;//shortestDistanceToNode.Add(singleStepDistanceFromNodeToTarget);
-      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget)) {
+      if (newUtilityFromNodeToTargetFromCurrentRoute.HasGreaterUtility(currentHighestUtilityFromNodeToTarget, target)) {
     	Main.Message(debugFlag, "[DijkstraAlgorithm 55] Adding route " + node.toStringLong() + " to " + target.toStringLong() + " new:" + newUtilityFromNodeToTargetFromCurrentRoute.quality + " old:" + currentHighestUtilityFromNodeToTarget.quality);
         distance.put(target, newUtilityFromNodeToTargetFromCurrentRoute);
         predecessors.put(target, node);
@@ -105,7 +105,7 @@ public class DijkstraAlgorithm {
       if (maximum == null) {
         maximum = vertex;
       } else {
-        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum))) {
+        if (getHighestUtility(vertex).HasGreaterUtility(getHighestUtility(maximum), vertex)) {
           maximum = vertex;
         }
       }

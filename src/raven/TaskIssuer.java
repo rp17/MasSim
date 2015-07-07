@@ -1,5 +1,8 @@
 package raven;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +59,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskNameList.add("DropPatient");
 		MasterTaskNameList.add("Patrol");
 		
-		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
+		MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		//Main.Message(this, true, ": have added tasks");
 		//MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");

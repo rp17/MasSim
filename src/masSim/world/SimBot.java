@@ -104,10 +104,8 @@ public class SimBot implements IBot{
 			System.out.println("SimBot.addWptsGoal " + name + " assigned Goal_PIDFollowPath " + methodName);
 			return g;
 		}
-		else {
 			System.out.println("SimBot.addWptsGoal " + name + " received waypoint list with size " + wpts.size() + " ! Should be > 1");
 			return null;
-		}
 	}
 	/*
 	 * Calculation of Cross Track Error as a difference between desired course and current bearing (in degrees)

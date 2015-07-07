@@ -60,6 +60,8 @@ public class Scheduler implements Runnable {
 				this.agent.UpdateSchedule(schedule);	
 				//Instrumentation
 				//StatementEvent.getExecutionPlan(schedule);
+			} else {
+				Main.Message(true, this.agent.getName() + " schedule came out to be null");
 			}
 		}
 	}
@@ -270,7 +272,7 @@ public class Scheduler implements Runnable {
 						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
 						//only one, then for aesthetic purposes, we can have the same object repeated
 						boolean multiplePermutationRequringUniqueMethodsForGraph = true;
-						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
+//						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
 						for(int i=0;i<s.length;i++)
 						{
 							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk, multiplePermutationRequringUniqueMethodsForGraph);

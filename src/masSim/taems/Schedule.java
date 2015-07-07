@@ -39,79 +39,61 @@ public class Schedule {
 	}
 	public synchronized void Merge(Schedule sch)
 	{
+
 		Main.Message(true, "Old Schedule " + this.hashCode() + " : " + this.toString());
 		Main.Message(true, "Merge Candidate " + sch.hashCode() + " : " + sch.toString());
 		ScheduleElement first = null;
 		ScheduleElement last = null;
-		Queue<ScheduleElement> mergedList = new ConcurrentLinkedQueue<ScheduleElement>();
-		List<ScheduleElement> cachedNewList = new ArrayList<ScheduleElement>();
-		List<ScheduleElement> removedList = new ArrayList<ScheduleElement>();
-		//First, loop through all elements of new schedule
-		for(ScheduleElement el : sch.items)
-		{
-			//Save its first and last methods, as these will be given priority over first and last methods of
-			//old schedule
-			if (el.getMethod().isStartMethod())
-			{
+		boolean useSch = false;
+
+		//First, set first and last, and remove all elements from old schedule, which are also present in the new schedule
+		for(ScheduleElement el : sch.items) {
+			if(el.getMethod().isStartMethod()) {
 				first = el;
-			}
-			else if (el.getMethod().isEndMethod())
-			{
+				useSch = true;
+			} else if(el.getMethod().isEndMethod()) {
 				last = el;
-			}
-			else
-			{
-				//Cache these new elements
-				cachedNewList.add(el);
-			}
-			//Remove all those elements from the old schedule, which are also present in new one 
-			//since they'd be the updated versions of those same methods
-			if (ContainsSameMethod(this.items,el))
-			{
-				//this.items.remove(el);Remove is not guaranteed to work in concurrent queue, so using custom mechanism
-				removedList.add(el);
+				sch.items.remove(el);
+			} else if (ContainsSameMethod(this.items,el)) {
+				this.items.remove(el);
 			}
 		}
-		//Now we have a pruned over schedule containing only those elements which were not present in new
-		//one and thus need to be brought in. Loop through old schedule and bring them in
-		for(ScheduleElement el : this.items)
-		{
-			if (!ContainsSameMethod(removedList,el))
-			{
-				if (el.getMethod().isStartMethod())//If first was not found in new schedule
-				{
-					if (first==null)
-						first = el;
-					//By this time we should have a first method, so add it to new merged schedule now
-					mergedList.add(first);
-				}
-				else if (el.getMethod().isEndMethod())//If last was not found in new schedule
-				{
-					if (last==null)
-						last = el;//By this time, we should have a last, but don't add it yet to schedule
-				}
-				else
-				{
-					mergedList.add(el);//Add all elements of old schedule
+
+		//If first was not in sch, then set it
+		if(first == null) {
+			for(ScheduleElement el : this.items) {
+				if(el.getMethod().isStartMethod()) { 
+					first = el;
 				}
 			}
 		}
-		//If old schedule was empty, first did not get added, so check and add now
-		if (!ContainsSameMethod(mergedList,first))
-		{
-			mergedList.add(first);
+		//If last was not in sch, then set it
+		if(last == null) {
+			for(ScheduleElement el : this.items) {
+				if(el.getMethod().isEndMethod()) {
+					last = el;
+					this.items.remove(el);
+				}
+			}
 		}
-		//Now that we are done adding all elements of old schedule, along with a first, add new elements and last
-		for(ScheduleElement el : cachedNewList)
-		{
-			mergedList.add(el);
+
+		//add items to updated schedule
+		if(useSch) {
+			for(ScheduleElement el : this.items) {
+				sch.items.add(el);
+			}
+			sch.items.add(last);
+			this.items = sch.items;
+		} else {
+			for(ScheduleElement el : sch.items) {
+				this.items.add(el);
+			}
+			this.items.add(last);
 		}
-		//Finally add the last method
-		mergedList.add(last);
-		this.items = mergedList;
 		Main.Message(true, "New Schedule " + this.hashCode() + " : " + this.toString());
+
 	}
-	
+
 	private boolean ContainsSameMethod(Collection<ScheduleElement> one, ScheduleElement two)
 	{
 		//Different from equals() because it will check name rather than id
@@ -125,7 +107,7 @@ public class Schedule {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toString()
 	{
