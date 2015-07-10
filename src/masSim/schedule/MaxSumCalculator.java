@@ -2,6 +2,7 @@ package masSim.schedule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
@@ -34,7 +35,8 @@ public class MaxSumCalculator {
 		//}
 		int maxImprovement = 0;
 		ScheduleQualities selectedQuality = null;
-		for(ScheduleQualities ql : this.scheduleQualities)
+		System.out.println("schedule qualities size " + this.scheduleQualities.size());
+/*		for(ScheduleQualities ql : this.scheduleQualities)
 		{
 			int improvement = ql.incremental - ql.base;
 			if (improvement > maxImprovement)
@@ -42,7 +44,31 @@ public class MaxSumCalculator {
 				maxImprovement = improvement;
 				selectedQuality = ql;
 			}
+		}*/
+		Iterator iterQual = this.scheduleQualities.iterator();
+		if(iterQual.hasNext()) {
+			ScheduleQualities q1 = (ScheduleQualities) iterQual.next();
+			selectedQuality = q1;
+			int maxVal = q1.incremental - q1.base;
+			while(iterQual.hasNext()) {
+				ScheduleQualities q2 = (ScheduleQualities) iterQual.next();
+				int val = q2.incremental - q2.base;
+				if(val > maxVal) {
+					maxVal = val;
+					selectedQuality = q2;
+				}
+				System.out.println("maxVal = " + maxVal);
+			}
+		} else {
+			System.out.println("ERROR : ScheduleQualities size is 0");
 		}
+
+		if(selectedQuality == null) {
+			System.out.println("selectedQuality is null");
+		} else {
+		System.out.println("variable is " + selectedQuality.agentVariableId);
+		}
+		System.out.println("Agent " + selectedQuality.agentVariableId + " was selected to complete the dynamic task");
 		return this.agentsIndex.get(selectedQuality.agentVariableId);
 	}
 	

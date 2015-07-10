@@ -28,8 +28,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	//private volatile MqttMessagingProvider mq;
 	private volatile MqttMessagingProvider mqReceiver;
 	//private String clientName = "taskIssuer";
-	private String ambName = "Ambulance";
-	private String polName = "Police";
+	public static final String ambName = "Ambulance";
+	public static final String polName = "Police";
 	public static String TaskIssuerName = "TaskIssuer";
 	private final static ExecutorService commsPool = Executors.newSingleThreadExecutor();
 	private final static ExecutorService issuerPool = Executors.newSingleThreadExecutor();
@@ -58,6 +58,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskNameList.add("PickPatient");
 		MasterTaskNameList.add("DropPatient");
 		MasterTaskNameList.add("Patrol");
+//		MasterTaskNameList.add("RespondToAccident");
 		
 		MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");

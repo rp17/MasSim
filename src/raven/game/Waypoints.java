@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.SwingUtilities;
+
 import raven.math.Transformations;
 import raven.math.Vector2D;
 import raven.ui.GameCanvas;
@@ -30,17 +32,19 @@ public class Waypoints {
 			name = wayPointName;
 		}
 	}
-	public void addWpt(Vector2D pos) {
+	public synchronized void addWpt(Vector2D pos) {
 		String nextWptName = "selfGenWaypoint" + nextNum;
 		nextNum++;
 		Wpt wpt = new Wpt(pos, nextWptName);
 		wpts.add(wpt);
 		wptsMap.put(nextWptName, wpt);
+		notifyAll();
 	}
-	public void addWpt(Vector2D pos, String name) {
+	public synchronized void addWpt(Vector2D pos, String name) {
 		Wpt wpt = new Wpt(pos, name);
 		wpts.add(wpt);
 		wptsMap.put(name, wpt);
+		notifyAll();
 	}
 	public void removeWpt(String name) {
 		Wpt wpt = wptsMap.get(name);
@@ -52,14 +56,27 @@ public class Waypoints {
 	public void removeWpt(Vector2D pos, String name) {
 		removeWpt(name);
 	}
-	
+
 	public void clearWpts(){
 		wpts.clear();
 		wptsMap.clear();
 	}
 	public int size(){return wpts.size();}
 	public Waypoints.Wpt get(int i) {return wpts.get(i);}
-	public Waypoints.Wpt get(String name) {return wptsMap.get(name);}
+	public Waypoints.Wpt get(String name) {
+		try {
+			while(wptsMap.get(name) == null) {
+
+//				SwingUtilities.invokeLater(new Runnable(){public void run(){System.out.println("Waypoints.Wpt : Thread goes to sleep because method name not found");}});
+
+				wait();
+			} }
+			catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		return wptsMap.get(name);
+	}
 	public synchronized void render() {		
 		GameCanvas.bluePen();
 		for (Wpt wpt : wpts) {
@@ -71,6 +88,6 @@ public class Waypoints {
 		//for (int i=0; i<wpts.size()-1; i++) {
 		//	GameCanvas.lineWithArrow(wpts.get(i).pos, wpts.get(i+1).pos, 2.0);
 		//}
-		
+
 	}	
 }

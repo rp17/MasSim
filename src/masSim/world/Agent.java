@@ -48,12 +48,12 @@ import raven.ui.RavenUI;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
-	
+
 	private Map<String, List<String>> mapTaskToMethods = new HashMap<String, List<String>>();
 	private Map<String, String> mapMethodToRootTask = new HashMap<String, String>();
-	
+
 	private SimBot simBot;
-	Waypoints wpts = new Waypoints();
+	volatile Waypoints wpts = new Waypoints();
 	private final static String schedulingEventListenerName = "RavenUI";
 	public boolean noUI = true;
 	private boolean debugFlag = true;
@@ -61,19 +61,19 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean scenarioDone = false;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
-	
-	
+
+
 	// MQTT thread pool and mqtt reference
 	private final static ExecutorService commsPool = Executors.newSingleThreadExecutor();
 	private volatile MqttMessagingProvider mqReceiver;
-	
-	
+
+
 	//private Schedule currentSchedule = new Schedule();
 
 	public Schedule currentSchedule = new Schedule();
 
 	private List<String> methodsList = new ArrayList<String>();
-	
+
 	private int taskInd;
 	//private boolean resetScheduleExecutionFlag = false;
 
@@ -99,44 +99,44 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Method currentMethod = null;
 	//Represents the current final optimum schedule calculated for the taskGroup member
 	private Schedule schedule;
-	
+
 	public static void main(String[] args) {
 		//Agent to be run via this method in its own jvm
 	}
-	
+
 	@Override
 	public synchronized List<Task> getPendingTasks()
 	{
 		return this.pendingTasks;
 	}
-	
+
 	public ArrayList<String> getAgentsUnderManagement()
 	{
 		return agentsUnderManagement;
 	}
-	
+
 	private enum Status {
 		IDLE, PROCESSNG, EMPTY, AWAITINGTASKCOMPLETION
 	}
-	
+
 	@Override
 	public String getName()
 	{
 		return this.label;
 	}
-	
+
 	/** alive, dead or spawning? */
 	private Status status;
 	/*
 	public Agent(int newCode){
 		this(newCode,"Agent"+newCode,false,0,0);
 	}
-	*/
+	 */
 	public Agent(String name, boolean isManagingAgent, int x, int y,
 			MqttMessagingProvider mq){
 		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, mq);
 	}
-	
+
 	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, final MqttMessagingProvider mq){
 		this.code = newCode;
 		this.label = label;
@@ -145,17 +145,17 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = x;
 		this.y = y;
 		if (isManagingAgent) agentsUnderManagement = new ArrayList<String>(2);
-		
-		
+
+
 		//this.mq.SubscribeForAgent(TaskIssuer.TaskIssuerName); 
-		
+
 		//schedulerPool = Executors.newFixedThreadPool(3);
 		currentTaskGroup = new Task("Task Group",new SumAllQAF(), this);
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
 		this.schedulerPool = Executors.newFixedThreadPool(2);
 		localScheduler = new Scheduler(this);
 		this.mq = mq;
-		
+
 		/*
 		commsPool.execute( new Runnable(){
 			@Override
@@ -165,10 +165,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				//mqReceiver.SubscribeForAgent(ambName);
 			}
 		});
-		*/
-		
+		 */
+
 	}
-	
+
 	private void reinitAgent() {
 		taskInd = 0;
 		status = Status.EMPTY;
@@ -178,9 +178,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		currentSchedule = new Schedule();
 		taskRepository.ReadTaskDescriptions(getName()+".xml");
 	}
-	
+
 	public void startEventProcessing() {
-		
+
 		this.mq.AddListener(this); // start listening for events from its own instance of MqttMessagingProvider
 		//this.mq = MqttMessagingProvider.GetMqttProvider();
 		this.mq.SubscribeForAgent(label);// needs to listen to topic of the agent's own name to which TaskIssuer posts task assignments
@@ -204,15 +204,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		task.AssignAgent(this);
 		
 		List<String> methodNames = new ArrayList<String>();
-		
+
+		System.out.println("Task name " + taskName + " was registered");
 		RegisterChildrenWithUI(task, methodNames);
-		
+
 		mapTaskToMethods.put(taskName, methodNames);
-		
+
 		for(String methodN : methodNames) {
 			mapMethodToRootTask.put(methodN, taskName);
 		}
-		
+
 		this.pendingTasks.add(task);
 
 		schedulerPool.execute(localScheduler);
@@ -221,14 +222,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//StatementEvent.addTasks(task);
 		//schedulerPool.execute(localScheduler);
 	}
-	
+
 	private boolean IsManagingAgent()
 	{
 		if(agentsUnderManagement == null) return false;
 		else
-		return this.agentsUnderManagement.size()>0;
+			return this.agentsUnderManagement.size()>0;
 	}
-	
+
 	public void CalculateCost(Task task)
 	{
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
@@ -237,14 +238,16 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		.AddTaskName(task.getLabel())
 		.AddAgentId(getName())
 		.AddData(costsString);
-		SchedulingEvent event = new SchedulingEvent(this.getName(), SchedulingCommandType.COSTBROADCAST, params);
+		SchedulingEvent event = new SchedulingEvent(TaskIssuer.polName, SchedulingCommandType.COSTBROADCAST, params);
 		mq.PublishMessage(event);
 	}
-	
+
 	public void Negotiate(Task task)
 	{
+		System.out.println("~~~~~In Negotiate~~~~~");
 		if (IsManagingAgent())
-		{
+		{		
+			System.out.println("~~~~~In Negotiate If statement~~~~~");
 			MaxSumCalculator maxSumInstance = new MaxSumCalculator(task.label,this.agentsUnderManagement.size()+1);//One additional for managing agent
 			int[] costs = CalculateIncrementalQualitiesForTask(task);
 			maxSumInstance.AddCostData(this.label, costs[0], costs[1]);
@@ -257,7 +260,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				.AddOriginatingAgent(this.label);
 				SchedulingEvent event = new SchedulingEvent(agName, SchedulingCommandType.CALCULATECOST, params);
 				mq.PublishMessage(event);
+
 			}
+/*			SchedulingEventParams params = new SchedulingEventParams()
+			.AddTaskName(task.getLabel())
+			.AddAgentId(this.getName())
+			.AddOriginatingAgent(this.label);
+			SchedulingEvent managingEvent = new SchedulingEvent(this.getName(), SchedulingCommandType.CALCULATECOST, params);
+			mq.PublishMessage(managingEvent);*/
 		}
 	}
 
@@ -279,22 +289,23 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		cop.append("F 0 2 13");
 		cop.append("F 0 1 14");
 		cop.append("F 0 0 8");
-		*/
+		 */
 		//test.Main jmaxMain = new test.Main();
 		//ArrayList<SimpleEntry<String, String>> result = jmaxMain.CalculateMaxSumAssignments(cop.toString());
 		//Calculate which agent is best to assign
-		
+
 		for(MaxSumCalculator cal : this.negotiations)
 		{
-			if (cal.getTaskName().equalsIgnoreCase(taskName))
+			if (cal.getTaskName().equalsIgnoreCase(taskName)) {
 				return cal;
+			}
 		}
 		return null;
 	}
-	
+
 
 	/*
-	
+
 	private int getIncrementalQualityWhenThisAgentIsAssignedAnExtraTask(Task task, IAgent agent)
 	{
 		int result = 0;
@@ -313,10 +324,13 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				) {
 			Main.Message(debugFlag, "Failed to obtain Quality increase for " + agent.getName() + " if assigned "	+ task.getLabel() + ". Using default of 0");
 			return 0;
-*/
+	 */
 	public void ProcessCostBroadcast(String taskName, String agentName, String data)
 	{	
+		System.out.println("*****GOT INTO PROCESSCOSTBROADCAST*****");
+
 		if(IsManagingAgent()) {
+			System.out.println("*****GOT INTO 1ST IF STATEMENT PROCESSCOSTBROADCAST*****");
 			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
@@ -325,7 +339,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
 			if (calc.IsDataCollectionComplete())
 			{
+				System.out.println("*****GOT INTO 2ND IF STATEMENT PROCESSCOSTBROADCAST*****");
 				String selectedAgentName = calc.GetBestAgent();
+				System.out.println("Agent.ProcessCostBroadcast : selectedAgentName is " + selectedAgentName);
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(taskName)
 				.AddAgentId(selectedAgentName);
@@ -333,9 +349,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				mq.PublishMessage(event);
 			}
 
+		} else {
+			//
 		}
 	}
-	
+
 	private int[] CalculateIncrementalQualitiesForTask(Task task)
 	{
 		try
@@ -356,7 +374,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			return new int[]{0,0};
 		}	
 	}
-	
+
 	public synchronized Schedule GetScheduleCostSync(Task task, IAgent taskAgent)
 	{
 		//Make a copy
@@ -378,22 +396,22 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.schedule = this.localScheduler.CalculateScheduleFromTaems(tempTaskGroup);
 		//send schedule quality back to mqtt
 		//this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.PUBLISHCOST, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
-		
+
 		return schedule;
-		
+
 	}
-	
+
 	@Override
 	public Task GetCurrentTasks()
 	{
 		return currentTaskGroup;
 	}
-	
+
 	public void RunSchedular()
 	{
 		schedulerPool.execute(localScheduler);
 	}
-	
+
 	public synchronized boolean AreEnablersInPlace(Method m)
 	{
 		boolean methodEnablersCompleted = false;
@@ -427,7 +445,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		return methodEnablersCompleted;
 	}
-	
+
 	public void ExecuteTask(Method m) throws InterruptedException
 	{
 		System.out.println("Agent.ExecuteTask " + label + ": starting execution of " + m.label);
@@ -441,7 +459,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
-			
+
 			// the event SchedulingCommandType.DISPLAYTASKEXECUTION make RavenUI assign a pid traverse goal to a bot
 			// instead, this assignment must be done directly to SimBot associated with this Agent
 			/*
@@ -453,29 +471,28 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			else {
 				Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
 				GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
-			
+
 				fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 				this.flagScheduleRecalculateRequired = false;
 			}
-			*/
+			 */
 			Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
-			
+
 			GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
-		
+
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			//this.flagScheduleRecalculateRequired = false;
-			System.out.println("***matched waypoints are : " + matchedWaypoints.toString() + " ***");
-			
+
 		}
 	}
-	
+
 	public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)
 	{
 		//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
 		Vector2D currentPosition = bot.pos();
 		Waypoints local = new Waypoints();
 		String waypointNamesForDebugging = "";
-		
+
 		/* why this loop ? HashMap much better
 		for(int i=0;i<wpts.size();i++)
 		{
@@ -489,12 +506,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				break;
 			}
 		}
-		*/
-		
+		 */
+		System.out.println("Agent.getWptsForMethodExecution : methodName is : " + methodName);
 		Wpt wpt = wpts.get(methodName);
 		if(wpt != null) {
 			local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
 			local.addWpt(new Vector2D(wpt.x, wpt.y));
+		} else {
+			System.out.println("Wpt is null");
 		}
 		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
 		{
@@ -503,7 +522,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		return local;
 	}
-	
+
 	@Override
 
 	@Execution(name="reachWaypoint", mode=ExecutionMode.After)
@@ -520,10 +539,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			methodsList.remove(methodName);
 			//instrumentation
 			//PredicateParameterFilter.addMethod(currentMethod);
-			
+
 			//schedule.get().RemoveElement(e);Does this need to be done?
 			//currentMethod.MarkCompleted();
-			
+
 			//instrumentation
 			//spec 2
 			//StatementEvent.evaluateReachAWayPoint();
@@ -531,7 +550,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			WorldState.CompletedMethods.add(currentMethod);
 			Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
 
-			
+
 			if (currentSchedule!=null)
 			{
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
@@ -548,7 +567,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				}
 			}
 			wpts.removeWpt(currentMethod.label);
-			
+
 			String taskName = mapMethodToRootTask.get(methodName);
 			List<String> methodNames = mapTaskToMethods.get(taskName);
 			methodNames.remove(methodName);
@@ -557,21 +576,21 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all methods of task " + taskName + " have been completed");
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " task " + taskName + " is completed");
 				mapTaskToMethods.remove(taskName);
-				
+
 				// sending an event about TASKCOMPLETION to TaskIssuer
 				SchedulingEventParams params = new SchedulingEventParams().AddAgentId(label)
 						.AddTaskName(taskName);
 				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.TASKCOMPLETED, params);
 				mq.publishMessage(event.rawMessage, 2);
 			}
-			
+
 			if(mapTaskToMethods.size() == 0) {
 				scenarioDone = true;
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " re-initializing");
 				reinitAgent();
 			}
-			
+
 			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());
 			for(int i = 0; i < wpts.size(); i++) {
 				Waypoints.Wpt wp = wpts.get(i);
@@ -581,20 +600,20 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			for(int i = 0; i < methodsList.size(); i++) {
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left method " + i + " : " + methodsList.get(i));
 			}
-			
-			
+
+
 			if(wpts.size() == 0) {
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " NO MORE WAYPOINTS ");
 			}
 			//this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
-			
+
 			//flagScheduleRecalculateRequired = true;
 			status=Status.PROCESSNG;
 		}
 	}
-	
+
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
-		
+
 		if(destinationAgentId == Agent.schedulingEventListenerName && noUI) {return;} // since schedulingEventListenerName String is final static, reference comparison is enough
 		else {
 			//SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
@@ -602,21 +621,21 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 					.AddXCoord(x2).AddYCoord(y2).AddTaskName("");
 			SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
 			mq.PublishMessage(worldEvent);
-			
-			
+
+
 		}
-    }
-	
+	}
+
 	// Returns identifying code, specific for this agent
 	public int getCode(){
 		return code;
 	}
-	
+
 	public void UpdateSchedule(Schedule newSchedule)
 	{
 		this.currentSchedule.Merge(newSchedule);
 	}
-	
+
 	private void executeNextTask() {
 		try
 		{
@@ -641,7 +660,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			ex.printStackTrace();
 		}
 	}
-	
+
 	public void RegisterChildrenWithUI(Node node, List<String> methodNames)
 	{
 		if (!node.IsTask())
@@ -650,6 +669,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			wpts.addWpt(new Vector2D(method.x, method.y), method.getLabel());
 			methodsList.add(method.label);
 			methodNames.add(method.label);
+			System.out.println("Agent.RegisterChildrenWithUI : Method " + methodNames + " was added to Wpts");
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
 		}
 		else
@@ -662,9 +682,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 		}
 	}
-	
+
 	public void update(int tick) {
-		
+
 		if(currentSchedule.hasNext(taskInd)) {
 			ScheduleElement el = currentSchedule.peek();
 			ScheduleElement.Status status = el.update(tick);
@@ -681,7 +701,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	@Override
 	public void run() {
 		fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
-//		RunSchedular();
+		//		RunSchedular();
 		status=Status.PROCESSNG;
 		int i = 0;
 		//TODO Introduce step to fetch commands from mqtt to govern execution and status
@@ -722,7 +742,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		this.x = pos.x;
 		this.y = pos.y;
 	}
-	
+
 	@Override
 	public Vector2D getPosition() {
 		return new Vector2D(x,y);
@@ -737,7 +757,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void setMode(AgentMode mode) {
 		this.mode = mode;
 	}
-	
+
 	@Override
 
 	@Event(name="a task is added")
@@ -748,11 +768,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if (event.commandType==SchedulingCommandType.ASSIGNTASK )
 			{
 				//StatementEvent.assignchoice();
-			
+
 				//Instrumentation
 				//StatementEvent.getConsensus(event.params.TaskName);
 				AssignTask(event.params.TaskName);
-			
+
 			}
 			if (event.commandType==SchedulingCommandType.METHODCOMPLETED )
 			{
@@ -789,10 +809,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
 			}
 			if(event.commandType==SchedulingCommandType.SHUTDOWN) {
-				
+
 				//SchedulingEvent evt = new SchedulingEvent(label, SchedulingCommandType.INITMSG, "re-init");
 				//mq.publishMessage(evt.rawMessage, 2);
-				
+
 				/*
 				commsPool.execute( new Runnable(){
 					@Override
@@ -804,7 +824,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 						mq.publishMessage("Ambulance,INITMSG,----re-init", 1);
 					}
 				});
-				*/
+				 */
 				/*
 				if(scenarioDone) {
 					try {
@@ -819,13 +839,13 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				else {
 					Main.Message(debugFlag, "Agent " + label + " scenario NOT done, SHUTDOWN received, but NOT shutting down");
 				}
-				*/
-				
+				 */
+
 				Main.Message(debugFlag, "Agent " + label + " SHUTDOWN received, shutting down");
 				System.exit(0);
 			}
 		}
-		
+
 		return null;
 	}
 

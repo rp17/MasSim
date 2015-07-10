@@ -115,6 +115,10 @@ public class Task extends Node {
 	public void addTask(Node task){
 		synchronized(Task.Lock){
 		this.children.add(task);}
+		System.out.println("Task.addTask : children ");
+		for(Node n : children) {
+			System.out.println(n.label);
+		}
 	}
 	
 	public QAF getQAF(){

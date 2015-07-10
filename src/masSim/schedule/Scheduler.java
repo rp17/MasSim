@@ -88,6 +88,11 @@ public class Scheduler implements Runnable {
 					{
 						Main.Message(true, "entered lock 2");
 						agent.GetCurrentTasks().addTask(newTask);
+						List<Method> methods = agent.GetCurrentTasks().GetMethods();
+						System.out.println("Current task structure updated, methods are : ");
+						for(Method m : methods) {
+							System.out.println(m.label);
+						}
 						//instrumentation
 						//PredicateParameterFilter.addTask(newTask);
 					}
