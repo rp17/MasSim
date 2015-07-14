@@ -64,7 +64,7 @@ public class Waypoints {
 	public int size(){return wpts.size();}
 	public Waypoints.Wpt get(int i) {return wpts.get(i);}
 	public Waypoints.Wpt get(String name) {
-		try {
+/*		try {
 			while(wptsMap.get(name) == null) {
 
 //				SwingUtilities.invokeLater(new Runnable(){public void run(){System.out.println("Waypoints.Wpt : Thread goes to sleep because method name not found");}});
@@ -74,7 +74,7 @@ public class Waypoints {
 			catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 		return wptsMap.get(name);
 	}
 	public synchronized void render() {		

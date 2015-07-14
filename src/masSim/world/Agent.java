@@ -202,7 +202,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 		if (task==null) Main.Message(true, "Error: Task " + taskName + " not found in tasks repository");
 		task.AssignAgent(this);
-		
+
 		List<String> methodNames = new ArrayList<String>();
 
 		System.out.println("Task name " + taskName + " was registered");
@@ -262,7 +262,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				mq.PublishMessage(event);
 
 			}
-/*			SchedulingEventParams params = new SchedulingEventParams()
+			/*			SchedulingEventParams params = new SchedulingEventParams()
 			.AddTaskName(task.getLabel())
 			.AddAgentId(this.getName())
 			.AddOriginatingAgent(this.label);
@@ -455,7 +455,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Thread.sleep(1000);
 		}
 		Main.Message(this, debugFlag, "Agent " + this.label + " executing " + m.label);
-		if (m.x!=0 && m.y!=0)
+		boolean isComplete = WorldState.NamesCompletedMethods.contains(m.getLabel());
+		if (!isComplete && m.x!=0 && m.y!=0)
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
@@ -483,17 +484,32 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			//this.flagScheduleRecalculateRequired = false;
 
+		} else {
+			System.out.println("Agent.ExecuteTask() - Method " + m.getLabel() + " has already been completed, ignoring execution");
+			if (currentSchedule!=null)
+			{
+				Iterator<ScheduleElement> el = currentSchedule.getItems();
+				while(el.hasNext())
+				{
+					ScheduleElement e = el.next();
+					if (m.label.equals(e.getMethod().label))
+					{
+						currentSchedule.RemoveElement(e);
+						WorldState.NamesCompletedMethods.remove(m.label);
+						Main.Message(debugFlag, "Agent.ExecuteTask() - Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+					}
+				}
+			}}
 		}
-	}
 
-	public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)
-	{
-		//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
-		Vector2D currentPosition = bot.pos();
-		Waypoints local = new Waypoints();
-		String waypointNamesForDebugging = "";
+		public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)
+		{
+			//Main.Message(debugFlag, "[RavenGame 790] getting waypoints for " + methodName );
+			Vector2D currentPosition = bot.pos();
+			Waypoints local = new Waypoints();
+			String waypointNamesForDebugging = "";
 
-		/* why this loop ? HashMap much better
+			/* why this loop ? HashMap much better
 		for(int i=0;i<wpts.size();i++)
 		{
 			Waypoints.Wpt wp = wpts.get(i);
@@ -506,314 +522,321 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				break;
 			}
 		}
-		 */
-		System.out.println("Agent.getWptsForMethodExecution : methodName is : " + methodName);
-		Wpt wpt = wpts.get(methodName);
-		if(wpt != null) {
-			local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
-			local.addWpt(new Vector2D(wpt.x, wpt.y));
-		} else {
-			System.out.println("Wpt is null");
-		}
-		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
-		{
-			waypointNamesForDebugging = "Possible Error: " + methodName + " not found in " + waypointNamesForDebugging + " by " + bot.name;
-			Main.Message(this, true, waypointNamesForDebugging);
-		}
-		return local;
-	}
-
-	@Override
-
-	@Execution(name="reachWaypoint", mode=ExecutionMode.After)
-	@Param(name="execution", variable="currentMethod", pred="reachWaypoint", mode=StoreMode.List)
-
-	public void MarkMethodCompleted(String methodName)
-	{
-		Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " notified of completion of method " + methodName + " from Goal_PidTraverseEdge");
-		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
-		{
-
-			//schedule.get().RemoveElement(e);Does this need to be done?
-			currentMethod.MarkCompleted();
-			methodsList.remove(methodName);
-			//instrumentation
-			//PredicateParameterFilter.addMethod(currentMethod);
-
-			//schedule.get().RemoveElement(e);Does this need to be done?
-			//currentMethod.MarkCompleted();
-
-			//instrumentation
-			//spec 2
-			//StatementEvent.evaluateReachAWayPoint();
-
-			WorldState.CompletedMethods.add(currentMethod);
-			Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
-
-
-			if (currentSchedule!=null)
+			 */
+			System.out.println("Agent.getWptsForMethodExecution : methodName is : " + methodName);
+			Wpt wpt = wpts.get(methodName);
+			if(wpt != null) {
+				local.addWpt(new Vector2D(currentPosition.x, currentPosition.y));
+				local.addWpt(new Vector2D(wpt.x, wpt.y));
+			} else {
+				System.out.println("Wpt is null");
+			}
+			if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
 			{
-				Iterator<ScheduleElement> el = currentSchedule.getItems();
-				if(el.hasNext())
+				waypointNamesForDebugging = "Possible Error: " + methodName + " not found in " + waypointNamesForDebugging + " by " + bot.name;
+				Main.Message(this, true, waypointNamesForDebugging);
+			}
+			return local;
+		}
+
+		@Override
+
+		@Execution(name="reachWaypoint", mode=ExecutionMode.After)
+		@Param(name="execution", variable="currentMethod", pred="reachWaypoint", mode=StoreMode.List)
+
+		public void MarkMethodCompleted(String methodName)
+		{
+			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " notified of completion of method " + methodName + " from Goal_PidTraverseEdge");
+			if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
+			{
+
+				//schedule.get().RemoveElement(e);Does this need to be done?
+				currentMethod.MarkCompleted();
+				methodsList.remove(methodName);
+				//instrumentation
+				//PredicateParameterFilter.addMethod(currentMethod);
+
+				//schedule.get().RemoveElement(e);Does this need to be done?
+				//currentMethod.MarkCompleted();
+
+				//instrumentation
+				//spec 2
+				//StatementEvent.evaluateReachAWayPoint();
+
+				WorldState.CompletedMethods.add(currentMethod);
+				WorldState.NamesCompletedMethods.add(methodName);
+				Main.Message(debugFlag, "[Agent 130] " + currentMethod.label + " marked completed");
+
+
+				if (currentSchedule!=null)
 				{
-					ScheduleElement e = el.next();
-					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
-						e = el.next();
-					if (currentMethod.equals(e.getMethod()))
+					Iterator<ScheduleElement> el = currentSchedule.getItems();
+					while(el.hasNext())
 					{
-						currentSchedule.RemoveElement(e);
-						Main.Message(debugFlag, "[Agent 135] Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+						ScheduleElement e = el.next();
+						if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
+							e = el.next();
+						if (currentMethod.equals(e.getMethod()))
+						{
+							currentSchedule.RemoveElement(e);
+							Main.Message(debugFlag, "[Agent 135] Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+						}
 					}
 				}
+				wpts.removeWpt(currentMethod.label);
+
+				String taskName = mapMethodToRootTask.get(methodName);
+				List<String> methodNames = mapTaskToMethods.get(taskName);
+				methodNames.remove(methodName);
+				mapMethodToRootTask.remove(methodName);
+				if(methodNames.size() == 0) {
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all methods of task " + taskName + " have been completed");
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " task " + taskName + " is completed");
+					mapTaskToMethods.remove(taskName);
+
+					// sending an event about TASKCOMPLETION to TaskIssuer
+					SchedulingEventParams params = new SchedulingEventParams().AddAgentId(label)
+							.AddTaskName(taskName);
+					SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.TASKCOMPLETED, params);
+					mq.publishMessage(event.rawMessage, 2);
+				}
+
+				if(mapTaskToMethods.size() == 0) {
+					scenarioDone = true;
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " re-initializing");
+					reinitAgent();
+				}
+
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());
+				for(int i = 0; i < wpts.size(); i++) {
+					Waypoints.Wpt wp = wpts.get(i);
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left waypoint " + i + " : " + wp.name);
+				}
+				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " methods left " + methodsList.size());
+				for(int i = 0; i < methodsList.size(); i++) {
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left method " + i + " : " + methodsList.get(i));
+				}
+
+
+				if(wpts.size() == 0) {
+					Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " NO MORE WAYPOINTS ");
+				}
+				//this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+
+				//flagScheduleRecalculateRequired = true;
+				status=Status.PROCESSNG;
 			}
-			wpts.removeWpt(currentMethod.label);
-
-			String taskName = mapMethodToRootTask.get(methodName);
-			List<String> methodNames = mapTaskToMethods.get(taskName);
-			methodNames.remove(methodName);
-			mapMethodToRootTask.remove(methodName);
-			if(methodNames.size() == 0) {
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all methods of task " + taskName + " have been completed");
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " task " + taskName + " is completed");
-				mapTaskToMethods.remove(taskName);
-
-				// sending an event about TASKCOMPLETION to TaskIssuer
-				SchedulingEventParams params = new SchedulingEventParams().AddAgentId(label)
-						.AddTaskName(taskName);
-				SchedulingEvent event = new SchedulingEvent(TaskIssuer.TaskIssuerName, SchedulingCommandType.TASKCOMPLETED, params);
-				mq.publishMessage(event.rawMessage, 2);
-			}
-
-			if(mapTaskToMethods.size() == 0) {
-				scenarioDone = true;
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " re-initializing");
-				reinitAgent();
-			}
-
-			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());
-			for(int i = 0; i < wpts.size(); i++) {
-				Waypoints.Wpt wp = wpts.get(i);
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left waypoint " + i + " : " + wp.name);
-			}
-			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " methods left " + methodsList.size());
-			for(int i = 0; i < methodsList.size(); i++) {
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " left method " + i + " : " + methodsList.get(i));
-			}
-
-
-			if(wpts.size() == 0) {
-				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " NO MORE WAYPOINTS ");
-			}
-			//this.mq.PublishMessage(Agent.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(currentMethod.label).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
-
-			//flagScheduleRecalculateRequired = true;
-			status=Status.PROCESSNG;
 		}
-	}
 
-	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
+		public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
 
-		if(destinationAgentId == Agent.schedulingEventListenerName && noUI) {return;} // since schedulingEventListenerName String is final static, reference comparison is enough
-		else {
-			//SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
-			SchedulingEventParams params = new SchedulingEventParams().AddAgentId(subjectAgentId).AddMethodId(methodId)
-					.AddXCoord(x2).AddYCoord(y2).AddTaskName("");
-			SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
-			mq.PublishMessage(worldEvent);
+			if(destinationAgentId == Agent.schedulingEventListenerName && noUI) {return;} // since schedulingEventListenerName String is final static, reference comparison is enough
+			else {
+				//SchedulingEventParams params = new SchedulingEventParams(subjectAgentId, methodId, Double.toString(x2), Double.toString(y2), "");
+				SchedulingEventParams params = new SchedulingEventParams().AddAgentId(subjectAgentId).AddMethodId(methodId)
+						.AddXCoord(x2).AddYCoord(y2).AddTaskName("");
+				SchedulingEvent worldEvent = new SchedulingEvent(destinationAgentId, type, params);
+				mq.PublishMessage(worldEvent);
 
 
+			}
 		}
-	}
 
-	// Returns identifying code, specific for this agent
-	public int getCode(){
-		return code;
-	}
+		// Returns identifying code, specific for this agent
+		public int getCode(){
+			return code;
+		}
 
-	public void UpdateSchedule(Schedule newSchedule)
-	{
-		this.currentSchedule.Merge(newSchedule);
-	}
-
-	private void executeNextTask() {
-		try
+		public void UpdateSchedule(Schedule newSchedule)
 		{
-			//Main.Message(true, "Agent.executeNextTask ");
-			if (currentSchedule!=null)
+			this.currentSchedule.Merge(newSchedule);
+		}
+
+		private void executeNextTask() {
+			try
 			{
-				Iterator<ScheduleElement> el = currentSchedule.getItems();
-				if(el.hasNext())
+				//Main.Message(true, "Agent.executeNextTask ");
+				if (currentSchedule!=null && currentSchedule.size() > 0)
 				{
-					Main.Message(true, "Executing tasks from schedule " + currentSchedule.hashCode());
-					ScheduleElement e = el.next();
-					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
-						e = el.next();
-					else
-						return;
-					Main.Message(this, true, this.label +  " picked next task " + e.getName() + " " + e.hashCode() + " from schedule " + currentSchedule.hashCode());
-					Method m = e.getMethod();
-					ExecuteTask(m);
+					Iterator<ScheduleElement> el = currentSchedule.getItems();
+					System.out.println("Agent.executeNextTask - Current Schedule is : " + currentSchedule.toString()); 
+					if(el.hasNext())
+					{
+						Main.Message(true, "Executing tasks from schedule " + currentSchedule.hashCode());
+						ScheduleElement e = el.next();
+						if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
+							e = el.next();
+						else
+							return;
+						Main.Message(this, true, this.label +  " picked next task " + e.getName() + " " + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+						Method m = e.getMethod();
+						ExecuteTask(m);
+					}
+				}
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		public void RegisterChildrenWithUI(Node node, List<String> methodNames)
+		{
+			if (!node.IsTask())
+			{
+				Method method = (Method)node;
+				wpts.addWpt(new Vector2D(method.x, method.y), method.getLabel());
+				methodsList.add(method.label);
+				methodNames.add(method.label);
+				System.out.println("Agent.RegisterChildrenWithUI : Method " + methodNames + " was added to Wpts");
+				fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
+			}
+			else
+			{
+				Iterator<Node> it = ((Task)node).getSubtasks();
+				while(it.hasNext())
+				{
+					Node nd = it.next();
+					RegisterChildrenWithUI(nd, methodNames);
 				}
 			}
-		} catch (InterruptedException ex) {
-			ex.printStackTrace();
 		}
-	}
 
-	public void RegisterChildrenWithUI(Node node, List<String> methodNames)
-	{
-		if (!node.IsTask())
-		{
-			Method method = (Method)node;
-			wpts.addWpt(new Vector2D(method.x, method.y), method.getLabel());
-			methodsList.add(method.label);
-			methodNames.add(method.label);
-			System.out.println("Agent.RegisterChildrenWithUI : Method " + methodNames + " was added to Wpts");
-			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDMETHOD, this.getName(), method.getLabel(), method.x, method.y);
+		public void update(int tick) {
+
+			if(currentSchedule.hasNext(taskInd)) {
+				ScheduleElement el = currentSchedule.peek();
+				ScheduleElement.Status status = el.update(tick);
+				if(status == ScheduleElement.Status.COMPLETED) {
+					Main.Message(debugFlag, "Agent " + label + " completed item " + el.getName());
+					currentSchedule.poll();
+				}
+			}
+			else {
+				Main.Message(debugFlag, "Agent " + label + " idle");
+			}
 		}
-		else
-		{
-			Iterator<Node> it = ((Task)node).getSubtasks();
-			while(it.hasNext())
+
+		@Override
+		public void run() {
+			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
+			//		RunSchedular();
+			status=Status.PROCESSNG;
+			int i = 0;
+			//TODO Introduce step to fetch commands from mqtt to govern execution and status
+			while(true)
 			{
-				Node nd = it.next();
-				RegisterChildrenWithUI(nd, methodNames);
+				//Main.Message(this, true, this.label + " run() while loop iteration " + i + " status " + status);
+				i++;
+				if (status==Status.PROCESSNG){
+					executeNextTask();
+				}
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
-	}
 
-	public void update(int tick) {
-
-		if(currentSchedule.hasNext(taskInd)) {
-			ScheduleElement el = currentSchedule.peek();
-			ScheduleElement.Status status = el.update(tick);
-			if(status == ScheduleElement.Status.COMPLETED) {
-				Main.Message(debugFlag, "Agent " + label + " completed item " + el.getName());
-				currentSchedule.poll();
-			}
+		@Override
+		public void HandleScheduleEvent(ScheduleUpdateEvent scheduleUpdateEvent) {
+			if (currentSchedule!=null)
+				currentSchedule.Merge(scheduleUpdateEvent.Schedule);
+			else
+				currentSchedule = scheduleUpdateEvent.Schedule;
+			Main.Message(this, true, this.label + " schedule updated with tasks " + currentSchedule.toString());
 		}
-		else {
-			Main.Message(debugFlag, "Agent " + label + " idle");
+
+		@Override
+		public void AddChildAgent(String agentName){
+			if (agentsUnderManagement==null)
+				Main.Message(debugFlag, "Child Agent being added to non-managing agent");
+			this.agentsUnderManagement.add(agentName);
 		}
-	}
 
-	@Override
-	public void run() {
-		fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
-		//		RunSchedular();
-		status=Status.PROCESSNG;
-		int i = 0;
-		//TODO Introduce step to fetch commands from mqtt to govern execution and status
-		while(true)
-		{
-			//Main.Message(this, true, this.label + " run() while loop iteration " + i + " status " + status);
-			i++;
-			if (status==Status.PROCESSNG){
-				executeNextTask();
-			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		@Override
+		public void setPosition(Vector2D pos) {
+			this.x = pos.x;
+			this.y = pos.y;
 		}
-	}
 
-	@Override
-	public void HandleScheduleEvent(ScheduleUpdateEvent scheduleUpdateEvent) {
-		if (currentSchedule!=null)
-			currentSchedule.Merge(scheduleUpdateEvent.Schedule);
-		else
-			currentSchedule = scheduleUpdateEvent.Schedule;
-		Main.Message(this, true, this.label + " schedule updated with tasks " + currentSchedule.toString());
-	}
+		@Override
+		public Vector2D getPosition() {
+			return new Vector2D(x,y);
+		}
 
-	@Override
-	public void AddChildAgent(String agentName){
-		if (agentsUnderManagement==null)
-			Main.Message(debugFlag, "Child Agent being added to non-managing agent");
-		this.agentsUnderManagement.add(agentName);
-	}
+		@Override
+		public AgentMode getMode() {
+			return mode;
+		}
 
-	@Override
-	public void setPosition(Vector2D pos) {
-		this.x = pos.x;
-		this.y = pos.y;
-	}
+		@Override
+		public void setMode(AgentMode mode) {
+			this.mode = mode;
+		}
 
-	@Override
-	public Vector2D getPosition() {
-		return new Vector2D(x,y);
-	}
+		@Override
 
-	@Override
-	public AgentMode getMode() {
-		return mode;
-	}
+		@Event(name="a task is added")
 
-	@Override
-	public void setMode(AgentMode mode) {
-		this.mode = mode;
-	}
+		public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
+			System.out.println("Agent.ProcessSchedulingEvent " + label + " received event " + event.commandType);
+			if(event.agentName.equalsIgnoreCase(this.getName())) {
+				if (event.commandType==SchedulingCommandType.ASSIGNTASK )
+				{
+					//StatementEvent.assignchoice();
 
-	@Override
-
-	@Event(name="a task is added")
-
-	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
-		System.out.println("Agent.ProcessSchedulingEvent " + label + " received event " + event.commandType);
-		if(event.agentName.equalsIgnoreCase(this.getName())) {
-			if (event.commandType==SchedulingCommandType.ASSIGNTASK )
-			{
-				//StatementEvent.assignchoice();
-
-				//Instrumentation
-				//StatementEvent.getConsensus(event.params.TaskName);
-				AssignTask(event.params.TaskName);
-
-			}
-			if (event.commandType==SchedulingCommandType.METHODCOMPLETED )
-			{
-				String completedMethodName = event.params.MethodId;
-
-				if (completedMethodName!=null) {
-					MarkMethodCompleted(completedMethodName);
 					//Instrumentation
-					//StatementEvent.getCompletedTasks(completedMethodName);
+					//StatementEvent.getConsensus(event.params.TaskName);
+					AssignTask(event.params.TaskName);
+
 				}
+				if (event.commandType==SchedulingCommandType.METHODCOMPLETED )
+				{
+					String completedMethodName = event.params.MethodId;
 
-			}
-			if (event.commandType==SchedulingCommandType.NEGOTIATE )
-			{
-				Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
-				Task task = this.taskRepository.GetTask(event.params.TaskName);
+					if (completedMethodName!=null) {
+						MarkMethodCompleted(completedMethodName);
+						//Instrumentation
+						//StatementEvent.getCompletedTasks(completedMethodName);
+					}
 
-				//Instrumentation
-				//StatementEvent.getConsensus(event.params.TaskName);
-				this.Negotiate(task);
-			}
-			if (event.commandType==SchedulingCommandType.CALCULATECOST )
-			{
-				Task task = this.taskRepository.GetTask(event.params.TaskName);
+				}
+				if (event.commandType==SchedulingCommandType.NEGOTIATE )
+				{
+					Main.Message(debugFlag, "Task " + event.params.TaskName + " received for negotiation");
+					Task task = this.taskRepository.GetTask(event.params.TaskName);
 
-				//Instrumentation
-				//StatementEvent.getConsensus(event.params.TaskName);
-				CalculateCost(task);
-			}
-			if (event.commandType==SchedulingCommandType.COSTBROADCAST )
-			{
-				//Instrumentation
-				//StatementEvent.getConsensus(event.params.TaskName);
-				ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
-			}
-			if(event.commandType==SchedulingCommandType.SHUTDOWN) {
+					//Instrumentation
+					//StatementEvent.getConsensus(event.params.TaskName);
+					this.Negotiate(task);
+				}
+				if (event.commandType==SchedulingCommandType.CALCULATECOST )
+				{
+					Task task = this.taskRepository.GetTask(event.params.TaskName);
 
-				//SchedulingEvent evt = new SchedulingEvent(label, SchedulingCommandType.INITMSG, "re-init");
-				//mq.publishMessage(evt.rawMessage, 2);
+					//Instrumentation
+					//StatementEvent.getConsensus(event.params.TaskName);
+					CalculateCost(task);
+				}
+				if (event.commandType==SchedulingCommandType.COSTBROADCAST )
+				{
+					//Instrumentation
+					//StatementEvent.getConsensus(event.params.TaskName);
+					ProcessCostBroadcast(event.params.TaskName, event.params.AgentId, event.params.Data);
+				}
+				if(event.commandType==SchedulingCommandType.INITMSG) 
+				{
+					System.out.println("Received event INITMSG");
+					reinitAgent();
+				}
+				if(event.commandType==SchedulingCommandType.SHUTDOWN) {
 
-				/*
+					//SchedulingEvent evt = new SchedulingEvent(label, SchedulingCommandType.INITMSG, "re-init");
+					//mq.publishMessage(evt.rawMessage, 2);
+
+					/*
 				commsPool.execute( new Runnable(){
 					@Override
 					public void run() {
@@ -824,8 +847,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 						mq.publishMessage("Ambulance,INITMSG,----re-init", 1);
 					}
 				});
-				 */
-				/*
+					 */
+					/*
 				if(scenarioDone) {
 					try {
 						Main.Message(debugFlag, "Agent " + label + " scenario done, SHUTDOWN received, shutting down");
@@ -839,18 +862,18 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				else {
 					Main.Message(debugFlag, "Agent " + label + " scenario NOT done, SHUTDOWN received, but NOT shutting down");
 				}
-				 */
+					 */
 
-				Main.Message(debugFlag, "Agent " + label + " SHUTDOWN received, shutting down");
-				System.exit(0);
+					Main.Message(debugFlag, "Agent " + label + " SHUTDOWN received, shutting down");
+					System.exit(0);
+				}
 			}
+
+			return null;
 		}
 
-		return null;
+		@Override
+		public boolean IsGlobalListener() {
+			return false;
+		}
 	}
-
-	@Override
-	public boolean IsGlobalListener() {
-		return false;
-	}
-}

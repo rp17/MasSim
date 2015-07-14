@@ -13,6 +13,7 @@ import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
 import masSim.world.MqttMessagingProvider;
+import masSim.world.WorldState;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -58,7 +59,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskNameList.add("PickPatient");
 		MasterTaskNameList.add("DropPatient");
 		MasterTaskNameList.add("Patrol");
-//		MasterTaskNameList.add("RespondToAccident");
+		MasterTaskNameList.add("RespondToAccident");
 		
 		MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
@@ -206,6 +207,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 
 			if ( currentIteration < numberOfIteration ) {
 				Main.Message(this, true, "TaskIssuer.run() relaunching execution loop ");
+				
 				RelaunchExecutionLoop();
 				currentIteration++;
 				onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
@@ -291,7 +293,11 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	{
 		//TasksPendingCompletion.addAll(MasterTaskList);
 		TaskNamesPendingCompletion.addAll(MasterTaskNameList);
-		
+/*		String initMSG = "Ambulance,INITMSG,----PickPatient";
+		publishMessage(initMSG, 2);
+		String policeInitMSG = "Police,INITMSG,----Patrol";
+		publishMessage(policeInitMSG, 2);
+		*/
 		for(String taskMessage : MasterTaskList)
 		{
 			Main.Message(true, "TaskIssuer.RelaunchExecutionLoop: Issuing message " + taskMessage);
@@ -314,6 +320,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		if (TaskNamesPendingCompletion.isEmpty())
 		{
 			//RelaunchExecutionLoop();
+			WorldState.NamesCompletedMethods.clear();
 			Main.Message(true, "TaskIssuer.ProcessSchedulingEvent: all scenario tasks completed");
 			onResume(); // unpause the thread with TaskIssuer run method
 		}
