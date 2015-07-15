@@ -31,6 +31,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 	//private String clientName = "taskIssuer";
 	public static final String ambName = "Ambulance";
 	public static final String polName = "Police";
+	public static final String ambName2 = "Ambulance2";
 	public static String TaskIssuerName = "TaskIssuer";
 	private final static ExecutorService commsPool = Executors.newSingleThreadExecutor();
 	private final static ExecutorService issuerPool = Executors.newSingleThreadExecutor();
@@ -54,14 +55,19 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
 		
+		MasterTaskList.add("Ambulance2,ASSIGNTASK,----PickPatient2");
+		MasterTaskList.add("Ambulance2,ASSIGNTASK,----DropPatient2");
+		
 		MasterTaskList.add("Police,ASSIGNTASK,----Patrol");
 		
 		MasterTaskNameList.add("PickPatient");
 		MasterTaskNameList.add("DropPatient");
+		MasterTaskNameList.add("PickPatient2");
+		MasterTaskNameList.add("DropPatient2");
 		MasterTaskNameList.add("Patrol");
-		MasterTaskNameList.add("RespondToAccident");
+		//MasterTaskNameList.add("RespondToAccident");
 		
-		MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
+		//MasterTaskList.add("Police,NEGOTIATE,----RespondToAccident");
 		//TasksToExecute.add("");
 		//Main.Message(this, true, ": have added tasks");
 		//MasterTaskList.add("Police,ASSIGNTASK,----RespondToAccident");
@@ -96,6 +102,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				mqReceiver.SubscribeForAgent(TaskIssuerName);
 				mqReceiver.SubscribeForAgent(polName);
 				mqReceiver.SubscribeForAgent(ambName);
+				mqReceiver.SubscribeForAgent(ambName2);
 			}
 		});
 	
@@ -217,8 +224,10 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				active = false;
 				String ambShutdown = "Ambulance,SHUTDOWN,----PickPatient";
 				String polShutdown = "Police,SHUTDOWN,----PickPatient";
+				String ambShutdown2 = "Ambulance2,SHUTDOWN,----PickPatient";
 				publishMessage(ambShutdown, 2);
 				publishMessage(polShutdown, 2);
+				publishMessage(ambShutdown2, 2);
 				try {
 					Thread.sleep(250);
 					shutdown();
