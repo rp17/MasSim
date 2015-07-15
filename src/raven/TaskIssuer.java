@@ -329,7 +329,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		if (TaskNamesPendingCompletion.isEmpty())
 		{
 			//RelaunchExecutionLoop();
-			WorldState.NamesCompletedMethods.clear();
+			//WorldState.NamesCompletedMethods.clear();
 			Main.Message(true, "TaskIssuer.ProcessSchedulingEvent: all scenario tasks completed");
 			onResume(); // unpause the thread with TaskIssuer run method
 		}
