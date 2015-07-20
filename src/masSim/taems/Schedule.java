@@ -9,14 +9,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Iterator;
 
+import masSim.world.LapsedTime;
 import raven.Main;
 
 public class Schedule {
 	private boolean debugFlag = false;
 	private Queue<ScheduleElement> items;
 	public int TotalQuality = 0;
+	public long lapsedTime;
 	public Schedule() {
 		items = new ConcurrentLinkedQueue<ScheduleElement>();
+		lapsedTime = 0;
 	}
 	public void addItem(ScheduleElement item){
 		//Main.Message("[Schedule] Added to schedule task " + item.getName());
@@ -99,6 +102,7 @@ public class Schedule {
 
 	}*/
 	{
+		long start = LapsedTime.getStart();
 		Main.Message(true, "Old Schedule " + this.hashCode() + " : " + this.toString());
 		Main.Message(true, "Merge Candidate " + sch.hashCode() + " : " + sch.toString());
 		ScheduleElement first = null;
@@ -172,7 +176,9 @@ public class Schedule {
 		//Finally add the last method
 		mergedList.add(last);
 		this.items = mergedList;
+		lapsedTime = lapsedTime +  LapsedTime.getLapsed(start);
 		Main.Message(true, "New Schedule " + this.hashCode() + " : " + this.toString());
+		
 	}
 
 	private boolean ContainsSameMethod(Collection<ScheduleElement> one, ScheduleElement two)

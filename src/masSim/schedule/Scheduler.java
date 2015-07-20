@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import masSim.taems.*;
+import masSim.world.LapsedTime;
 import masSim.world.MqttMessagingProvider;
 import masSim.world.TaskRepository;
 
@@ -21,25 +22,26 @@ import BAEventMonitor.Params;
 import BAEventMonitor.Predicate;
 import BAEventMonitor.Execution.ExecutionMode;
 import BAEventMonitor.Param.StoreMode;
-
 import raven.Main;
 import raven.math.Vector2D;
 import raven.utils.SchedulingLog;
 
 public class Scheduler implements Runnable {
-	
+
 	private boolean debugFlag = true;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
-	
-	
+	public static long lapsedTime;
+
+
 	private IAgent agent;
-	
+
 	public Scheduler(IAgent agent)
 	{
 		this.agent = agent;
+		lapsedTime = 0;
 	}
-	
+
 	//This is the main method of the scheduler, which implements runnable interface of java thread
 	//It will run continuously when the scheduler thread is started. It will initially calculate the schedule
 	//for current taskGroup, and then subsequently keep checking for arrival of new pending tasks, so that
@@ -65,78 +67,82 @@ public class Scheduler implements Runnable {
 			}
 		}
 	}
-	
-		
+
+
 	@Params({@Param(name="schedule", variable="schedule", pred="containWaypoint", mode=StoreMode.Single), @Param(name="task", variable="newTask", pred="containWaypoint", mode=StoreMode.List)})
 	@Execution(name="containWaypoint", mode=ExecutionMode.After)
 	@Param(name="task", variable="newTask", pred="reachWaypoint", mode=StoreMode.List)
 	public synchronized Schedule CalculateSchedule()
 	{
+		long start = LapsedTime.getStart();
 		//try {
-			//Read all new tasks
-			int numberOfPendingTasks = this.agent.getPendingTasks().size();
-			if (numberOfPendingTasks<=0) return null;
-			//boolean newTasksAssigned = assignTask(null);
-			String debugMessage = "";
-			for(int i=0;i<numberOfPendingTasks;i++)
-			{
-				Task newTask = this.agent.getPendingTasks().get(0);
-				debugMessage += " > " + newTask.label;
-				this.agent.getPendingTasks().remove(0);
-				if (newTask.agent.equals(agent)){
-					synchronized(Task.Lock)
-					{
-						Main.Message(true, "entered lock 2");
-						agent.GetCurrentTasks().addTask(newTask);
-						List<Method> methods = agent.GetCurrentTasks().GetMethods();
-						System.out.println("Current task structure updated, methods are : ");
-						for(Method m : methods) {
-							System.out.println(m.label);
-						}
-						//instrumentation
-						//PredicateParameterFilter.addTask(newTask);
+		//Read all new tasks
+		int numberOfPendingTasks = this.agent.getPendingTasks().size();
+		if (numberOfPendingTasks<=0) return null;
+		//boolean newTasksAssigned = assignTask(null);
+		String debugMessage = "";
+		for(int i=0;i<numberOfPendingTasks;i++)
+		{
+			Task newTask = this.agent.getPendingTasks().get(0);
+			debugMessage += " > " + newTask.label;
+			this.agent.getPendingTasks().remove(0);
+			if (newTask.agent.equals(agent)){
+				synchronized(Task.Lock)
+				{
+					Main.Message(true, "entered lock 2");
+					agent.GetCurrentTasks().addTask(newTask);
+					List<Method> methods = agent.GetCurrentTasks().GetMethods();
+					System.out.println("Current task structure updated, methods are : ");
+					for(Method m : methods) {
+						System.out.println(m.label);
 					}
-					Main.Message(true, "exited lock 2");
+					//instrumentation
+					//PredicateParameterFilter.addTask(newTask);
 				}
+				Main.Message(true, "exited lock 2");
 			}
-			//Remove completed tasks
-			/*
+		}
+		//Remove completed tasks
+		/*
 			synchronized(Task.Lock){
 					agent.GetCurrentTasks().Cleanup(MqttMessagingProvider.GetMqttProvider());
 			}
-			*/
-			synchronized(Task.Lock){
-				agent.GetCurrentTasks().Cleanup();
-			}
-			if(agent.GetCurrentTasks().hasChildren())
-				{
-					Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
-					//instrumentation
-					//PredicateParameterFilter.addSchedule(schedule);
-					//instrumentation
-					//StatementEvent.executeScheduleContainsTask();
-					return schedule;
-				}
-				
-				//Thread.sleep(10000); // what is this sleep for ??
-				
-			//} catch (InterruptedException e) {
-				//Main.Message(debugFlag, "[Schedular 109]" + e.toString());
-			//}
+		 */
+		synchronized(Task.Lock){
+			agent.GetCurrentTasks().Cleanup();
+		}
+		if(agent.GetCurrentTasks().hasChildren())
+		{
+			Schedule schedule = CalculateScheduleFromTaems(agent.GetCurrentTasks());
+			//instrumentation
+			//PredicateParameterFilter.addSchedule(schedule);
+			//instrumentation
+			//StatementEvent.executeScheduleContainsTask();
+			lapsedTime = lapsedTime + LapsedTime.getLapsed(start);
+			return schedule;
+		}
+
+		//Thread.sleep(10000); // what is this sleep for ??
+
+		//} catch (InterruptedException e) {
+		//Main.Message(debugFlag, "[Schedular 109]" + e.toString());
+		//}
+		lapsedTime = lapsedTime + LapsedTime.getLapsed(start);
 		return null;
 	}
-	
+
 	//Method takes a Teams structure as input and outputs all the possible schedules resulting from that
 	//task structure. This output is then fed to a generic Dijkstra's algorithm to calculate the optimum schedule
 	//corresponding to the optimum path from the starting task to the ending task
 	public Schedule CalculateScheduleFromTaems(Task topLevelTask)
 	{
+		long start = LapsedTime.getStart();
 		Iterator ii = topLevelTask.getSubtasks();
 		//Reinitialize the schedule item
-	  	Schedule schedule = new Schedule();
-	  	//Reinitialize the start time of calculation
-	  	startTime = new Date();
-	
+		Schedule schedule = new Schedule();
+		//Reinitialize the start time of calculation
+		startTime = new Date();
+
 		//Create set of Nodes representing all methods that can be executed in the eventual schedule
 		ArrayList<Method> nodes = new ArrayList<Method>();
 		//Create set of all possible transitions of execution from one method to another, which represents an actual
@@ -157,27 +163,28 @@ public class Scheduler implements Runnable {
 					finalMethodList[i], finalMethod);
 			edges.add(t);
 		}
-		
+
 		//Create a Graph of these methods and run Dijkstra Algorithm on it
 		Graph graph = new Graph(nodes, edges);
 		graph.Print();
-	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph, agentPos);
-	    dijkstra.execute(initialMethod);
-	    LinkedList<Method> path = dijkstra.getPath(finalMethod);
-	    //Print the determined schedule
-	    int totalquality = 0;
-	    if (path!=null)
-		    for (Method vertex : path) {
-		    	if (!vertex.label.equals("Final Point"))//Ignore final point as its only necessary to complete graph for dijkstra, but we don't need to visit it
-		        {
-		    		totalquality += vertex.getOutcome().getQuality();
-		    		schedule.addItem(new masSim.taems.ScheduleElement(vertex));
-		    	}
-		    }
-	    schedule.TotalQuality = totalquality;
+		DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph, agentPos);
+		dijkstra.execute(initialMethod);
+		LinkedList<Method> path = dijkstra.getPath(finalMethod);
+		//Print the determined schedule
+		int totalquality = 0;
+		if (path!=null)
+			for (Method vertex : path) {
+				if (!vertex.label.equals("Final Point"))//Ignore final point as its only necessary to complete graph for dijkstra, but we don't need to visit it
+				{
+					totalquality += vertex.getOutcome().getQuality();
+					schedule.addItem(new masSim.taems.ScheduleElement(vertex));
+				}
+			}
+		schedule.TotalQuality = totalquality;
+		lapsedTime = lapsedTime + LapsedTime.getLapsed(start);
 		return schedule;
 	}
-	
+
 	//A helper method used internally by CalculateScheduleFromTaems method
 	private void Permute(Node[] inputArray, int start, int end, ArrayList<Node[]> permutations)
 	{
@@ -199,7 +206,7 @@ public class Scheduler implements Runnable {
 			}
 		}
 	}
-	
+
 	private void PrintNodeArray(Node[] n)
 	{
 		String m = "";
@@ -209,7 +216,7 @@ public class Scheduler implements Runnable {
 		}
 		Main.Message(debugFlag, "[Scheduler 185] Node Methods: " + m );
 	}
-	
+
 	//A helper method used internally by CalculateScheduleFromTaems method
 	private Method[] AppendAllMethodExecutionRoutes(ArrayList<Method> nodes, ArrayList<MethodTransition> edges, Node task,
 			Method[] appendTo, Node Parent, boolean makeMethodsUnique)
@@ -277,7 +284,7 @@ public class Scheduler implements Runnable {
 						//If there are multiple methods, we want them to be separated out in the graph to avoid cross linkages of permuted values. But if there is
 						//only one, then for aesthetic purposes, we can have the same object repeated
 						boolean multiplePermutationRequringUniqueMethodsForGraph = true;
-//						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
+						//						if (s.length<2) multiplePermutationRequringUniqueMethodsForGraph = false;
 						for(int i=0;i<s.length;i++)
 						{
 							permutationLinkMethodsList = AppendAllMethodExecutionRoutes(nodes, edges, s[i], permutationLinkMethodsList, tk, multiplePermutationRequringUniqueMethodsForGraph);

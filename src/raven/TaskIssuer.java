@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
+import masSim.world.Agent;
+import masSim.world.LapsedTime;
 import masSim.world.MqttMessagingProvider;
 import masSim.world.WorldState;
 
@@ -191,6 +193,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//Issue dummy task completion message to mqtt to start new cycle of task executions
 		//mq.PublishMessage(new SchedulingEvent(TaskIssuer.TaskIssuerName,SchedulingCommandType.TASKCOMPLETED,"----DUMMY"));
 		while(active) {
+			long startTime = LapsedTime.getStart();
+
 			//Main.Message(this, true, "TaskIssuer.run()");
 			Main.Message(this, true, "TaskIssuer.run() numberOfIteration = " + numberOfIteration + " currentIteration " + currentIteration);
 			synchronized (pauseLock) {
@@ -214,7 +218,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 
 			if ( currentIteration < numberOfIteration ) {
 				Main.Message(this, true, "TaskIssuer.run() relaunching execution loop ");
-				
+				//long currentLapsedTime = Agent.getLapsedTime();
 				RelaunchExecutionLoop();
 				currentIteration++;
 				onPause(); // pause the thread until all tasks by all agents are completed to repeat a scenario
@@ -222,6 +226,9 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			else {
 				Main.Message(this, true, "TaskIssuer.run() all " + numberOfIteration + " iterations completed, TaskIssuer shutting down");
 				active = false;
+				double lapsedTime = (double) LapsedTime.getLapsed(startTime) * .001;
+				System.out.println("LapsedTime = " + lapsedTime + " seconds");
+				
 				String ambShutdown = "Ambulance,SHUTDOWN,----PickPatient";
 				String polShutdown = "Police,SHUTDOWN,----PickPatient";
 				String ambShutdown2 = "Ambulance2,SHUTDOWN,----PickPatient";
@@ -368,5 +375,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 			cc.startIssuer();
 		}
 	}
+	
+
 }
 

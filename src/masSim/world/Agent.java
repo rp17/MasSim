@@ -10,6 +10,10 @@ import masSim.schedule.SchedulingEventListener;
 import masSim.schedule.SchedulingEventParams;
 import masSim.taems.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 //import java.io.IOException;
 import java.util.*;
 //import java.util.AbstractMap.SimpleEntry;
@@ -61,6 +65,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean scenarioDone = false;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
+	private long lapsedTime;
 
 
 	// MQTT thread pool and mqtt reference
@@ -135,6 +140,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Agent(String name, boolean isManagingAgent, int x, int y,
 			MqttMessagingProvider mq){
 		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, mq);
+		lapsedTime = 0;
 	}
 
 	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, final MqttMessagingProvider mq){
@@ -232,6 +238,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void CalculateCost(Task task)
 	{
+		long start = LapsedTime.getStart();
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
 		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
 		SchedulingEventParams params = new SchedulingEventParams()
@@ -240,14 +247,14 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		.AddData(costsString);
 		SchedulingEvent event = new SchedulingEvent(TaskIssuer.polName, SchedulingCommandType.COSTBROADCAST, params);
 		mq.PublishMessage(event);
+		lapsedTime = lapsedTime + LapsedTime.getLapsed(start);
 	}
 
 	public void Negotiate(Task task)
 	{
-		System.out.println("~~~~~In Negotiate~~~~~");
+		long startTime = LapsedTime.getStart();
 		if (IsManagingAgent())
 		{		
-			System.out.println("~~~~~In Negotiate If statement~~~~~");
 			MaxSumCalculator maxSumInstance = new MaxSumCalculator(task.label,this.agentsUnderManagement.size()+1);//One additional for managing agent
 			int[] costs = CalculateIncrementalQualitiesForTask(task);
 			maxSumInstance.AddCostData(this.label, costs[0], costs[1]);
@@ -268,6 +275,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			.AddOriginatingAgent(this.label);
 			SchedulingEvent managingEvent = new SchedulingEvent(this.getName(), SchedulingCommandType.CALCULATECOST, params);
 			mq.PublishMessage(managingEvent);*/
+			lapsedTime = lapsedTime + LapsedTime.getLapsed(startTime);
 		}
 	}
 
@@ -327,10 +335,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	 */
 	public void ProcessCostBroadcast(String taskName, String agentName, String data)
 	{	
-		System.out.println("*****GOT INTO PROCESSCOSTBROADCAST*****");
-
+		long startTime = LapsedTime.getStart();
 		if(IsManagingAgent()) {
-			System.out.println("*****GOT INTO 1ST IF STATEMENT PROCESSCOSTBROADCAST*****");
 			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
@@ -339,7 +345,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
 			if (calc.IsDataCollectionComplete())
 			{
-				System.out.println("*****GOT INTO 2ND IF STATEMENT PROCESSCOSTBROADCAST*****");
 				String selectedAgentName = calc.GetBestAgent();
 				System.out.println("Agent.ProcessCostBroadcast : selectedAgentName is " + selectedAgentName);
 				SchedulingEventParams params = new SchedulingEventParams()
@@ -347,6 +352,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				.AddAgentId(selectedAgentName);
 				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
 				mq.PublishMessage(event);
+				lapsedTime = lapsedTime + LapsedTime.getLapsed(startTime);
 			}
 
 		} else {
@@ -458,7 +464,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		//boolean isComplete = WorldState.NamesCompletedMethods.contains(m.getLabel());
 		//if (!isComplete && m.x!=0 && m.y!=0)
 		if (m.x!=0 && m.y!=0)
-				{
+		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
 
@@ -485,7 +491,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			//this.flagScheduleRecalculateRequired = false;
 
-				} /*else {
+		} /*else {
 					System.out.println("Agent.ExecuteTask() - Method " + m.getLabel() + " has already been completed, ignoring execution");
 					if (currentSchedule!=null)
 					{
@@ -651,7 +657,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void UpdateSchedule(Schedule newSchedule)
 	{
+		//long startTime = LapsedTime.getStart();
 		this.currentSchedule.Merge(newSchedule);
+		//lapsedTime = lapsedTime + LapsedTime.getLapsed(startTime);
 	}
 
 	private void executeNextTask() {
@@ -866,6 +874,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				 */
 
 				Main.Message(debugFlag, "Agent " + label + " SHUTDOWN received, shutting down");
+				getLapsedTime();
+				double lt = lapsedTime * .001;
+				System.out.println("LapsedTime = " + lt + " seconds");
 				System.exit(0);
 			}
 		}
@@ -873,6 +884,26 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		return null;
 	}
 
+	public void getLapsedTime() {
+		lapsedTime = localScheduler.lapsedTime + lapsedTime + currentSchedule.lapsedTime;
+		
+		String filePath = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + label;
+
+		try {
+			File file = new File(filePath);
+			if(!file.exists()) {
+				System.out.println("New file created");
+				file.createNewFile();
+
+			}
+			FileWriter fw = new FileWriter(filePath, true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write((double)lapsedTime * .001 + " seconds");
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	@Override
 	public boolean IsGlobalListener() {
 		return false;

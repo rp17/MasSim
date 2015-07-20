@@ -1,0 +1,12 @@
+Agent : Ambulance	Elapsed Time : 0.068 seconds
+
+Agent : Police	Elapsed Time : 0.09 seconds
+
+Agent : Ambulance2	Elapsed Time : 0.034 seconds
+
+Agent : Ambulance	Elapsed Time : 0.024 seconds
+
+Agent : Police	Elapsed Time : 0.02 seconds
+
+Agent : Ambulance2	Elapsed Time : 0.028 seconds
+
