@@ -4,4 +4,5 @@
 	<Task id="T3" name="PatrolRegionA" qaf="SumAll" />
 	<Task id="T4" name="PatrolRegionB" qaf="SumAll" />
 	<Task id="T4" name="RespondToAccident" qaf="SumAll" />
+	<Task id="T6" name="RespondToAccident2" qaf="SumAll" />
 </Taems>

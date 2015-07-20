@@ -10,4 +10,7 @@
 	<Task id="T3" name="RespondToAccident" qaf="SumAll" >
 		<Method id="A1M1T3" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="250"></Method>
 	</Task>
+	<Task id="T6" name="RespondToAccident2" qaf="SumAll" >
+		<Method id="A2M6T5" name="VisitAccidentLocation2" Quality="500" Duration="10" XCoord="550" YCoord="450"></Method>
+	</Task>
 </Taems>

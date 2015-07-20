@@ -461,9 +461,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Thread.sleep(1000);
 		}
 		Main.Message(this, debugFlag, "Agent " + this.label + " executing " + m.label);
-		//boolean isComplete = WorldState.NamesCompletedMethods.contains(m.getLabel());
-		//if (!isComplete && m.x!=0 && m.y!=0)
-		if (m.x!=0 && m.y!=0)
+		boolean isComplete = WorldState.NamesCompletedMethods.contains(m.getLabel());
+		if (!isComplete && m.x!=0 && m.y!=0)
+		//if (m.x!=0 && m.y!=0)
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
@@ -491,7 +491,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 			//this.flagScheduleRecalculateRequired = false;
 
-		} /*else {
+		} else {
 					System.out.println("Agent.ExecuteTask() - Method " + m.getLabel() + " has already been completed, ignoring execution");
 					if (currentSchedule!=null)
 					{
@@ -506,7 +506,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 								Main.Message(debugFlag, "Agent.ExecuteTask() - Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
 							}
 						}
-					}}*/
+					}}
 	}
 
 	public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)

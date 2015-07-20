@@ -1,0 +1,16 @@
+<Taems>
+	<Task id="A1T1" name="PickPatient3" qaf="SeqSum" >
+		<Method id="A1M1T1" name="PickFromHouse3" Quality="500" Duration="10" XCoord="200" YCoord="425"></Method>
+		<Method id="A1M2T1" name="DropToHospital3" Quality="500" Duration="10" XCoord="200" YCoord="375"></Method>
+	</Task>
+	<Task id="A1T2" name="DropPatient3" qaf="SeqSum" >
+		<Method id="A1M1T2" name="PickFromHospital3" Quality="500" Duration="10" XCoord="475" YCoord="225"></Method>
+		<Method id="A1M2T2" name="DropToHouse3" Quality="500" Duration="10" XCoord="475" YCoord="300"></Method>
+	</Task>
+	<Task id="T3" name="RespondToAccident" qaf="SumAll" >
+		<Method id="A1M1T3" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="400" YCoord="250"></Method>
+	</Task>
+	<Task id="T6" name="RespondToAccident2" qaf="SumAll" >
+		<Method id="A2M6T5" name="VisitAccidentLocation2" Quality="500" Duration="10" XCoord="550" YCoord="450"></Method>
+	</Task>
+</Taems>
