@@ -898,7 +898,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 			FileWriter fw = new FileWriter(filePath, true);
 			BufferedWriter bw = new BufferedWriter(fw);
-			bw.write((double)lapsedTime * .001 + " seconds");
+			bw.write((double)lapsedTime * .001 + " seconds" + "\n");
 			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
