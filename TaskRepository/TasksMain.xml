@@ -5,4 +5,12 @@
 	<Task id="T4" name="PatrolRegionB" qaf="SumAll" />
 	<Task id="T4" name="RespondToAccident" qaf="SumAll" />
 	<Task id="T6" name="RespondToAccident2" qaf="SumAll" />
+	<Task id="T7" name="RespondToAccident3" qaf="SumAll" />
+	<Task id="T8" name="RespondToAccident4" qaf="SumAll" />
+	<Task id="T9" name="RespondToAccident5" qaf="SumAll" />
+	<Task id="T10" name="RespondToAccident6" qaf="SumAll" />
+	<Task id="T11" name="RespondToAccident7" qaf="SumAll" />
+	<Task id="T12" name="RespondToAccident8" qaf="SumAll" />
+	<Task id="T13" name="RespondToAccident9" qaf="SumAll" />
+	<Task id="T14" name="RespondToAccident10" qaf="SumAll" />
 </Taems>

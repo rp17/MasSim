@@ -66,6 +66,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private long lapsedTime;
+	private long totalTimeStart;
+	private long totalTime;
 
 
 	// MQTT thread pool and mqtt reference
@@ -141,6 +143,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			MqttMessagingProvider mq){
 		this(GloballyUniqueAgentId++,name, isManagingAgent, x, y, mq);
 		lapsedTime = 0;
+		totalTime = 0;
 	}
 
 	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y, final MqttMessagingProvider mq){
@@ -255,6 +258,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		long startTime = LapsedTime.getStart();
 		if (IsManagingAgent())
 		{		
+			totalTimeStart = LapsedTime.getStart();
 			MaxSumCalculator maxSumInstance = new MaxSumCalculator(task.label,this.agentsUnderManagement.size()+1);//One additional for managing agent
 			int[] costs = CalculateIncrementalQualitiesForTask(task);
 			maxSumInstance.AddCostData(this.label, costs[0], costs[1]);
@@ -353,6 +357,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
 				mq.PublishMessage(event);
 				lapsedTime = lapsedTime + LapsedTime.getLapsed(startTime);
+				totalTime = totalTime + LapsedTime.getLapsed(totalTimeStart);
 			}
 
 		} else {
@@ -454,6 +459,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void ExecuteTask(Method m) throws InterruptedException
 	{
+
 		System.out.println("Agent.ExecuteTask " + label + ": starting execution of " + m.label);
 		while (!AreEnablersInPlace(m))
 		{
@@ -463,50 +469,51 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		Main.Message(this, debugFlag, "Agent " + this.label + " executing " + m.label);
 		boolean isComplete = WorldState.NamesCompletedMethods.contains(m.getLabel());
 		if (!isComplete && m.x!=0 && m.y!=0)
-		//if (m.x!=0 && m.y!=0)
+			//if (m.x!=0 && m.y!=0)
 		{
 			status=Status.AWAITINGTASKCOMPLETION;
 			this.currentMethod = m;
 
 			// the event SchedulingCommandType.DISPLAYTASKEXECUTION make RavenUI assign a pid traverse goal to a bot
 			// instead, this assignment must be done directly to SimBot associated with this Agent
-			/*
+
 			if(m.label.equals("Finish")) {
 				System.out.println("Agent.ExecuteTask " + label + ": IGNORING execution of " + m.label);
 				//this.currentMethod = null;
-				MarkMethodCompleted(m.label);
+				markFinishCompleted(m.label);
 			}
-			else {
+			/*else {
 				Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
 				GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
 
 				fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
 				this.flagScheduleRecalculateRequired = false;
 			}
-			 */
-			Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
+			 */ 
+			else {
+				Waypoints matchedWaypoints = getWptsForMethodExecution(m.label, simBot);
 
-			GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
+				GoalComposite g = simBot.addWptsGoal(matchedWaypoints, m.label);
 
-			fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
-			//this.flagScheduleRecalculateRequired = false;
-
+				fireSchedulingEvent(Agent.schedulingEventListenerName, SchedulingCommandType.DISPLAYTASKEXECUTION, this.getName(), m.label, m.x, m.y);
+				//this.flagScheduleRecalculateRequired = false;
+			}
 		} else {
-					System.out.println("Agent.ExecuteTask() - Method " + m.getLabel() + " has already been completed, ignoring execution");
-					if (currentSchedule!=null)
+			System.out.println("Agent.ExecuteTask() - Method " + m.getLabel() + " has already been completed, ignoring execution");
+			if (currentSchedule!=null)
+			{
+				Iterator<ScheduleElement> el = currentSchedule.getItems();
+				while(el.hasNext())
+				{
+					ScheduleElement e = el.next();
+					if (m.label.equals(e.getMethod().label))
 					{
-						Iterator<ScheduleElement> el = currentSchedule.getItems();
-						while(el.hasNext())
-						{
-							ScheduleElement e = el.next();
-							if (m.label.equals(e.getMethod().label))
-							{
-								currentSchedule.RemoveElement(e);
-								WorldState.NamesCompletedMethods.remove(m.label);
-								Main.Message(debugFlag, "Agent.ExecuteTask() - Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
-							}
-						}
-					}}
+						currentSchedule.RemoveElement(e);
+						WorldState.NamesCompletedMethods.remove(m.label);
+						Main.Message(debugFlag, "Agent.ExecuteTask() - Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+					}
+				}
+			}}
 	}
 
 	public Waypoints getWptsForMethodExecution(String methodName, SimBot bot)
@@ -612,7 +619,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				scenarioDone = true;
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " all tasks have been completed");
 				Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " re-initializing");
-				reinitAgent();
+				//reinitAgent();
 			}
 
 			Main.Message(debugFlag, "Agent.MarkMethodCompleted " + label + " waypoints left " + wpts.size());
@@ -636,6 +643,28 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 
+	public void markFinishCompleted(String methodName) {
+		if (currentMethod != null && currentMethod.label.equalsIgnoreCase(methodName))
+		{
+			currentMethod.MarkCompleted();
+
+			if (currentSchedule!=null)
+			{
+				Iterator<ScheduleElement> el = currentSchedule.getItems();
+				while(el.hasNext())
+				{
+					ScheduleElement e = el.next();
+					if (e.getMethod().label.equals(Method.StartingPoint) && el.hasNext())
+						e = el.next();
+					if (currentMethod.equals(e.getMethod()))
+					{
+						currentSchedule.RemoveElement(e);
+						Main.Message(debugFlag, "[Agent 135] Removed " + e.getName() + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+					}
+				}
+			}}
+	}
+
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {
 
 		if(destinationAgentId == Agent.schedulingEventListenerName && noUI) {return;} // since schedulingEventListenerName String is final static, reference comparison is enough
@@ -657,17 +686,35 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void UpdateSchedule(Schedule newSchedule)
 	{
-		//long startTime = LapsedTime.getStart();
 		this.currentSchedule.Merge(newSchedule);
-		//lapsedTime = lapsedTime + LapsedTime.getLapsed(startTime);
 	}
 
+	@SuppressWarnings("null")
 	private void executeNextTask() {
 		try
 		{
-			//Main.Message(true, "Agent.executeNextTask ");
+			//Repair schedule for the case when the Start Method is not first in currentSchedule
 			if (currentSchedule!=null && currentSchedule.size() > 0)
 			{
+				ScheduleElement first = null;
+				Schedule notFirst = new Schedule();;
+				if(!currentSchedule.peek().getMethod().isStartMethod()) {
+					while(currentSchedule.size() > 0) {
+						ScheduleElement el = currentSchedule.poll();
+						if (el.getMethod().isStartMethod()) {
+							first = el;
+						} else {
+							notFirst.addItem(el);
+						}
+					}
+					currentSchedule.addItem(first);
+					while(notFirst.size() > 0) {
+						ScheduleElement el = notFirst.poll();
+						currentSchedule.addItem(el);
+					}
+
+				}
+
 				Iterator<ScheduleElement> el = currentSchedule.getItems();
 				System.out.println("Agent.executeNextTask - Current Schedule is : " + currentSchedule.toString()); 
 				if(el.hasNext())
@@ -886,7 +933,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	public void getLapsedTime() {
 		lapsedTime = localScheduler.lapsedTime + lapsedTime + currentSchedule.lapsedTime;
-		
+
 		String filePath = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + label;
 
 		try {
@@ -898,10 +945,28 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			}
 			FileWriter fw = new FileWriter(filePath, true);
 			BufferedWriter bw = new BufferedWriter(fw);
-			bw.write((double)lapsedTime * .001 + " seconds" + "\n");
+			bw.write((double)lapsedTime * .001 + "\n");
 			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		
+		if(totalTime > 0) {
+			String filePathTotal = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + "Execution Time";		
+			try {
+				File file = new File(filePathTotal);
+				if(!file.exists()) {
+					System.out.println("New file created");
+					file.createNewFile();
+
+				}
+				FileWriter fw = new FileWriter(filePathTotal, true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				bw.write((double)totalTime * .001 + "\n");
+				bw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	@Override
