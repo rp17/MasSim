@@ -56,6 +56,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private Map<String, List<String>> mapTaskToMethods = new HashMap<String, List<String>>();
 	private Map<String, String> mapMethodToRootTask = new HashMap<String, String>();
 
+	private Map<String, IntPosition> agentsPositions = new HashMap<String, IntPosition>();
+	
 	private SimBot simBot;
 	volatile Waypoints wpts = new Waypoints();
 	private final static String schedulingEventListenerName = "RavenUI";
@@ -107,8 +109,13 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	//Represents the current final optimum schedule calculated for the taskGroup member
 	private Schedule schedule;
 
-	public static void main(String[] args) {
-		//Agent to be run via this method in its own jvm
+	private class IntPosition {
+		public int x;
+		public int y;
+		public IntPosition(int x, int y) {
+			this.x = x;
+			this.y = y;
+		}
 	}
 
 	@Override
@@ -207,7 +214,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		Task task = this.taskRepository.GetTask(taskName);
 
 		//Instrumentation
-		//PredicateParameterFilter.addChoiceTask(task);
+		PredicateParameterFilter.addChoiceTask(task);
 
 		if (task==null) Main.Message(true, "Error: Task " + taskName + " not found in tasks repository");
 		task.AssignAgent(this);
@@ -225,11 +232,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 		this.pendingTasks.add(task);
 
+		//Instrumentation for distributed event
+		StatementEvent.addTasks(task);
 		schedulerPool.execute(localScheduler);
 
-		//Instrumentation for distributed event
-		//StatementEvent.addTasks(task);
-		//schedulerPool.execute(localScheduler);
 	}
 
 	private boolean IsManagingAgent()
@@ -243,7 +249,13 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		long start = LapsedTime.getStart();
 		int[] costs = CalculateIncrementalQualitiesForTask(task);
-		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
+		//String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1];
+		
+		// put the two utilities and this agent's coordinates into a COSTBROADCAST event
+		int x = (int)simBot.position.x;
+		int y = (int)simBot.position.y;
+		String costsString = costs[0] + SchedulingEventParams.DataItemSeparator + costs[1] + 
+				SchedulingEventParams.DataItemSeparator + x + SchedulingEventParams.DataItemSeparator + y;
 		SchedulingEventParams params = new SchedulingEventParams()
 		.AddTaskName(task.getLabel())
 		.AddAgentId(getName())
@@ -337,19 +349,37 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			Main.Message(debugFlag, "Failed to obtain Quality increase for " + agent.getName() + " if assigned "	+ task.getLabel() + ". Using default of 0");
 			return 0;
 	 */
+	
+	
+	
 	public void ProcessCostBroadcast(String taskName, String agentName, String data)
 	{	
 		long startTime = LapsedTime.getStart();
 		if(IsManagingAgent()) {
-			String[] arr = data.split(SchedulingEventParams.DataItemSeparator,2);
+			String[] arr = data.split(SchedulingEventParams.DataItemSeparator, 4);
 			MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			if(calc == null) {
 				System.out.println("calc is null");
 			}
 			calc.AddCostData(agentName, Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+			int agentsX = Integer.parseInt(arr[2]);
+			int agentsY = Integer.parseInt(arr[3]);
+			
+			// put other agents' position into the table
+			agentsPositions.put(agentName, new IntPosition(agentsX, agentsY));
+			
+			// put this agent's position into the table
+			agentsPositions.put(getName(), new IntPosition((int)x, (int)y));
+			
 			if (calc.IsDataCollectionComplete())
 			{
 				String selectedAgentName = calc.GetBestAgent();
+				
+				// check agent's choice based on distances between the negotiated waypoint and
+				// agents' positions
+				
+				assertionBestAgentChosen(taskName, selectedAgentName);
+				
 				System.out.println("Agent.ProcessCostBroadcast : selectedAgentName is " + selectedAgentName);
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(taskName)
@@ -365,6 +395,55 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 	}
 
+	// this assertion checks if the best agent was chosen for a negotiated task
+	// two simplifications: only the distance between agents and the negotiated task is used,
+	// generally utilities should be checked;
+	// the negotiated task is assumed to have only one waypoint
+	
+	public boolean assertionBestAgentChosen(String taskName, String selectedAgentName) {
+		String bestAgentName = selectedAgentName;
+		Task task = this.taskRepository.GetTask(taskName);
+		if( task != null ) {
+			// simplification: GetMethods does not traverse
+			// assumption that a dynamic task has only one method
+			
+			List<Method> methods = task.GetMethods();
+			Method m = methods.get(0);
+			if(m != null) {
+				Vector2D mPos = new Vector2D(m.x, m.y);
+				IntPosition intPosSelected = agentsPositions.get(selectedAgentName);
+				Vector2D posSelected = new Vector2D((double)intPosSelected.x, (double)intPosSelected.y);
+				double minDist = mPos.distanceSq(posSelected);
+				
+				for(String agentName : agentsPositions.keySet()) {
+					IntPosition intPos = agentsPositions.get(agentName);
+					Vector2D agentPos = new Vector2D((double)intPos.x, (double)intPos.y);
+					double dist = mPos.distanceSq(agentPos);
+					if(dist < minDist) {
+						minDist = dist;
+						bestAgentName = agentName;
+					}
+				}
+				if(bestAgentName.equals(selectedAgentName)) {
+					// the agent closest to the negotiated waypoint was chosen
+					Main.Message(this, true, "Agent.assertionBestAgentChosen: proper best agent, " + 
+							selectedAgentName + ", was chosen for " + taskName);
+					return true;
+				}
+				else {
+					// not the closest agent was chosen
+					Main.Message(this, true, "Agent.assertionBestAgentChosen: improper agent " + selectedAgentName +
+							"was chosen for " + taskName + " while agent " + bestAgentName + " was closer");
+					return false;
+				}
+			}
+		}
+		else {
+			Main.Message(this, true, "Agent.assertionBestAgentChosen: no task " + taskName + " found");
+		}
+		return false;
+	}
+	
 	private int[] CalculateIncrementalQualitiesForTask(Task task)
 	{
 		try
