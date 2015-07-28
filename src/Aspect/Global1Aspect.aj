@@ -52,6 +52,16 @@ public aspect Global1Aspect {
 		try {
 			System.out.println("global event e1 evaluation");
 			Agent mainInstance = (Agent)EventClass.getComponentInstance("Agent");
+			if(mainInstance == null) {
+				System.out.println("Global1Aspect: Agent mainInstance is null");
+				if(mainInstance == null) {
+					System.out.println("Spec3Aspect: Agent mainInstance is null");
+					// take some time
+					int prod = 1;
+					for(int i=0; i<1000; i++){prod *= 2;}
+					return;
+				}
+			}
 			if ( mainInstance.equals(a)) {
 				//assigned to reach a way-point (ChosenPoint)
 				//generate distributed event and object

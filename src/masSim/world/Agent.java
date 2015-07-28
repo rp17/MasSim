@@ -400,10 +400,15 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	// generally utilities should be checked;
 	// the negotiated task is assumed to have only one waypoint
 	
+	@Event(name="best agent was chosen for negotiated task")
+	@Param(name="choice", variable="task", pred="scheduleOptimal", mode=StoreMode.List)
 	public boolean assertionBestAgentChosen(String taskName, String selectedAgentName) {
 		String bestAgentName = selectedAgentName;
 		Task task = this.taskRepository.GetTask(taskName);
 		if( task != null ) {
+			//Instrumentation
+			PredicateParameterFilter.addChoiceTask(task);
+			
 			// simplification: GetMethods does not traverse
 			// assumption that a dynamic task has only one method
 			
@@ -414,7 +419,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				IntPosition intPosSelected = agentsPositions.get(selectedAgentName);
 				Vector2D posSelected = new Vector2D((double)intPosSelected.x, (double)intPosSelected.y);
 				double minDist = mPos.distanceSq(posSelected);
-				
+				double initDist = minDist;
 				for(String agentName : agentsPositions.keySet()) {
 					IntPosition intPos = agentsPositions.get(agentName);
 					Vector2D agentPos = new Vector2D((double)intPos.x, (double)intPos.y);
@@ -433,7 +438,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				else {
 					// not the closest agent was chosen
 					Main.Message(this, true, "Agent.assertionBestAgentChosen: improper agent " + selectedAgentName +
-							"was chosen for " + taskName + " while agent " + bestAgentName + " was closer");
+							" (dist " + Math.sqrt(initDist) + ") was chosen for " + taskName + " while agent " + bestAgentName + " (dist " + Math.sqrt(minDist) + ") was closer: ");
 					return false;
 				}
 			}
@@ -1013,8 +1018,9 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void getLapsedTime() {
 		lapsedTime = localScheduler.lapsedTime + lapsedTime + currentSchedule.lapsedTime;
 
-		String filePath = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + label;
-
+		//String filePath = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + label;
+		
+		String filePath = "C:" + "\\" + "Users" + "\\" + "rp31" + "\\" + "Data" + "\\" + label;
 		try {
 			File file = new File(filePath);
 			if(!file.exists()) {
@@ -1031,7 +1037,8 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		
 		if(totalTime > 0) {
-			String filePathTotal = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + "Execution Time";		
+			//String filePathTotal = "C:" + "\\" + "Users" + "\\" + "k_h247" + "\\" + "Data" + "\\" + "Execution Time";	
+			String filePathTotal = "C:" + "\\" + "Users" + "\\" + "rp31" + "\\" + "Data" + "\\" + "ExecutionTime";
 			try {
 				File file = new File(filePathTotal);
 				if(!file.exists()) {

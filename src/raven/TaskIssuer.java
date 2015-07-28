@@ -65,6 +65,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----PickPatient");
 		MasterTaskList.add("Ambulance,ASSIGNTASK,----DropPatient");
 
+		/*
 		MasterTaskList.add("Ambulance2,ASSIGNTASK,----PickPatient2");
 		MasterTaskList.add("Ambulance2,ASSIGNTASK,----DropPatient2");
 
@@ -82,6 +83,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		
 		MasterTaskList.add("Ambulance7,ASSIGNTASK,----PickPatient7");
 		MasterTaskList.add("Ambulance7,ASSIGNTASK,----DropPatient7");
+		*/
 		
 		//MasterTaskList.add("Ambulance8,ASSIGNTASK,----PickPatient8");
 		//MasterTaskList.add("Ambulance8,ASSIGNTASK,----DropPatient8");
@@ -96,6 +98,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 
 		MasterTaskNameList.add("PickPatient");
 		MasterTaskNameList.add("DropPatient");
+		
+		/*
 		MasterTaskNameList.add("PickPatient2");
 		MasterTaskNameList.add("DropPatient2");
 		MasterTaskNameList.add("PickPatient3");
@@ -107,6 +111,8 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		MasterTaskNameList.add("PickPatient6");
 		MasterTaskNameList.add("DropPatient6");
 		MasterTaskNameList.add("PickPatient7");
+		*/
+		
 		//MasterTaskNameList.add("DropPatient7");
 		//MasterTaskNameList.add("PickPatient8");
 		//MasterTaskNameList.add("DropPatient8");
@@ -114,8 +120,10 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		//MasterTaskNameList.add("DropPatient9");
 		//MasterTaskNameList.add("PickPatient10");
 		//MasterTaskNameList.add("DropPatient10");
+		
 		MasterTaskNameList.add("Patrol");
 		MasterTaskNameList.add("RespondToAccident");
+		
 		//MasterTaskNameList.add("RespondToAccident2");
 		//MasterTaskNameList.add("RespondToAccident3");
 		//MasterTaskNameList.add("RespondToAccident4");
@@ -162,13 +170,15 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				mqReceiver.SubscribeForAgent(TaskIssuerName);
 				mqReceiver.SubscribeForAgent(polName);
 				mqReceiver.SubscribeForAgent(ambName);
+				
+				/*
 				mqReceiver.SubscribeForAgent(ambName2);
 				mqReceiver.SubscribeForAgent(ambName3);
 				mqReceiver.SubscribeForAgent(ambName4);
 				mqReceiver.SubscribeForAgent(ambName5);
 				mqReceiver.SubscribeForAgent(ambName6);
 				mqReceiver.SubscribeForAgent(ambName7);
-				
+				*/
 				
 				//mqReceiver.SubscribeForAgent(ambName8);
 				//mqReceiver.SubscribeForAgent(ambName9);
@@ -307,8 +317,12 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
+				// sending dynamic task NEGOTIATE events
 				MasterTaskList.add(msgAcc);
 				publishMessage(msgAcc, 2);
+				
+				
 				/*
 				try {
 					Thread.sleep(1200);
@@ -413,12 +427,16 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 				
 				publishMessage(ambShutdown, 2);
 				publishMessage(polShutdown, 2);
+				
+				/*
 				publishMessage(ambShutdown2, 2);
 				publishMessage(ambShutdown3, 2);
 				publishMessage(ambShutdown4, 2);
 				publishMessage(ambShutdown5, 2);
 				publishMessage(ambShutdown6, 2);
 				publishMessage(ambShutdown7, 2);
+				*/
+				
 				//publishMessage(ambShutdown8, 2);
 				//publishMessage(ambShutdown9, 2);
 				//publishMessage(ambShutdown10, 2);

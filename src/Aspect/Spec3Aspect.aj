@@ -104,6 +104,14 @@ public aspect Spec3Aspect {
 		try {
 			
 			Agent mainInstance = (Agent)EventClass.getComponentInstance("Agent");
+			if(mainInstance == null) {
+				System.out.println("Spec3Aspect: Agent mainInstance is null");
+				// take some time
+				int prod = 1;
+				for(int i=0; i<1000; i++){prod *= 2;}
+				return;
+			}
+			
 			if ( mainInstance.equals(a)) {
 				System.out.println("Choice");
 				LinkedList<Object> uncastTasksReach = EventClass.getPredicateQueue("scheduleOptimal", "choice");
