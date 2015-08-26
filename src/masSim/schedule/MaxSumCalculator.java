@@ -2,6 +2,7 @@ package masSim.schedule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 
@@ -33,10 +34,10 @@ public class MaxSumCalculator {
 		{
 			if (ent.getValue().equals("1"))
 			{
-				selectedAgent = ent.getKey();
+				selectedAgent = ent.getKey().replace("NodeVariable_", "");
 			}
 		}
-		return selectedAgent;
+		return this.agentsIndex.get(Integer.parseInt(selectedAgent));
 	}
 	
 	public String GetBestAgent()
@@ -126,17 +127,86 @@ public class MaxSumCalculator {
 		}
 		AddLine(f, c);
 		
+		
+		GenerateLines(0, totalVariables, "", f, 0);
+		
+		
+		return f.toString();
+	}
+	
+	private int GetQualityForAgent(int agentVariable)
+	{
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
-			f.append("F ");
-			for(int i = 0; i<totalVariables; i++)
+			if (agentVariable==ql.agentVariableId)
 			{
-				f.append( (i==ql.agentVariableId) ? "1 " : "0 " );
+				return ql.incremental;
 			}
-			f.append(ql.incremental);
+		}
+		return 0;
+	}
+	
+	private String SpaceOut(String input)
+	{
+		StringBuilder builder = new StringBuilder();
+		char[] chars = input.toCharArray();
+		for(char c : chars)
+		{
+			builder.append(c);
+			builder.append(" ");
+		}
+		return builder.substring(0, builder.length()-1);
+	}
+	
+	private int LogBase2(int variable)
+	{
+		return (int) (Math.log(variable)/Math.log(2));
+	}
+	
+	private void GenerateLines(int currentVariableRepresentingAgentName, int totalVariables, String prefixBuiltSoFar, 
+			StringBuilder f, int numberOfOnes)
+	{
+		List<Integer> singleVariableValues = new ArrayList<Integer>();
+		for(int i=0;i<totalVariables;i++)
+		{
+			singleVariableValues.add( (int) Math.pow(2, i));
+		}
+		for(int i=0;i<(Math.pow(2,totalVariables));i++)
+		{
+			int quality = 0;
+			if (singleVariableValues.contains(i))
+				quality = GetQualityForAgent(LogBase2(i));
+			String line = "F" + String.format("%0"+totalVariables+"d", Integer.parseInt(Integer.toString(i, 2)));
+			f.append(SpaceOut(line) + " " + quality);//Don't want quality to be spaced out
 			f.append(System.lineSeparator());
 		}
-		return f.toString();
+		/*//if (totalVariables)
+		{
+			
+			
+			
+			f.append(prefixBuiltSoFar + " ");
+			f.append("0");
+			numberOfOnes = numberOfOnes + 0;
+			if (numberOfOnes!=1) f.append(" 0");//schedule quality is also zero for this case
+			else f.append(" " + quality);
+			
+			
+			f.append("F");
+			f.append(prefixBuiltSoFar + " ");
+			f.append("1");
+			numberOfOnes = numberOfOnes + 1;
+			
+			if (numberOfOnes!=1) f.append(" 0");//schedule quality is also zero for this case
+			else f.append(" " + quality);
+			f.append(System.lineSeparator());
+		}
+		else
+		{
+			GenerateLines(currentVariableRepresentingAgentName+1, totalVariables, prefixBuiltSoFar + " 0", f, numberOfOnes+0);
+			GenerateLines(currentVariableRepresentingAgentName+1, totalVariables, prefixBuiltSoFar + " 1", f, numberOfOnes+1);
+		}
+		*/
 	}
 	
 	@Override
