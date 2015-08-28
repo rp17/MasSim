@@ -138,7 +138,7 @@ public class MaxSumCalculator {
 	{
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
-			if (agentVariable==ql.agentVariableId)
+			if (agentVariable==(this.scheduleQualities.size() - 1 - ql.agentVariableId))//compare with inverted agent index because shorted decimal number points to first agent but should point to last
 			{
 				return ql.incremental;
 			}
