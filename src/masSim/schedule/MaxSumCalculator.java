@@ -24,12 +24,36 @@ public class MaxSumCalculator {
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
-	public String GetBestAgentFromMaxSum()
+	public String GetBestAgent()
 	{
 		String selectedAgent = "";
-		//Commenting out maxsum calculation, to do a manual one for now.
+		ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
+		boolean compareIdleAgentsOnly = false;
+		for(ScheduleQualities ql : this.scheduleQualities)
+		{
+			
+			if (!compareIdleAgentsOnly && ql.base==0)
+			{
+				//Found an idle agent, so this agent must be given preference over non idle ones
+				compareIdleAgentsOnly = true;
+			}
+		}
+		for(ScheduleQualities ql : this.scheduleQualities)
+		{
+			if (compareIdleAgentsOnly)
+			{
+				if (ql.base!=0)
+					scheduleQualities.add(ql);
+			}
+			else
+				scheduleQualities.add(ql);
+		}
+		//If all are idle, then add all
+		if (scheduleQualities.size()==0)
+			scheduleQualities.addAll(this.scheduleQualities);
+		
 		test.Main jmaxMain = new test.Main();
-		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.toString());
+		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.BuildMaxsumInput(scheduleQualities));
 		for(SimpleEntry<String,String> ent : result)
 		{
 			if (ent.getValue().equals("1"))
@@ -40,7 +64,7 @@ public class MaxSumCalculator {
 		return this.agentsIndex.get(Integer.parseInt(selectedAgent));
 	}
 	
-	public String GetBestAgent()
+	public String GetBestAgent1()
 	{
 		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
@@ -102,10 +126,10 @@ public class MaxSumCalculator {
 		b.append(line + System.lineSeparator());
 	}
 	
-	private String GetVariablesBlock()
+	private String GetVariablesBlock(ArrayList<ScheduleQualities> scheduleQualities)
 	{
 		StringBuilder variables = new StringBuilder();
-		for(ScheduleQualities ql : this.scheduleQualities)
+		for(ScheduleQualities ql : scheduleQualities)
 		{
 			//Number of agents (maxsum agent, not rover agents) is fixed, 
 			//as well as variable states i.e. 2, assign task or not assign task
@@ -115,10 +139,10 @@ public class MaxSumCalculator {
 	}
 	
 	
-	private String GetFunctionsBlock()
+	private String GetFunctionsBlock(ArrayList<ScheduleQualities> scheduleQualities)
 	{
 		StringBuilder f = new StringBuilder();
-		int totalVariables = this.scheduleQualities.size();
+		int totalVariables = scheduleQualities.size();
 		
 		String c = "CONSTRAINT 0 1";
 		for(int i = 0; i<totalVariables; i++)
@@ -128,17 +152,17 @@ public class MaxSumCalculator {
 		AddLine(f, c);
 		
 		
-		GenerateLines(0, totalVariables, "", f, 0);
+		GenerateLines(0, totalVariables, "", f, 0, scheduleQualities);
 		
 		
 		return f.toString();
 	}
 	
-	private int GetQualityForAgent(int agentVariable)
+	private int GetQualityForAgent(int agentVariable, ArrayList<ScheduleQualities> scheduleQualities)
 	{
-		for(ScheduleQualities ql : this.scheduleQualities)
+		for(ScheduleQualities ql : scheduleQualities)
 		{
-			if (agentVariable==(this.scheduleQualities.size() - 1 - ql.agentVariableId))//compare with inverted agent index because shorted decimal number points to first agent but should point to last
+			if (agentVariable==(scheduleQualities.size() - 1 - ql.agentVariableId))//compare with inverted agent index because shorted decimal number points to first agent but should point to last
 			{
 				return ql.incremental;
 			}
@@ -164,7 +188,7 @@ public class MaxSumCalculator {
 	}
 	
 	private void GenerateLines(int currentVariableRepresentingAgentName, int totalVariables, String prefixBuiltSoFar, 
-			StringBuilder f, int numberOfOnes)
+			StringBuilder f, int numberOfOnes, ArrayList<ScheduleQualities> scheduleQualities)
 	{
 		List<Integer> singleVariableValues = new ArrayList<Integer>();
 		for(int i=0;i<totalVariables;i++)
@@ -175,7 +199,7 @@ public class MaxSumCalculator {
 		{
 			int quality = 0;
 			if (singleVariableValues.contains(i))
-				quality = GetQualityForAgent(LogBase2(i));
+				quality = GetQualityForAgent(LogBase2(i), scheduleQualities);
 			String line = "F" + String.format("%0"+totalVariables+"d", Integer.parseInt(Integer.toString(i, 2)));
 			f.append(SpaceOut(line) + " " + quality);//Don't want quality to be spaced out
 			f.append(System.lineSeparator());
@@ -209,13 +233,13 @@ public class MaxSumCalculator {
 		*/
 	}
 	
-	@Override
-	public String toString()
+
+	public String BuildMaxsumInput(ArrayList<ScheduleQualities> scheduleQualities)
 	{
 		StringBuilder cop = new StringBuilder();
 		AddLine(cop,"AGENT 1");
-		cop.append(GetVariablesBlock());
-		cop.append(GetFunctionsBlock());
+		cop.append(GetVariablesBlock(scheduleQualities));
+		cop.append(GetFunctionsBlock(scheduleQualities));
 		return cop.toString();
 	}
 }
