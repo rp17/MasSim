@@ -42,7 +42,7 @@ public class MaxSumCalculator {
 		{
 			if (compareIdleAgentsOnly)
 			{
-				if (ql.base!=0)
+				if (ql.base==0)
 					scheduleQualities.add(ql);
 			}
 			else
@@ -61,6 +61,8 @@ public class MaxSumCalculator {
 				selectedAgent = ent.getKey().replace("NodeVariable_", "");
 			}
 		}
+		if (selectedAgent=="")
+			return null;
 		return this.agentsIndex.get(Integer.parseInt(selectedAgent));
 	}
 	
