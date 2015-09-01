@@ -30,8 +30,7 @@ public class MaxSumCalculator {
 		ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
 		boolean compareIdleAgentsOnly = false;
 		for(ScheduleQualities ql : this.scheduleQualities)
-		{
-			
+		{			
 			if (!compareIdleAgentsOnly && ql.base==0)
 			{
 				//Found an idle agent, so this agent must be given preference over non idle ones
@@ -66,7 +65,9 @@ public class MaxSumCalculator {
 		return this.agentsIndex.get(Integer.parseInt(selectedAgent));
 	}
 	
-	public String GetBestAgent1()
+	/*
+	 * This is the old method which does not use maxsum
+	 * public String GetBestAgentSimpleWithoutMaxSum()
 	{
 		int maxImprovement = -9999999;
 		ScheduleQualities selectedQuality = null;
@@ -98,7 +99,7 @@ public class MaxSumCalculator {
 			}
 		}
 		return this.agentsIndex.get(selectedQuality.agentVariableId);
-	}
+	}*/
 	
 	public String getTaskName()
 	{
