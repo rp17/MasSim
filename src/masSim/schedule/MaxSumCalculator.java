@@ -14,9 +14,10 @@ public class MaxSumCalculator {
 	private String negotiatedTaskName = "";
 	private int numberOfAgentsInNegotiation = 0;
 	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
-	private class ScheduleQualities {public int agentVariableId; public int base; public int incremental;}
 	private ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
+	private class ScheduleQualities {public int agentVariableId; public int base; public int incremental;}
 	int agentsIdIndex = 0;
+	BooleanOptimizationCalculator booleanOptimizer = new BooleanOptimizationCalculator();
 	
 	public MaxSumCalculator(String negotiatedTaskName, int numberOfAgentsBeingNegotiatedWith)
 	{
@@ -237,6 +238,9 @@ public class MaxSumCalculator {
 	}
 	
 
+	
+	
+	//Deprecated in favor of BuildPseudoBooleanOptimizationInput
 	public String BuildMaxsumInput(ArrayList<ScheduleQualities> scheduleQualities)
 	{
 		StringBuilder cop = new StringBuilder();

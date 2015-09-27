@@ -38,7 +38,7 @@ public class SimWorld {
 		//Initialize two agents, and specify their initial positions
 		mq.SubscribeForAgent(RavenUI.schedulingEventListenerName);//GUI application simulates as a listening agent to catch events
 		agentPolice = new Agent("Police", true, 40, 300, mq);
-		agentAmbulance = new Agent("Ambulance", false, 40, 100, mq);
+		agentAmbulance = new Agent("Ambulance", false, 30, 100, mq);
 		agentPolice.AddChildAgent(agentAmbulance);
 		agents.add(agentPolice);
 		agents.add(agentAmbulance);
