@@ -30,8 +30,8 @@ import masSim.taems.Task;
 public class TaskRepository {
 	
 	boolean debugFlag = true;
-	String repositoryFolderPath = "";
-	Map<String,Task> taskDefinitions;
+	public String repositoryFolderPath = "";
+	public Map<String,Task> taskDefinitions;
 	
 	public TaskRepository()
 	{
@@ -67,9 +67,9 @@ public class TaskRepository {
 				}
 			}
 		} 
-		catch (IOException e) {}
-		catch(ParserConfigurationException e){}
-		catch(SAXException e){}
+		catch (IOException e) {System.out.print(e);}
+		catch(ParserConfigurationException e){System.out.print(e);}
+		catch(SAXException e){System.out.print(e);}
 		return null;	
 	}
 	
