@@ -30,6 +30,7 @@ public class MaxSumCalculator {
 	
 	public String GetBestAgent()
 	{
+		Map<Integer,String> localAgentsIndex = new HashMap<Integer,String>();
 		String selectedAgent = "";
 		ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
 		boolean compareIdleAgentsOnly = false;
@@ -41,19 +42,26 @@ public class MaxSumCalculator {
 				compareIdleAgentsOnly = true;
 			}
 		}
+		int newZeroBasedIndexForLocalSanitizedAgentList = 0;
 		for(ScheduleQualities ql : this.scheduleQualities)
 		{
 			if (compareIdleAgentsOnly)
 			{
-				if (ql.base==0)
+				if (ql.base==0){
 					scheduleQualities.add(ql);
+					localAgentsIndex.put(newZeroBasedIndexForLocalSanitizedAgentList++, this.agentsIndex.get(ql.agentVariableId));
+				}
 			}
-			else
+			else{
 				scheduleQualities.add(ql);
+				localAgentsIndex.put(newZeroBasedIndexForLocalSanitizedAgentList++, this.agentsIndex.get(ql.agentVariableId));
+			}
 		}
 		//If all are idle, then add all
-		if (scheduleQualities.size()==0)
+		if (scheduleQualities.size()==0){
 			scheduleQualities.addAll(this.scheduleQualities);
+			localAgentsIndex = this.agentsIndex;
+		}
 		
 		//test.Main jmaxMain = new test.Main();
 		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.BuildMaxsumInput(scheduleQualities));
@@ -78,7 +86,7 @@ public class MaxSumCalculator {
 		//if (selectedAgent=="")
 		//	return null;
 		//return this.agentsIndex.get(Integer.parseInt(selectedAgent));
-		return this.agentsIndex.get(result-1);
+		return localAgentsIndex.get(result);
 	}
 	
 	/*

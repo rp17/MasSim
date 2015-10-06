@@ -1,10 +1,10 @@
-<Taems>
+<Taems><!-- x=right, y=down-->
 	<Task id="T1" name="PickAndDrop" qaf="SeqSum" >
-		<Method id="A1M1T1" name="PickFromHouse" Quality="500" Duration="10" XCoord="250" YCoord="100"></Method>
-		<!--<Method id="A1M2T1" name="DropToHospital" Quality="500" Duration="10" XCoord="100" YCoord="100"></Method>-->
+		<Method id="A1M1T1" name="PickFromHouse" Quality="500" Duration="10" XCoord="250" YCoord="400"></Method>
+		<Method id="A1M2T1" name="DropToHospital" Quality="500" Duration="10" XCoord="500" YCoord="350"></Method>
 	</Task>
 	<Task id="T2" name="Visit1" qaf="SeqSum" >
-		<Method id="A1M1T2" name="PickFromHospital" Quality="500" Duration="10" XCoord="350" YCoord="150"></Method>
+		<Method id="A1M1T2" name="VisitPlace" Quality="500" Duration="10" XCoord="400" YCoord="150"></Method>
 	</Task>
 	<!--<Task id="T3" name="Patrol" qaf="SumAll" recurring="true" >
 		<Method id="A2M1T3" name="PatrolPointA" Quality="500" Duration="10" XCoord="100" YCoord="300"></Method>

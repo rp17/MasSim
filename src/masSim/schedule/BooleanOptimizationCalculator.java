@@ -120,7 +120,7 @@ public class BooleanOptimizationCalculator implements ILogAble {
 		} catch (ParseFormatException | IOException | ContradictionException e) {
 			e.printStackTrace();
 		}
-		return retValue;
+		return retValue-1;
 	}
 	
 	@Override
