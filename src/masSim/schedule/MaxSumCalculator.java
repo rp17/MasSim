@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.AbstractMap.SimpleEntry;
 
 import raven.Main;
@@ -15,7 +19,6 @@ public class MaxSumCalculator {
 	private int numberOfAgentsInNegotiation = 0;
 	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
 	private ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
-	private class ScheduleQualities {public int agentVariableId; public int base; public int incremental;}
 	int agentsIdIndex = 0;
 	BooleanOptimizationCalculator booleanOptimizer = new BooleanOptimizationCalculator();
 	
@@ -52,18 +55,30 @@ public class MaxSumCalculator {
 		if (scheduleQualities.size()==0)
 			scheduleQualities.addAll(this.scheduleQualities);
 		
-		test.Main jmaxMain = new test.Main();
-		ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.BuildMaxsumInput(scheduleQualities));
-		for(SimpleEntry<String,String> ent : result)
+		//test.Main jmaxMain = new test.Main();
+		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.BuildMaxsumInput(scheduleQualities));
+		String fileInput = this.booleanOptimizer.BuildOPBInputSingle(scheduleQualities);
+		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+	        new FileOutputStream(filename), "US-ASCII"))) {
+			writer.write(fileInput);
+		}
+		catch(Exception ex)
+		{
+			System.out.print(ex);
+		}
+		int result = this.booleanOptimizer.Solve(filename);
+		/*for(SimpleEntry<String,String> ent : result)
 		{
 			if (ent.getValue().equals("1"))
 			{
 				selectedAgent = ent.getKey().replace("NodeVariable_", "");
 			}
-		}
-		if (selectedAgent=="")
-			return null;
-		return this.agentsIndex.get(Integer.parseInt(selectedAgent));
+		}*/
+		//if (selectedAgent=="")
+		//	return null;
+		//return this.agentsIndex.get(Integer.parseInt(selectedAgent));
+		return this.agentsIndex.get(result-1);
 	}
 	
 	/*

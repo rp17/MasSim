@@ -395,7 +395,7 @@ public class RavenGame {
 		return true;
 	}
 
-	protected void addBots(int numBotsToAdd) {
+	protected synchronized void addBots(int numBotsToAdd) {
 		Log.info("game", "Adding " + numBotsToAdd + " bots to the map");
 		while (numBotsToAdd-- > 0) {
 			// create a bot. (its position is irrelevant at this point because
@@ -416,7 +416,7 @@ public class RavenGame {
 		}
 	}
 
-	protected void addNetNode(INetNode bot){
+	protected synchronized void addNetNode(INetNode bot){
 		Log.info("game", "Adding " + bot.getName() + " bot to the map");
 		// switch the default steering behaviors on
 		bot.getSteering().wallAvoidanceOn();
@@ -808,7 +808,7 @@ public class RavenGame {
 	public boolean addRoverBotAt(Vector2D pos, String name) {
 		return addRoverBotAt(pos, name, true);
 	}
-	public boolean addRoverBotAt(Vector2D pos, String name, boolean start) {
+	public synchronized boolean addRoverBotAt(Vector2D pos, String name, boolean start) {
 		boolean available = true;
 		for (IRavenBot other : bots) {
 			if (pos.distance(other.pos()) < other.getBRadius()) {

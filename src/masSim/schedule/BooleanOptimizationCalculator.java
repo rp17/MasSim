@@ -27,6 +27,18 @@ public class BooleanOptimizationCalculator implements ILogAble {
 	Map<String,int[]> dictionary = new HashMap<String, int[]>();
 	private String log = "";
 	
+	public String BuildOPBInputSingle(ArrayList<ScheduleQualities> scheduleQualities)
+	{
+		ArrayList<AgentScheduleQualities> aqlList = new ArrayList<AgentScheduleQualities>();
+		for(ScheduleQualities sq : scheduleQualities)
+		{
+			AgentScheduleQualities aql = new AgentScheduleQualities(sq.agentVariableId);
+			aql.TaskQualities.add(new TaskScheduleQualities(0,sq.base, sq.incremental));
+			aqlList.add(aql);
+		}
+		return BuildOPBInput(aqlList);
+	}
+	
 	public String BuildOPBInput(ArrayList<AgentScheduleQualities> scheduleQualities)
 	{	
 		StringBuilder opb = new StringBuilder();
@@ -34,7 +46,7 @@ public class BooleanOptimizationCalculator implements ILogAble {
 		if (numberOfAgents<=0)
 			return "";
 		int numberOfTasks = scheduleQualities.get(0).TaskQualities.size();//Assuming all agents report qualities equally for all tasks
-		opb.append(  String.format("* #variable= %1$s #constraint= %2$s\n", numberOfAgents * numberOfTasks, numberOfTasks));
+		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", numberOfAgents * numberOfTasks, numberOfTasks, System.lineSeparator()));
 		opb.append("min:");
 		int i = 1;
 		for(AgentScheduleQualities ql : scheduleQualities)
@@ -46,10 +58,16 @@ public class BooleanOptimizationCalculator implements ILogAble {
 				mapping[TASKID] = tl.TaskId;
 				String variableName = "x" + i++;
 				dictionary.put(variableName,mapping);
-				opb.append(" -" + tl.diff() + " " + variableName);//- sign to convert min function to max
+				int diff = tl.diff();
+				if (diff>0)//- sign to convert min function to max
+					opb.append(" -" + tl.diff() + " " + variableName);
+				else if (diff<0)
+					opb.append(" " + Math.abs(diff) + " " + variableName);
+				else
+					opb.append(" " + diff + " " + variableName);
 			}
 		}
-		opb.append(";\n");
+		opb.append(";" + System.lineSeparator());
 		String[] constraints = new String[numberOfTasks];
 		for(int j=1;j<=numberOfTasks;j++)
 		{
@@ -65,13 +83,14 @@ public class BooleanOptimizationCalculator implements ILogAble {
 		}
 		for(int j=1;j<=numberOfTasks;j++)
 		{
-			opb.append(constraints[j-1] + "= 1;\n");
+			opb.append(constraints[j-1] + "= 1;" + System.lineSeparator());
 		}
 		return opb.toString();
 	}
 	
-	public void Solve(String problemName)//Convert to problem obp content string instead of file name
+	public int Solve(String problemName)//Convert to problem obp content string instead of file name
 	{
+		int retValue = 0;
 		try {
 			ASolverFactory<IPBSolver> factory = SolverFactory.instance();
 			//setLauncherMode();
@@ -94,11 +113,14 @@ public class BooleanOptimizationCalculator implements ILogAble {
 			int[] result = optproblem.model();
 			for(int i=0;i<result.length;i++)
 			{
+				if (result[i]>0)
+					retValue = result[i];
 				out.println(result[i]);
 			}
 		} catch (ParseFormatException | IOException | ContradictionException e) {
 			e.printStackTrace();
 		}
+		return retValue;
 	}
 	
 	@Override

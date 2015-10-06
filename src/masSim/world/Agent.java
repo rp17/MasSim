@@ -423,6 +423,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public void run() {
+		Main.Message(true, "Executing agent");
 		fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
 		RunSchedular();
 		status=Status.PROCESSNG;

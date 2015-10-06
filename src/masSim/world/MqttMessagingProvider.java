@@ -38,7 +38,7 @@ import java.util.Enumeration;
 
 public class MqttMessagingProvider implements MqttCallback {
 
-	private boolean debugFlag = false;
+	private boolean debugFlag = true;
 	private boolean simulationMode = true;
 	private String baseTopic;
 	private int qos;
