@@ -105,6 +105,9 @@ public class BooleanOptimizationCalculator implements ILogAble {
 			long beginTime = System.currentTimeMillis();
 			
 			ILauncherMode.OPTIMIZATION.solve(problem, reader, this, out, beginTime);
+			
+			System.out.println( "Solver took " + (System.currentTimeMillis() - beginTime) + " millseconds");
+			
 			if (!optproblem.hasNoObjectiveFunction()) {
 				String objvalue;
 				objvalue = optproblem.getObjectiveValue().toString();

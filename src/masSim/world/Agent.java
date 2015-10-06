@@ -344,6 +344,11 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			flagScheduleRecalculateRequired = true;
 			status=Status.PROCESSNG;
 		}
+		//TODO Get siblings for exactly one methods
+		//for(String m : this.taskRepository.GetSiblingTasks(methodName))
+		//{
+			//this.mq.PublishMessage(RavenUI.schedulingEventListenerName,SchedulingCommandType.DISPLAYREMOVEMETHOD, new SchedulingEventParams().AddMethodId(m).AddXCoord(currentMethod.x).AddYCoord(currentMethod.y).toString());
+		//}
 	}
 	
 	public void fireSchedulingEvent(String destinationAgentId, SchedulingCommandType type, String subjectAgentId, String methodId, double x2, double y2) {

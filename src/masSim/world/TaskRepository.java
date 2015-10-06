@@ -44,6 +44,25 @@ public class TaskRepository {
 		this.taskDefinitions= new HashMap<String,Task>();
 	}
 	
+	public String[] GetSiblingTasks(String methodName)
+	{
+		String[] result = null;
+		for(Task t: this.taskDefinitions.values())
+		{
+			if (t.getQAF() instanceof ExactlyOneQAF)
+			{
+				ArrayList<Method> methods = t.GetMethods();
+				int i = 0;
+				for(Method m : methods)
+				{
+					result[i++] = m.label;
+				}
+				return result;
+			}
+		}
+		return null;
+	}
+	
 	public Task ReadTaskDescriptions(String fileName)
 	{
 		try {

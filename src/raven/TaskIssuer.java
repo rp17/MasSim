@@ -9,7 +9,9 @@ import java.util.List;
 import masSim.schedule.SchedulingCommandType;
 import masSim.schedule.SchedulingEvent;
 import masSim.schedule.SchedulingEventListener;
+import masSim.taems.Task;
 import masSim.world.MqttMessagingProvider;
+import masSim.world.TaskRepository;
 
 public class TaskIssuer implements Runnable, SchedulingEventListener {
 
@@ -23,8 +25,16 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		mq = MqttMessagingProvider.GetMqttProvider();
 		mq.SubscribeForAgent(getName());
 		//Create list of tasks to be executed in a loop
-		MasterTaskList.add("Police,NEGOTIATE,::::PickAndDrop");
-		MasterTaskList.add("Police,NEGOTIATE,::::Visit1");
+		
+		TaskRepository repository = new TaskRepository();
+		repository.repositoryFolderPath = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\";
+		repository.ReadTaskDescriptions("TaskDetails.xml");
+		for(Task t : repository.taskDefinitions.values())
+		{
+			MasterTaskList.add("Police,NEGOTIATE,::::" + t.label);
+		}
+		//MasterTaskList.add("Police,NEGOTIATE,::::PickAndDrop");
+		//MasterTaskList.add("Police,NEGOTIATE,::::Visit1");
 		//MasterTaskList.add("Police,NEGOTIATE,::::Patrol");
 		//MasterTaskList.add("Police,NEGOTIATE,::::RespondToAccident");
 	}
