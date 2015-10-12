@@ -1,5 +1,12 @@
 <Taems>
-<Task id="T1" name="T1" qaf="SumAll" ><Method id="M1" name="M1" Quality="500" Duration="10" XCoord="332" YCoord="122"></Method></Task>
-<Task id="T2" name="T2" qaf="SumAll" ><Method id="M2" name="M2" Quality="500" Duration="10" XCoord="253" YCoord="47"></Method></Task>
-<Task id="T3" name="T3" qaf="SumAll" ><Method id="M3" name="M3" Quality="500" Duration="10" XCoord="15" YCoord="134"></Method></Task>
+<Task id="T1" name="T1" qaf="SumAll" ><Method id="M1" name="M1" Quality="500" Duration="10" XCoord="580" YCoord="380"></Method></Task>
+<Task id="T2" name="T2" qaf="SumAll" ><Method id="M2" name="M2" Quality="500" Duration="10" XCoord="707" YCoord="254"></Method></Task>
+<Task id="T3" name="T3" qaf="SumAll" ><Method id="M3" name="M3" Quality="500" Duration="10" XCoord="505" YCoord="85"></Method></Task>
+<Task id="T4" name="T4" qaf="SumAll" ><Method id="M4" name="M4" Quality="500" Duration="10" XCoord="239" YCoord="395"></Method></Task>
+<Task id="T5" name="T5" qaf="SumAll" ><Method id="M5" name="M5" Quality="500" Duration="10" XCoord="400" YCoord="269"></Method></Task>
+<Task id="T6" name="T6" qaf="SumAll" ><Method id="M6" name="M6" Quality="500" Duration="10" XCoord="416" YCoord="168"></Method></Task>
+<Task id="T7" name="T7" qaf="SumAll" ><Method id="M7" name="M7" Quality="500" Duration="10" XCoord="113" YCoord="14"></Method></Task>
+<Task id="T8" name="T8" qaf="SumAll" ><Method id="M8" name="M8" Quality="500" Duration="10" XCoord="314" YCoord="412"></Method></Task>
+<Task id="T9" name="T9" qaf="SumAll" ><Method id="M9" name="M9" Quality="500" Duration="10" XCoord="280" YCoord="182"></Method></Task>
+<Task id="T10" name="T10" qaf="SumAll" ><Method id="M10" name="M10" Quality="500" Duration="10" XCoord="313" YCoord="69"></Method></Task>
 </Taems>

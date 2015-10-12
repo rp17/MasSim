@@ -32,7 +32,7 @@ public class Method extends Node implements IMethod {
 	
 	public Method(String nm, double outcomeQuality, double outcomeDuration, double x2, double y2, int dl, ArrayList<Interrelationship> ir){
 		label = nm;
-		if (nm.contains("-")) Main.Message(this, true, "Error: Method name cannot contain a dash");
+		if (nm.contains("-")) Main.Message(this, this.debugFlag, "Error: Method name cannot contain a dash");
 		outcome = new Outcome(outcomeQuality, outcomeDuration, 0);
 		if (nm == StartingPoint) index = 1;
 		else if (nm == FinalPoint) index = 2;

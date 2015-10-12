@@ -20,7 +20,7 @@ import raven.TaskIssuer;
 
 public class Task extends Node {
 
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	private QAF qaf;
 	public Date earliest_start_time;
 	public Date deadline;

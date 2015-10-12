@@ -1,3 +1,4 @@
-* #variable= 1 #constraint= 1
-min: 210 x1;
-1 x1 = 1;
+* #variable= 4 #constraint= 2
+min: 35 x1 54 x2 52 x3 58 x4;
+1 x1 1 x3 = 1;
+1 x2 1 x4 = 1;

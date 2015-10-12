@@ -15,6 +15,7 @@ import masSim.world.TaskRepository;
 
 public class TaskIssuer implements Runnable, SchedulingEventListener {
 
+	private boolean debugFlag = false;
 	private List<String> MasterTaskList = new ArrayList<String>();
 	private List<String> TasksPendingCompletion = new ArrayList<String>();
 	private MqttMessagingProvider mq;
@@ -74,7 +75,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		TasksPendingCompletion.addAll(MasterTaskList);
 		for(String taskMessage : TasksPendingCompletion)
 		{
-			Main.Message(true, "[TaskIssuer 69] Issuing message " + taskMessage);
+			Main.Message(this.debugFlag, "[TaskIssuer 69] Issuing message " + taskMessage);
 			mq.PublishMessage(taskMessage);
 		}
 	}

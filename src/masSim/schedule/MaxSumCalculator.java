@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.util.AbstractMap.SimpleEntry;
 
 import raven.Main;
+import raven.MeasureTime;
 
 public class MaxSumCalculator {
 
@@ -28,8 +29,47 @@ public class MaxSumCalculator {
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
+	public String GetBestAgentPlain()
+	{
+		MeasureTime.Timer2.Start();
+		String selectedAgent = "";
+		int maxImprovement = -9999999;
+		ScheduleQualities selectedQuality = null;
+		boolean compareIdleAgentsOnly = false;
+		for(ScheduleQualities ql : this.scheduleQualities)
+		{
+			if (!compareIdleAgentsOnly && ql.base==0)
+			{
+				//Found an idle agent, so this agent must be given preference over non idle ones
+				compareIdleAgentsOnly = true;
+			}
+			int improvement = ql.incremental - ql.base;
+			if (improvement > maxImprovement)
+			{
+				if (compareIdleAgentsOnly)
+				{	
+					if (ql.base==0)
+					{
+						maxImprovement = improvement;
+						selectedQuality = ql;	
+					}
+				}
+				else
+				{
+					maxImprovement = improvement;
+					selectedQuality = ql;
+				}
+			}
+		}
+		MeasureTime.Timer2.Stop();
+		System.out.println("Plain Calculation Time " + MeasureTime.Timer2.GetTotal());
+		return this.agentsIndex.get(selectedQuality.agentVariableId);
+	}
+	
 	public String GetBestAgent()
 	{
+		Main.Message(this.debugFlag, "Current Timer value: " + MeasureTime.Timer1.GetTotal());
+		MeasureTime.Timer1.Start();
 		Map<Integer,String> localAgentsIndex = new HashMap<Integer,String>();
 		String selectedAgent = "";
 		ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
@@ -66,6 +106,7 @@ public class MaxSumCalculator {
 		//test.Main jmaxMain = new test.Main();
 		//ArrayList<SimpleEntry<String,String>> result = jmaxMain.CalculateMaxSumAssignments(this.BuildMaxsumInput(scheduleQualities));
 		String fileInput = this.booleanOptimizer.BuildOPBInputSingle(scheduleQualities);
+		MeasureTime.Timer1.Stop();
 		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
 	        new FileOutputStream(filename), "US-ASCII"))) {
@@ -75,6 +116,7 @@ public class MaxSumCalculator {
 		{
 			System.out.print(ex);
 		}
+		MeasureTime.Timer1.Start();
 		int result = this.booleanOptimizer.Solve(filename);
 		/*for(SimpleEntry<String,String> ent : result)
 		{
@@ -86,6 +128,8 @@ public class MaxSumCalculator {
 		//if (selectedAgent=="")
 		//	return null;
 		//return this.agentsIndex.get(Integer.parseInt(selectedAgent));
+		MeasureTime.Timer1.Stop();
+		System.out.println("Boolean Optimization Time: " + MeasureTime.Timer1.GetTotal());
 		return localAgentsIndex.get(result);
 	}
 	

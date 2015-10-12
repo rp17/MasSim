@@ -41,6 +41,7 @@ import raven.Main;
 public class RavenGame {
 	/** the current game map */
 	private RavenMap map;
+	private boolean debugFlag;
 
 	/** bots that inhabit the current map */
 	private ArrayList<IRavenBot> bots = new ArrayList<IRavenBot>();
@@ -798,7 +799,7 @@ public class RavenGame {
 		if (local.size()==0 && !methodName.equalsIgnoreCase(Method.FinalPoint))
 		{
 			waypointNamesForDebugging = "Possible Error: " + methodName + " not found in " + waypointNamesForDebugging + " by " + bot.name;
-			Main.Message(this, true, waypointNamesForDebugging);
+			Main.Message(this, this.debugFlag, waypointNamesForDebugging);
 		}
 		return local;
 	}

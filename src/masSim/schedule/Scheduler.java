@@ -19,7 +19,7 @@ import raven.utils.SchedulingLog;
 
 public class Scheduler implements Runnable {
 	
-	private boolean debugFlag = true;
+	private boolean debugFlag = false;
 	//Represents the start time when this schedule is being calculated, 
 	public static Date startTime = new Date();
 	
@@ -49,7 +49,7 @@ public class Scheduler implements Runnable {
 			if (schedule!=null)
 				this.agent.UpdateSchedule(schedule);
 			else
-				Main.Message(true, this.agent.getName() + " schedule came out to be null");
+				Main.Message(this.debugFlag, this.agent.getName() + " schedule came out to be null");
 		}
 	}
 		

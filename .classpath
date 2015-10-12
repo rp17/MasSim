@@ -25,7 +25,7 @@
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/GLPKSolverPack.jar"/>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/SCPSolver.jar"/>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/LPSOLVESolverPack.jar"/>
-	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.sat4j.core.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.sat4j.core.jar" sourcepath="lib/org.sat4j.core-src.jar"/>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.sat4j.core-src.jar"/>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/javailp-1.2a.jar"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
@@ -34,5 +34,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.ow2.sat4j.pb-2.3.4.jar"/>
+	<classpathentry kind="lib" path="E:/EclipseWorkspace/RoverSim/lib/org.sat4j.pb-src.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

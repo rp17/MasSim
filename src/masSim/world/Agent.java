@@ -32,8 +32,8 @@ import raven.utils.SchedulingLog;
 
 public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventListener, SchedulingEventListener, Runnable{
 
-	private boolean debugFlag = true;
-	private boolean errorFlag = true;
+	private boolean debugFlag = false;
+	private boolean errorFlag = false;
 	private static int GloballyUniqueAgentId = 1;
 	private int code;
 	private Schedule currentSchedule = new Schedule();
@@ -101,7 +101,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public Agent(int newCode, String label, boolean isManagingAgent, int x, int y){
 		this.code = newCode;
 		this.label = label;
-		if (label.contains("-")) Main.Message(this, true, "Error: Agent name cannot contain a dash");
+		if (label.contains("-")) Main.Message(this, this.debugFlag, "Error: Agent name cannot contain a dash");
 		taskInd = 0;
 		status = Status.EMPTY;
 		flagScheduleRecalculateRequired = true;
@@ -123,7 +123,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		Main.Message(this, debugFlag, "[Scheduler 62] Added Pending task " + taskName + " to Scheduler " + this.label);
 		Task task = this.taskRepository.GetTask(taskName);
-		if (task==null) Main.Message(true, "Error: Task " + taskName + " not found in tasks repository");
+		if (task==null) Main.Message(this.debugFlag, "Error: Task " + taskName + " not found in tasks repository");
 		task.AssignAgent(this);
 		RegisterChildrenWithUI(task);
 		this.pendingTasks.add(task);
@@ -164,7 +164,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				.AddTaskName(task.getLabel())
 				.AddAgentId(ag.getName())
 				.AddOriginatingAgent(this.label);
-				Main.Message(this, true, ag.getName() + " asked to calculate cost for " + task.label);
+				Main.Message(this, this.debugFlag, ag.getName() + " asked to calculate cost for " + task.label);
 				SchedulingEvent event = new SchedulingEvent(ag.getName(), SchedulingCommandType.CALCULATECOST, params);
 				mq.PublishMessage(event);
 			}
@@ -192,6 +192,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			if (calc.IsDataCollectionComplete())
 			{
 				String selectedAgentName = calc.GetBestAgent();
+				
+				//Diagnostic call -- Not impacting timers
+				String selectedAgentNamePlainMethod = calc.GetBestAgentPlain();
+				if (!selectedAgentName.equals(selectedAgentNamePlainMethod)) System.out.println("ERROR: Two methods are recommending different agents");
+				//Diangostic call end
+				
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddTaskName(taskName)
 				.AddAgentId(selectedAgentName);
@@ -217,7 +223,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		}
 		catch(Exception e)
 		{
-			Main.Message(this, true, e.getMessage() + " " + e.getStackTrace());
+			Main.Message(this, this.debugFlag, e.getMessage() + " " + e.getStackTrace());
 			return new int[]{0,0};
 		}	
 	}
@@ -366,7 +372,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void UpdateSchedule(Schedule newSchedule)
 	{
 		this.currentSchedule.Merge(newSchedule, this.completedMethods);
-		Main.Message(true, this.label + " updated schedule: " + this.currentSchedule.toString());
+		Main.Message(this.debugFlag, this.label + " updated schedule: " + this.currentSchedule.toString());
 	}
 	
 	private void executeNextTask() {
@@ -382,7 +388,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 						e = el.next();
 					else
 						return;
-					Main.Message(this, true, this.label +  " picked next task " + e.getName() + " " + e.hashCode() + " from schedule " + currentSchedule.hashCode());
+					Main.Message(this, this.debugFlag, this.label +  " picked next task " + e.getName() + " " + e.hashCode() + " from schedule " + currentSchedule.hashCode());
 					Method m = e.getMethod();
 					ExecuteTask(m);
 				}
@@ -428,7 +434,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 
 	@Override
 	public void run() {
-		Main.Message(true, "Executing agent");
+		Main.Message(this.debugFlag, "Executing agent");
 		fireSchedulingEvent(RavenUI.schedulingEventListenerName, SchedulingCommandType.DISPLAYADDAGENT, this.getName(), null, x, y);
 		RunSchedular();
 		status=Status.PROCESSNG;
@@ -453,7 +459,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			currentSchedule.Merge(scheduleUpdateEvent.Schedule, this.completedMethods);
 		else
 			currentSchedule = scheduleUpdateEvent.Schedule;
-		Main.Message(this, true, this.label + " schedule updated with tasks " + currentSchedule.toString());
+		Main.Message(this, this.debugFlag, this.label + " schedule updated with tasks " + currentSchedule.toString());
 	}
 
 	@Override

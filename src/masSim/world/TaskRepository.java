@@ -29,7 +29,7 @@ import masSim.taems.Task;
 
 public class TaskRepository {
 	
-	boolean debugFlag = true;
+	boolean debugFlag = false;
 	public String repositoryFolderPath = "";
 	public Map<String,Task> taskDefinitions;
 	
@@ -96,7 +96,7 @@ public class TaskRepository {
 	{
 		if (!this.taskDefinitions.containsKey(name))
 		{
-			Main.Message(true, "Possible Error: Task " + name + " not found in repository");
+			Main.Message(this.debugFlag, "Possible Error: Task " + name + " not found in repository");
 		}
 		return this.taskDefinitions.get(name);
 	}
