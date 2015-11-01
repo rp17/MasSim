@@ -13,22 +13,18 @@ import java.util.AbstractMap.SimpleEntry;
 import raven.Main;
 import raven.MeasureTime;
 
-public class MaxSumCalculator {
+public class MaxSumCalculator extends BestAgentCalculatorBase {
 
-	private boolean debugFlag = true;
-	private String instanceName = "";
-	private int numberOfAgentsInNegotiation = 0;
+	
 	//public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
-	private ArrayList<AgentScheduleQualities> agentScheduleQualities = new ArrayList<AgentScheduleQualities>();
+	
 	int agentsIdIndex = 0;
-	BooleanOptimizationCalculator booleanOptimizer = new BooleanOptimizationCalculator();
 	
-	public MaxSumCalculator(String instanceName, int numberOfAgentsBeingNegotiatedWith)
+	public MaxSumCalculator(String instanceName, int numberOfAgentsBeingNegotiatedWith, int numberOfTasks)
 	{
-		this.instanceName = instanceName;
-		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
+		super(instanceName,numberOfAgentsBeingNegotiatedWith, numberOfTasks);
 	}
-	
+	/*
 	public String GetBestAgentPlain()
 	{
 		MeasureTime.Timer2.Start();
@@ -64,8 +60,9 @@ public class MaxSumCalculator {
 		MeasureTime.Timer2.Stop();
 		System.out.println("Plain Calculation Time " + MeasureTime.Timer2.GetTotal());
 		return this.agentsIndex.get(selectedQuality.agentVariableId);
-	}
+	}*/
 	
+	/*
 	public String GetBestAgent()
 	{
 		Main.Message(this.debugFlag, "Current Timer value: " + MeasureTime.Timer1.GetTotal());
@@ -128,10 +125,10 @@ public class MaxSumCalculator {
 		//if (selectedAgent=="")
 		//	return null;
 		//return this.agentsIndex.get(Integer.parseInt(selectedAgent));
-		MeasureTime.Timer1.Stop();
+		/*MeasureTime.Timer1.Stop();
 		System.out.println("Boolean Optimization Time: " + MeasureTime.Timer1.GetTotal());
 		return localAgentsIndex.get(result[0]);
-	}
+	}*/
 	
 	/*
 	 * This is the old method which does not use maxsum
@@ -172,16 +169,6 @@ public class MaxSumCalculator {
 	public String getTaskName()
 	{
 		return this.instanceName;
-	}
-	
-	public boolean IsDataCollectionComplete()
-	{
-		return agentScheduleQualities.size()==this.numberOfAgentsInNegotiation;
-	}
-	
-	public void AddCostData(AgentScheduleQualities aql)
-	{
-		this.agentScheduleQualities.add(aql);
 	}
 	
 	private void AddLine(StringBuilder b, String line)

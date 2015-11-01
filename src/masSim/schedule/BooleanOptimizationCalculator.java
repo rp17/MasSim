@@ -1,9 +1,8 @@
 package masSim.schedule;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,25 +28,123 @@ import org.sat4j.specs.TimeoutException;
 import masSim.schedule.AgentScheduleQualities;
 import raven.MeasureTime;
 
-public class BooleanOptimizationCalculator implements ILogAble {
+public class BooleanOptimizationCalculator extends BestAgentCalculatorBase implements ILogAble {
 	private boolean debugFlag = false;
 	final int AGENTID = 0;
 	final int TASKID = 1;
 	private String log = "";
 	
-	public String BuildOPBInputSingle(ArrayList<ScheduleQualities> scheduleQualities)
+	public BooleanOptimizationCalculator(String instanceName, int numberOfAgents, int numberOfTasks)
 	{
-		ArrayList<AgentScheduleQualities> aqlList = new ArrayList<AgentScheduleQualities>();
-		for(ScheduleQualities sq : scheduleQualities)
-		{
-			AgentScheduleQualities aql = new AgentScheduleQualities(sq.agentVariableId);
-			//aql.TaskQualities.add(new TaskScheduleQualities(0,sq.base, sq.incremental));
-			aqlList.add(aql);
-		}
-		return null;//BuildOPBInput(aqlList);
+		super(instanceName, numberOfAgents, numberOfTasks);
 	}
 	
+	public String GetBestAgent()
+	{
+		Map<String, int[]> variableNameMappingToAgentTaskCombination = new HashMap<String, int[]>();
+		
+		String result = BuildOPBInput( this.agentScheduleQualities, variableNameMappingToAgentTaskCombination, this.numberOfTasksInNegotiation );
+		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+	        new FileOutputStream(filename), "US-ASCII"))) {
+			writer.write(result);
+		}
+		catch(Exception ex)
+		{
+			System.out.print(ex);
+		}
+		int[] result2 = Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");
+		List<Integer> resultList = new ArrayList<Integer>();
+		System.out.println(Arrays.toString(resultList.toArray()));
+		for(int r=0; r<result2.length; r++)
+		{
+			if (result2[r]>0) 
+			{
+				resultList.add(result2[r]);
+				int[] agentCombination = variableNameMappingToAgentTaskCombination.get("x" + result2[r]);
+			}
+			
+		}
+		return "";
+		//System.out.print(Arrays.toString(resultList.toArray()));
+	}
 	
+	public String BuildOPBInput(ArrayList<AgentScheduleQualities> input, Map<String, int[]> variableNameMappingToAgentTastCombination, int numberOfTasks)
+	{	
+		StringBuilder opb = new StringBuilder();
+				
+		int taskCombinationsSize = input.get(0).TaskQualities.size();
+		
+		//Get all unique agents
+		List<Integer> agentIds = new ArrayList<Integer>();
+		for(int i=0;i<input.size();i++)
+		{
+			agentIds.add(input.get(i).AgentVariableId);
+		}
+		int agentsSize = agentIds.size();
+				
+		Map<Integer,List<String>> constraintsPerTask = new HashMap<Integer, List<String>>();
+		
+		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", agentsSize * taskCombinationsSize, numberOfTasks, System.lineSeparator()));
+		opb.append("min:");
+		int i = 1;
+		String variableMappingCommentBlock = "* ";
+		for(int agent=0; agent<agentsSize; agent++)
+		{
+			int agentVariable = input.get(agent).AgentVariableId;
+			List<MultipleTaskScheduleQualities> qls = input.get(agent).TaskQualities;
+			for(int j=0;j<qls.size();j++)
+			{
+				int [] mapping = new int[2];
+				mapping[0] = agentVariable;
+				mapping[1] = j;
+				String variableName = "x" + i++;
+				variableNameMappingToAgentTastCombination.put(variableName,mapping);
+				
+				//Calculate quality for this combination
+				MultipleTaskScheduleQualities t = qls.get(j);
+				int quality = t.diff();
+				if (quality>0)//- sign to convert min function to max
+				{	
+					opb.append(" -" + quality + " " + variableName);
+				}
+				else if (quality<0)
+					opb.append(" " + Math.abs(quality) + " " + variableName);
+				else
+					opb.append(" " + quality + " " + variableName);
+				variableMappingCommentBlock += variableName + "=" + agentVariable + Arrays.toString(t.TaskIds.toArray()) + " ";
+				AddPBVariableToConstraintsList(constraintsPerTask, variableName, t.TaskIds);
+			}
+		}
+		opb.append(";" + System.lineSeparator());
+		opb.append(variableMappingCommentBlock + System.lineSeparator());
+		for(List<String> constraintsForATask : constraintsPerTask.values())
+		{
+			for(String str : constraintsForATask)
+			{
+				opb.append( "1 " + str + " "  );
+			}
+			opb.append( "= 1;" + System.lineSeparator() );
+		}
+		return opb.toString();
+	}
+	
+	private void AddPBVariableToConstraintsList(Map<Integer,List<String>> constraintsPerTask, String variable, List<Integer> tasksForThisVariable)
+	{
+		for(Integer _int : tasksForThisVariable)
+		{
+			if (constraintsPerTask.containsKey(_int))
+			{
+				constraintsPerTask.get(_int).add(variable);
+			}
+			else
+			{
+				List<String> arr = new ArrayList<String>();
+				arr.add(variable);
+				constraintsPerTask.put(_int, arr);
+			}
+		}
+	}
 	
 	public int[] SolveOptimizationProblem(ArrayList<AgentScheduleQualities> qualities)
 	{

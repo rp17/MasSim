@@ -1,6 +1,7 @@
 package masSim.world;
 
 import masSim.schedule.AgentScheduleQualities;
+import masSim.schedule.BooleanOptimizationCalculator;
 import masSim.schedule.IScheduleUpdateEventListener;
 import masSim.schedule.MaxSumCalculator;
 import masSim.schedule.MultipleTaskScheduleQualities;
@@ -46,7 +47,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	private boolean resetScheduleExecutionFlag = false;
 	private ArrayList<IAgent> agentsUnderManagement = null;
 	//ArrayList<MaxSumCalculator> negotiations = new ArrayList<MaxSumCalculator>();
-	MaxSumCalculator negotiations = new MaxSumCalculator("singleton",0);
+	BooleanOptimizationCalculator negotiations = new BooleanOptimizationCalculator("singleton",0,0);
 	private ConcurrentHashMap<String,String> completedMethods = new ConcurrentHashMap<String,String>();
 	private AgentMode mode;
 	public double x;
@@ -175,7 +176,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{
 		if (IsManagingAgent())
 		{
-			this.negotiations = new MaxSumCalculator(negotiationInstance,this.agentsUnderManagement.size()+1);//One additional for managing agent
+			this.negotiations = new BooleanOptimizationCalculator(negotiationInstance,this.agentsUnderManagement.size()+1, tasks.size());//One additional for managing agent
 			List<MultipleTaskScheduleQualities> costs = CalculateIncrementalQualitiesForTask(tasks);
 			AgentScheduleQualities aql = new AgentScheduleQualities(this.getAgentId(this.label));
 			aql.TaskQualities = costs;
@@ -208,7 +209,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	{	
 		if(IsManagingAgent()) {
 			//MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
-			MaxSumCalculator calc = this.negotiations;
+			BooleanOptimizationCalculator calc = this.negotiations;
 			if(calc == null) {
 				System.out.println("calc is null");
 			}
@@ -220,10 +221,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				String selectedAgentName = calc.GetBestAgent();
 				//TODO Asif revisit
 				//Diagnostic call -- Not impacting timers
-				String selectedAgentNamePlainMethod = calc.GetBestAgentPlain();
+				/*String selectedAgentNamePlainMethod = calc.GetBestAgentPlain();
 				if (!selectedAgentName.equals(selectedAgentNamePlainMethod)) System.out.println("ERROR: Two methods are recommending different agents");
 				//Diangostic call end
-				
+				*/
 				SchedulingEventParams params = new SchedulingEventParams()
 				.AddAgentId(selectedAgentName);
 				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);

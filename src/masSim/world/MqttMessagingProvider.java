@@ -167,7 +167,7 @@ public class MqttMessagingProvider implements MqttCallback {
 		}
 		else
 		{
-			PublishMessage(event);
+			ProcessArrivedMessage(event);
 		}
 	}
 	

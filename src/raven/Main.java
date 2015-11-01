@@ -16,8 +16,8 @@ public class Main {
 	private static RavenUI ui;
 	private static RavenGame game;
 	private static boolean debug = true;
-	public static int NumberOfTasks = 5;
-	public static int NumberOfAgents = 4;
+	public static int NumberOfTasks = 2;
+	public static int NumberOfAgents = 2;
 	
 	public static void Message(Object o, boolean flag, String message)
 	{
