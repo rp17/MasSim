@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import java.io.*;
@@ -32,7 +33,6 @@ public class BooleanOptimizationCalculator implements ILogAble {
 	private boolean debugFlag = false;
 	final int AGENTID = 0;
 	final int TASKID = 1;
-	Map<String,int[]> dictionary = new HashMap<String, int[]>();
 	private String log = "";
 	
 	public String BuildOPBInputSingle(ArrayList<ScheduleQualities> scheduleQualities)
@@ -41,63 +41,17 @@ public class BooleanOptimizationCalculator implements ILogAble {
 		for(ScheduleQualities sq : scheduleQualities)
 		{
 			AgentScheduleQualities aql = new AgentScheduleQualities(sq.agentVariableId);
-			aql.TaskQualities.add(new TaskScheduleQualities(0,sq.base, sq.incremental));
+			//aql.TaskQualities.add(new TaskScheduleQualities(0,sq.base, sq.incremental));
 			aqlList.add(aql);
 		}
-		return BuildOPBInput(aqlList);
+		return null;//BuildOPBInput(aqlList);
 	}
 	
-	public String BuildOPBInput(ArrayList<AgentScheduleQualities> scheduleQualities)
-	{	
-		StringBuilder opb = new StringBuilder();
-		int numberOfAgents = scheduleQualities.size();
-		if (numberOfAgents<=0)
-			return "";
-		int numberOfTasks = scheduleQualities.get(0).TaskQualities.size();//Assuming all agents report qualities equally for all tasks
-		opb.append(  String.format("* #variable= %1$s #constraint= %2$s%3$s", numberOfAgents * numberOfTasks, numberOfTasks, System.lineSeparator()));
-		opb.append("min:");
-		int i = 1;
-		for(AgentScheduleQualities ql : scheduleQualities)
-		{
-			for(TaskScheduleQualities tl : ql.TaskQualities)
-			{
-				int [] mapping = new int[2];
-				mapping[AGENTID] = ql.AgentVariableId;
-				mapping[TASKID] = tl.TaskId;
-				String variableName = "x" + i++;
-				dictionary.put(variableName,mapping);
-				int diff = tl.diff();
-				if (diff>0)//- sign to convert min function to max
-					opb.append(" -" + tl.diff() + " " + variableName);
-				else if (diff<0)
-					opb.append(" " + Math.abs(diff) + " " + variableName);
-				else
-					opb.append(" " + diff + " " + variableName);
-			}
-		}
-		opb.append(";" + System.lineSeparator());
-		String[] constraints = new String[numberOfTasks];
-		for(int j=1;j<=numberOfTasks;j++)
-		{
-			constraints[j-1] = "";
-		}
-		int index = 1;
-		for(int k=1;k<=numberOfAgents;k++)
-		{
-			for(int j=1;j<=numberOfTasks;j++)
-			{
-				constraints[j-1] += "1 x"+index++ + " ";
-			}	
-		}
-		for(int j=1;j<=numberOfTasks;j++)
-		{
-			opb.append(constraints[j-1] + "= 1;" + System.lineSeparator());
-		}
-		return opb.toString();
-	}
 	
-	public IOptimizationProblem SolveOptimizationProblem(ArrayList<AgentScheduleQualities> qualities)
+	
+	public int[] SolveOptimizationProblem(ArrayList<AgentScheduleQualities> qualities)
 	{
+		int[] result;
 		try 
 		{
 			int numberOfAgents = qualities.size();
@@ -118,7 +72,7 @@ public class BooleanOptimizationCalculator implements ILogAble {
 			int i = 1;
 			for(AgentScheduleQualities ql : qualities)
 			{
-				for(TaskScheduleQualities tl : ql.TaskQualities)
+				/*for(TaskScheduleQualities tl : ql.TaskQualities)
 				{
 					int [] mapping = new int[2];
 					mapping[AGENTID] = ql.AgentVariableId;
@@ -129,7 +83,7 @@ public class BooleanOptimizationCalculator implements ILogAble {
 					int diff = tl.diff() * -1;
 					objectiveCoeffs.push( BigInteger.valueOf(diff) );
 					objectiveVars.push(variableNumber);
-				}
+				}*/
 			}
 			IVecInt[] constraintCoeffs = new VecInt[numberOfTasks];
 			IVecInt[] constraintVars = new VecInt[numberOfTasks];
@@ -154,29 +108,37 @@ public class BooleanOptimizationCalculator implements ILogAble {
 				
 			}
 			solver.setObjectiveFunction(new ObjectiveFunction(objectiveVars,objectiveCoeffs));
-			//solver.isSatisfiable(new VecInt(), true);
 			IOptimizationProblem problem = (IOptimizationProblem)solver;
 			PrintWriter out = new PrintWriter(System.out, true);
-			long beginTime = System.currentTimeMillis();
-			ILauncherMode.OPTIMIZATION.solve(problem, null, this, out, beginTime);
-			return (IOptimizationProblem)problem;
+			long beginTime = 0;
+			long nano = System.nanoTime();
+			MeasureTime.Timer2 = new MeasureTime();
+			MeasureTime.Timer2.Start();
+			problem.isSatisfiable(new VecInt(), true);
+			//ILauncherMode.OPTIMIZATION.solve(problem, new OPBReader2012(solver), this, out, beginTime);
+			MeasureTime.Timer2.Stop();
+			//System.out.println("Boolean Solver (direct) Took (microseconds) " + MeasureTime.Timer2.GetTotal() );
+			if (false) throw new TimeoutException();
+			return problem.model();
 		} catch (ContradictionException e) {
+			e.printStackTrace();
+		} catch (TimeoutException e) {
 			e.printStackTrace();
 		}
 		return null;
 		
 	} 
 	
-	public int Solve(String problemName)//Convert to problem obp content string instead of file name
+	public int[] Solve(String problemName)//Convert to problem obp content string instead of file name
 	{
-		int retValue = 0;
+		int[] result = null;
 		try {
 			ASolverFactory<IPBSolver> factory = SolverFactory.instance();
 			
 			IPBSolver theSolver = factory.defaultSolver();
-			//theSolver.
 			theSolver = new PseudoOptDecorator(theSolver);
 			theSolver.setVerbose(true);
+			theSolver.setTimeoutMs(1000);
 			
 			OPBReader2012 reader = new OPBReader2012(theSolver);
 			IProblem problem = reader.parseInstance(problemName);
@@ -188,25 +150,19 @@ public class BooleanOptimizationCalculator implements ILogAble {
 			MeasureTime.Timer1 = new MeasureTime();
 			MeasureTime.Timer1.Start();
 			ILauncherMode.OPTIMIZATION.solve(problem, reader, this, out, beginTime);
-			
+			//problem.isSatisfiable(new VecInt(),true);
 			MeasureTime.Timer1.Stop();
-			System.out.println("Boolean Solver Took " + MeasureTime.Timer1.GetTotal());
+			System.out.println("Boolean Solver Took (microseconds) " + MeasureTime.Timer1.GetTotal());
 			if (!optproblem.hasNoObjectiveFunction()) {
 				String objvalue;
 				objvalue = optproblem.getObjectiveValue().toString();
 				if (true) System.out.println("FinaL" + objvalue);
 			}
-			int[] result = optproblem.model();
-			for(int i=0;i<result.length;i++)
-			{
-				if (result[i]>0)
-					retValue = result[i];
-				if (true) out.println(result[i]);
-			}
-		} catch (ParseFormatException | IOException | ContradictionException e) {
+			result = optproblem.model();
+		} catch (ParseFormatException | IOException | ContradictionException e) {// | TimeoutException
 			e.printStackTrace();
 		}
-		return retValue-1;
+		return result;
 	}
 	
 	@Override

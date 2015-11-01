@@ -1,6 +1,9 @@
 package masSim.schedule;
 
 import java.util.EventObject;
+import java.util.List;
+
+import masSim.taems.Task;
 
 public class SchedulingEvent {
 
@@ -8,6 +11,8 @@ public class SchedulingEvent {
 	public SchedulingCommandType commandType;
 	public SchedulingEventParams params;
 	public String rawMessage;
+	public List<MultipleTaskScheduleQualities> taskQualities;//Not serialized yet
+	public List<Task> tasks;//Not yet serialized
 	
 	public SchedulingEvent(String agentName, String commandType, String paramsRaw) {
 		this(agentName,SchedulingCommandType.valueOf(commandType),paramsRaw);

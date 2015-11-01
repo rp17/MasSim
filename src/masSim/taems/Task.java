@@ -27,6 +27,11 @@ public class Task extends Node {
 	public boolean isComplete = false;
 	public static Object Lock = new Object();
 	
+	public int GetIntId()
+	{
+		return Integer.parseInt(this.label.replaceAll("T", ""));
+	}
+	
 	public int GetUtility()
 	{
 		return 0;

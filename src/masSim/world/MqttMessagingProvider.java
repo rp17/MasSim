@@ -161,7 +161,14 @@ public class MqttMessagingProvider implements MqttCallback {
 	
 	public void PublishMessage(SchedulingEvent event)
 	{
-		PublishMessage(event.agentName, event.commandType, event.params.toString());
+		if (!simulationMode)
+		{
+			PublishMessage(event.agentName, event.commandType, event.params.toString());	
+		}
+		else
+		{
+			PublishMessage(event);
+		}
 	}
 	
 	public void PublishMessage(String messageString)
@@ -227,6 +234,11 @@ public class MqttMessagingProvider implements MqttCallback {
 	{
 		Main.Message(this, debugFlag, "Mqtt message received: " + message);
 		SchedulingEvent event = SchedulingEvent.Parse(message);
+		ProcessArrivedMessage(event);
+	}
+	
+	private void ProcessArrivedMessage(SchedulingEvent event)
+	{
 		//System.out.println("Message Recieved :" + event);
 		//Passing of events to individual listeners selectively is done because on a single machine, we cannot simulate
 		//the running of separate mqtt listeners in each agent thread, because the same TCP port number gets tied down.

@@ -29,15 +29,13 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		
 		TaskRepository repository = new TaskRepository();
 		repository.repositoryFolderPath = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\";
-		repository.ReadTaskDescriptions("TaskDetails.xml");
+		repository.ReadTaskDescriptions("TasksDetails.xml");
+		String tasks = "-";
 		for(Task t : repository.taskDefinitions.values())
 		{
-			MasterTaskList.add("Police,NEGOTIATE,::::" + t.label);
+			tasks += t.label + "-";
 		}
-		//MasterTaskList.add("Police,NEGOTIATE,::::PickAndDrop");
-		//MasterTaskList.add("Police,NEGOTIATE,::::Visit1");
-		//MasterTaskList.add("Police,NEGOTIATE,::::Patrol");
-		//MasterTaskList.add("Police,NEGOTIATE,::::RespondToAccident");
+		MasterTaskList.add("Police,NEGOTIATE,::::" + tasks);
 	}
 	
 	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus

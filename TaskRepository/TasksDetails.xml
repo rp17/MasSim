@@ -1,0 +1,7 @@
+<Taems>
+<Task id="T1" name="T1" qaf="SumAll" ><Method id="M1" name="M1" Quality="500" Duration="10" XCoord="526" YCoord="165"></Method></Task>
+<Task id="T2" name="T2" qaf="SumAll" ><Method id="M2" name="M2" Quality="500" Duration="10" XCoord="413" YCoord="259"></Method></Task>
+<Task id="T3" name="T3" qaf="SumAll" ><Method id="M3" name="M3" Quality="500" Duration="10" XCoord="339" YCoord="153"></Method></Task>
+<Task id="T4" name="T4" qaf="SumAll" ><Method id="M4" name="M4" Quality="500" Duration="10" XCoord="534" YCoord="157"></Method></Task>
+<Task id="T5" name="T5" qaf="SumAll" ><Method id="M5" name="M5" Quality="500" Duration="10" XCoord="263" YCoord="261"></Method></Task>
+</Taems>

@@ -16,16 +16,16 @@ import raven.MeasureTime;
 public class MaxSumCalculator {
 
 	private boolean debugFlag = true;
-	private String negotiatedTaskName = "";
+	private String instanceName = "";
 	private int numberOfAgentsInNegotiation = 0;
-	public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
-	private ArrayList<ScheduleQualities> scheduleQualities = new ArrayList<ScheduleQualities>();
+	//public Map<Integer,String> agentsIndex = new HashMap<Integer,String>();
+	private ArrayList<AgentScheduleQualities> agentScheduleQualities = new ArrayList<AgentScheduleQualities>();
 	int agentsIdIndex = 0;
 	BooleanOptimizationCalculator booleanOptimizer = new BooleanOptimizationCalculator();
 	
-	public MaxSumCalculator(String negotiatedTaskName, int numberOfAgentsBeingNegotiatedWith)
+	public MaxSumCalculator(String instanceName, int numberOfAgentsBeingNegotiatedWith)
 	{
-		this.negotiatedTaskName = negotiatedTaskName;
+		this.instanceName = instanceName;
 		this.numberOfAgentsInNegotiation = numberOfAgentsBeingNegotiatedWith;
 	}
 	
@@ -117,7 +117,7 @@ public class MaxSumCalculator {
 			System.out.print(ex);
 		}
 		MeasureTime.Timer1.Start();
-		int result = this.booleanOptimizer.Solve(filename);
+		int[] result = this.booleanOptimizer.Solve(filename);
 		/*for(SimpleEntry<String,String> ent : result)
 		{
 			if (ent.getValue().equals("1"))
@@ -130,7 +130,7 @@ public class MaxSumCalculator {
 		//return this.agentsIndex.get(Integer.parseInt(selectedAgent));
 		MeasureTime.Timer1.Stop();
 		System.out.println("Boolean Optimization Time: " + MeasureTime.Timer1.GetTotal());
-		return localAgentsIndex.get(result);
+		return localAgentsIndex.get(result[0]);
 	}
 	
 	/*
@@ -171,25 +171,17 @@ public class MaxSumCalculator {
 	
 	public String getTaskName()
 	{
-		return this.negotiatedTaskName;
+		return this.instanceName;
 	}
 	
 	public boolean IsDataCollectionComplete()
 	{
-		return scheduleQualities.size()==this.numberOfAgentsInNegotiation;
+		return agentScheduleQualities.size()==this.numberOfAgentsInNegotiation;
 	}
 	
-	public void AddCostData(String agentName, int base, int increment)
+	public void AddCostData(AgentScheduleQualities aql)
 	{
-		if (!agentsIndex.containsValue(agentName))
-		{
-			ScheduleQualities s = new ScheduleQualities();
-			s.agentVariableId = agentsIdIndex++;
-			s.base = base;
-			s.incremental = increment;
-			scheduleQualities.add(s);
-			this.agentsIndex.put(s.agentVariableId, agentName);
-		}
+		this.agentScheduleQualities.add(aql);
 	}
 	
 	private void AddLine(StringBuilder b, String line)

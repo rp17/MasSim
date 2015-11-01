@@ -34,14 +34,20 @@ public class SimWorld {
 	public static ArrayList<IAgent> CreateAgents(MqttMessagingProvider mq)
 	{
 		ArrayList<IAgent> agents = new ArrayList<IAgent>();
-		IAgent agentPolice = new Agent("Police", true, 200, 500, mq);//right, down from top
-		IAgent agentAmbulance = new Agent("Ambulance", false, 800, 500, mq);
-		IAgent agentFireTruck = new Agent("Fire", false, 600, 100, mq);
-		agentPolice.AddChildAgent(agentAmbulance);
-		agentPolice.AddChildAgent(agentFireTruck);
-		agents.add(agentPolice);
-		agents.add(agentAmbulance);
-		agents.add(agentFireTruck);
+		
+		int min = 100;
+		int max = 600;
+		
+		for(int i=1;i<=Main.NumberOfAgents;i++)
+		{
+			int x = (int)(Math.random() * (max - min) + min);
+			IAgent agent = new Agent("A" + i, true, x, 500, mq);//right, down from top
+			if (agents.size()>0)
+			{
+				agents.get(0).AddChildAgent(agent);
+			}
+			agents.add(agent);	
+		}
 		return agents;
 	}
 	

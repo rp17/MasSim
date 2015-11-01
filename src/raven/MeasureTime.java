@@ -9,9 +9,9 @@ public class MeasureTime {
 	public static MeasureTime Timer1 = new MeasureTime();
 	public static MeasureTime Timer2 = new MeasureTime();
 	
-	public long GetTotal()//milliseconds
+	public long GetTotal()//microseconds
 	{
-		return total;// / 1000000;
+		return total / 1000;
 	}
 	
 	public void Resume()
