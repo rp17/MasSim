@@ -35,7 +35,7 @@ public class TaskIssuer implements Runnable, SchedulingEventListener {
 		{
 			tasks += t.label + "-";
 		}
-		MasterTaskList.add("Police,NEGOTIATE,::::" + tasks);
+		MasterTaskList.add("A1,NEGOTIATE,::::" + tasks);
 	}
 	
 	//This program is used to issue commands to the agents via mqtt. It can be read in a separate JVM, and thus

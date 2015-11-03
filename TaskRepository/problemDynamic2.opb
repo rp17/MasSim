@@ -1,7 +1,0 @@
-* #variable= 4 #constraint= 2
-* Tasks: [11,12] Agents:
-* 1 x1=11:5 x2=t12:6 x3=t11-t12: 12
-* 2 x4=11:4: x5=12:3 x6=t11-t12: 14
-min: 1 x1 1 x2 1 x3 1 x4 ;
-1 x1 1 x3 = 2 ;
-1 x2 1 x4 = 1 ;

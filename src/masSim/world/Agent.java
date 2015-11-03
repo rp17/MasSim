@@ -5,6 +5,7 @@ import masSim.schedule.BooleanOptimizationCalculator;
 import masSim.schedule.IScheduleUpdateEventListener;
 import masSim.schedule.MaxSumCalculator;
 import masSim.schedule.MultipleTaskScheduleQualities;
+import masSim.schedule.PlainCalculator;
 import masSim.schedule.ScheduleUpdateEvent;
 import masSim.schedule.Scheduler;
 import masSim.schedule.SchedulingCommandType;
@@ -208,7 +209,6 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public void ProcessCostBroadcast(String sendingAgentWhoseCostHasBeenRecieved, List<MultipleTaskScheduleQualities> ql)
 	{	
 		if(IsManagingAgent()) {
-			//MaxSumCalculator calc = GetMaxSumCalculatorForTask(taskName);
 			BooleanOptimizationCalculator calc = this.negotiations;
 			if(calc == null) {
 				System.out.println("calc is null");
@@ -218,17 +218,34 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 			calc.AddCostData(aql);
 			if (calc.IsDataCollectionComplete())
 			{
-				String selectedAgentName = calc.GetBestAgent();
-				//TODO Asif revisit
-				//Diagnostic call -- Not impacting timers
-				/*String selectedAgentNamePlainMethod = calc.GetBestAgentPlain();
-				if (!selectedAgentName.equals(selectedAgentNamePlainMethod)) System.out.println("ERROR: Two methods are recommending different agents");
-				//Diangostic call end
-				*/
-				SchedulingEventParams params = new SchedulingEventParams()
-				.AddAgentId(selectedAgentName);
-				SchedulingEvent event = new SchedulingEvent(selectedAgentName, SchedulingCommandType.ASSIGNTASK, params);
-				mq.PublishMessage(event);
+				List<List<Integer>> bestAgentsForTasks = calc.GetBestAgent();
+				
+				//Calculate plain for comparison
+				PlainCalculator calcPlain = new PlainCalculator(calc);
+				List<List<Integer>> bestAgentsForTasksPlain = calcPlain.GetBestAgent();
+				
+				String pl = calcPlain.ToString(bestAgentsForTasksPlain);
+				String pb = calcPlain.ToString(bestAgentsForTasks);
+				System.out.println("Plain: " + pl);
+				System.out.println("PseudoB: " + pb);
+				if (!pl.equals(pb))
+				{
+					System.out.println("ERROR: Calculator best agent results are not equal");
+				}
+				
+				for(List<Integer> agentTasks : bestAgentsForTasks )
+				{
+					String agentName = "A" + agentTasks.get(0);
+					SchedulingEventParams params = new SchedulingEventParams()
+							.AddAgentId(agentName);
+							SchedulingEvent event = new SchedulingEvent(agentName, SchedulingCommandType.ASSIGNTASK, params);
+							event.assignedTasks = new ArrayList<Integer>();
+					for(int i=1;i<agentTasks.size();i++)
+					{
+						event.assignedTasks.add(agentTasks.get(i));
+					}
+					mq.PublishMessage(event);
+				}
 			}
 		}
 	}
@@ -252,7 +269,12 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 		{
 			ScenarioGenerator gen = new ScenarioGenerator();
 			Map<Integer, Task> idToTaskDictionary = new HashMap<Integer,Task>();
-			int base = GetScheduleCostSync(null, this).TotalQuality;
+			int base = 0;
+			try
+			{
+				base = GetScheduleCostSync(null, this).TotalQuality;
+			}
+			catch(Exception ex){}
 			IAgent previousAgent = tasks.get(0).agent;//Save previous agent, because assignment of agent will change while calculating costs and need to be reset
 			List<Integer> taskIdsList = ConvertTaskListToTaskIdList(tasks, idToTaskDictionary);
 			List<List<Integer>> combs = gen.GetArrayCombinations(taskIdsList);
@@ -547,7 +569,10 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 	public SchedulingEvent ProcessSchedulingEvent(SchedulingEvent event) {
 		if (event.commandType==SchedulingCommandType.ASSIGNTASK && event.agentName.equalsIgnoreCase(this.getName()))
 		{
-			AssignTask(event.params.TaskName);
+			for(int i=0;i<event.assignedTasks.size();i++)
+			{
+				AssignTask("T" + event.assignedTasks.get(i));
+			}
 		}
 		if (event.commandType==SchedulingCommandType.METHODCOMPLETED && event.agentName.equalsIgnoreCase(this.getName()))
 		{

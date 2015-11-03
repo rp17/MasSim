@@ -13,6 +13,7 @@ public class SchedulingEvent {
 	public String rawMessage;
 	public List<MultipleTaskScheduleQualities> taskQualities;//Not serialized yet
 	public List<Task> tasks;//Not yet serialized
+	public List<Integer> assignedTasks;//Not yet serialized
 	
 	public SchedulingEvent(String agentName, String commandType, String paramsRaw) {
 		this(agentName,SchedulingCommandType.valueOf(commandType),paramsRaw);

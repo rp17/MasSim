@@ -16,8 +16,9 @@ public class Main {
 	private static RavenUI ui;
 	private static RavenGame game;
 	private static boolean debug = true;
-	public static int NumberOfTasks = 2;
-	public static int NumberOfAgents = 2;
+
+	public static int NumberOfAgents = 3;
+	public static int NumberOfTasks = 3;
 	
 	public static void Message(Object o, boolean flag, String message)
 	{
@@ -34,6 +35,7 @@ public class Main {
     	
     	ScenarioGenerator gen = new ScenarioGenerator();
     	gen.CreateTestTasks(NumberOfTasks);
+    	
     	//Launch a new thread containing a console window to issue commands to agents via mqtt
     	new Thread(new TaskIssuer()).start();
     	

@@ -39,9 +39,11 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 		super(instanceName, numberOfAgents, numberOfTasks);
 	}
 	
-	public String GetBestAgent()
+	@Override
+	public List<List<Integer>> GetBestAgent()
 	{
-		Map<String, int[]> variableNameMappingToAgentTaskCombination = new HashMap<String, int[]>();
+		List<List<Integer>> selectedAgentsForTasks = new ArrayList<List<Integer>>();
+		Map<String, List<Integer>> variableNameMappingToAgentTaskCombination = new HashMap<String, List<Integer>>();
 		
 		String result = BuildOPBInput( this.agentScheduleQualities, variableNameMappingToAgentTaskCombination, this.numberOfTasksInNegotiation );
 		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
@@ -61,15 +63,14 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			if (result2[r]>0) 
 			{
 				resultList.add(result2[r]);
-				int[] agentCombination = variableNameMappingToAgentTaskCombination.get("x" + result2[r]);
+				List<Integer> selectedAgent = variableNameMappingToAgentTaskCombination.get("x" + result2[r]);
+				selectedAgentsForTasks.add(selectedAgent);
 			}
-			
 		}
-		return "";
-		//System.out.print(Arrays.toString(resultList.toArray()));
+		return selectedAgentsForTasks;
 	}
 	
-	public String BuildOPBInput(ArrayList<AgentScheduleQualities> input, Map<String, int[]> variableNameMappingToAgentTastCombination, int numberOfTasks)
+	public String BuildOPBInput(ArrayList<AgentScheduleQualities> input, Map<String, List<Integer>> variableNameMappingToAgentTastCombination, int numberOfTasks)
 	{	
 		StringBuilder opb = new StringBuilder();
 				
@@ -95,9 +96,9 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			List<MultipleTaskScheduleQualities> qls = input.get(agent).TaskQualities;
 			for(int j=0;j<qls.size();j++)
 			{
-				int [] mapping = new int[2];
-				mapping[0] = agentVariable;
-				mapping[1] = j;
+				List<Integer> mapping = new ArrayList<Integer>();
+				mapping.add(agentVariable);
+				mapping.addAll(qls.get(j).TaskIds);
 				String variableName = "x" + i++;
 				variableNameMappingToAgentTastCombination.put(variableName,mapping);
 				
