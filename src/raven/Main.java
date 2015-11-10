@@ -17,8 +17,9 @@ public class Main {
 	private static RavenGame game;
 	private static boolean debug = true;
 
-	public static int NumberOfAgents = 3;
-	public static int NumberOfTasks = 3;
+	public static int NumberOfAgents = 6;
+	public static int NumberOfTasks = 4;
+	public static int[] AgentLocations = new int[]{0, 0,0,0,0,0};
 	
 	public static void Message(Object o, boolean flag, String message)
 	{

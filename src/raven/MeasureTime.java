@@ -5,9 +5,7 @@ public class MeasureTime {
 	private long total = 0;
 	boolean isStarted = false;
 	
-	
-	public static MeasureTime Timer1 = new MeasureTime();
-	public static MeasureTime Timer2 = new MeasureTime();
+	public static MeasureTime Timer = new MeasureTime();
 	
 	public long GetTotal()//microseconds
 	{
@@ -16,13 +14,22 @@ public class MeasureTime {
 	
 	public void Resume()
 	{
+		if (isStarted) {
+			System.out.println("Timer Error");
+			System.exit(0);
+		}
 		startTime = System.nanoTime();
+		isStarted = true;
 	}
 	
 	public void Stop()
 	{
-		isStarted = false;
+		if (!isStarted) {
+			System.out.println("Timer Stop Error");
+			System.exit(0);
+		}
 		total += System.nanoTime() - startTime;
+		isStarted = false;
 	}
 	
 	public void Reset()
@@ -32,6 +39,10 @@ public class MeasureTime {
 	
 	public void Start()
 	{
+		if (isStarted) {
+			System.out.println("Timer Start Error");
+			System.exit(0);
+		}
 		isStarted = true;
 		startTime = System.nanoTime();
 	}

@@ -16,7 +16,7 @@ public class ScenarioGenerator {
 	public void CreateTestTasks(int numberOfTasks)
 	{
 		int min = 100;
-		int max = 600;
+		int max = 500;
 		StringBuilder tasksMain = new StringBuilder();
 		StringBuilder tasksDetails = new StringBuilder();
 		tasksMain.append("<Taems>" + System.lineSeparator());
@@ -112,7 +112,8 @@ public class ScenarioGenerator {
 			aCombinationWithOnlFirstInteger.add(firstInteger);
 			result.add(aCombinationWithOnlFirstInteger);
 		}
-		
+		//Final empty one
+		//result.add(new ArrayList<Integer>());
 		return result;
 	}
 	

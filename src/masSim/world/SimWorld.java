@@ -40,7 +40,12 @@ public class SimWorld {
 		
 		for(int i=1;i<=Main.NumberOfAgents;i++)
 		{
-			int x = (int)(Math.random() * (max - min) + min);
+			int x = Main.AgentLocations[i-1];
+			if (x==0)//Generate random if not over ridden to a fixed value in main class
+			{
+				x = (int)(Math.random() * (max - min) + min);
+				System.out.println("A"+i + " location " + x);
+			}
 			IAgent agent = new Agent("A" + i, true, x, 500, mq);//right, down from top
 			if (agents.size()>0)
 			{

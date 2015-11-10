@@ -32,10 +32,9 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 	{
 		//ArrayList<AgentScheduleQualities> input, List<List<Integer>> taskCombinations
 		
-		MeasureTime.Timer2 = new MeasureTime();
-		MeasureTime.Timer2.Start();
-	
-		int taskCombinationsSize = this.agentScheduleQualities.get(0).TaskQualities.size();
+		MeasureTime.Timer = new MeasureTime();
+		MeasureTime.Timer.Start();	
+		int taskCombinationsSize = this.agentScheduleQualities.get(0).TaskQualities.size()+1;
 		
 		//Get all unique agents
 		List<Integer> agentIds = new ArrayList<Integer>();
@@ -62,7 +61,7 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 			nextAssignment = ConvertBase10ToBaseNumberOfTasks(i,agentsSize, taskCombinationsSize);
 			//System.out.println(Arrays.toString(assignments));
 			
-			if (!IsAssignmentValid(nextAssignment, agentsSize, this.agentScheduleQualities))
+			if (!IsAssignmentValid(nextAssignment, agentsSize, this.agentScheduleQualities, this.numberOfTasksInNegotiation))
 			{
 				Main.Message(debugFlag, ToString(MapToResult(nextAssignment))+ " INVALID");
 				continue;
@@ -76,14 +75,16 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 				int inn = lastValidAssignment[agentIndex];
 				try
 				{
-					MultipleTaskScheduleQualities ql = this.agentScheduleQualities.get(agentIndex).TaskQualities.get(inn);
-					tempQuality += ql.diff();
+					if (this.agentScheduleQualities.get(agentIndex).TaskQualities.size()>inn)
+					{
+						MultipleTaskScheduleQualities ql = this.agentScheduleQualities.get(agentIndex).TaskQualities.get(inn);
+						tempQuality += ql.diff();
+					}
 				}
 				catch(Exception ex)
 				{
 					System.out.println(inn + " " + ex);
 				}
-				
 			}
 			Main.Message(debugFlag, ToString(MapToResult(nextAssignment)) + " " + tempQuality);
 			//If this is best, assign
@@ -94,9 +95,9 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 			}
 		}
 		
-		MeasureTime.Timer2.Stop();
-		System.out.println("Plain Calculation Took " + MeasureTime.Timer2.GetTotal());
 		List<List<Integer>> result = MapToResult(bestCombination);
+		MeasureTime.Timer.Stop();
+		System.out.println("Plain Calculation Took " + MeasureTime.Timer.GetTotal());
 		return result;
 	}
 	
@@ -113,7 +114,7 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 		return Arrays.copyOfRange(result, 1, result.length);
 	}
 	
-	private boolean IsAssignmentValid(int[] assignments, int agentsSize, List<AgentScheduleQualities> agentScheduleQualities)
+	private boolean IsAssignmentValid(int[] assignments, int agentsSize, List<AgentScheduleQualities> agentScheduleQualities, int taskSize)
 	{
 		boolean result = true;
 		List<Integer> tasksAlreadyTakenUpByAnAgent = new ArrayList<Integer>();
@@ -124,24 +125,30 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 			int inn = assignments[agentIndex];
 			try
 			{
-				MultipleTaskScheduleQualities ql = agentScheduleQualities.get(agentIndex).TaskQualities.get(inn);
-				for(Integer task : ql.TaskIds)
+				//This if statement means that we are dealing with an actual task execution, and not special number signifying no task execution
+				if (agentScheduleQualities.get(agentIndex).TaskQualities.size()>inn)
 				{
-					if (tasksAlreadyTakenUpByAnAgent.contains(task))
+					MultipleTaskScheduleQualities ql = agentScheduleQualities.get(agentIndex).TaskQualities.get(inn);
+					for(Integer task : ql.TaskIds)
 					{
-						return false;
-					}
-					else
-					{
-						tasksAlreadyTakenUpByAnAgent.add(task);
+						if (tasksAlreadyTakenUpByAnAgent.contains(task))
+						{
+							return false;
+						}
+						else
+						{
+							tasksAlreadyTakenUpByAnAgent.add(task);
+						}
 					}
 				}
 			}
 			catch(Exception ex)
 			{
 				System.out.println(inn + " " + ex);
-			}	
+			}
 		}
+		if (tasksAlreadyTakenUpByAnAgent.size()<taskSize) 
+			return false;
 		return result;
 	}
 
@@ -152,12 +159,15 @@ public class PlainCalculator extends BestAgentCalculatorBase implements ILogAble
 		{
 			List<Integer> agentAssignment = new ArrayList<Integer>();
 			agentAssignment.add(agentScheduleQualities.get(i).AgentVariableId);
-			MultipleTaskScheduleQualities ql = agentScheduleQualities.get(i).TaskQualities.get(chosenAssignment[i]);
-			for(Integer in : ql.TaskIds)
+			if (agentScheduleQualities.get(i).TaskQualities.size()>chosenAssignment[i])
 			{
-				agentAssignment.add(in);
+				MultipleTaskScheduleQualities ql = agentScheduleQualities.get(i).TaskQualities.get(chosenAssignment[i]);
+				for(Integer in : ql.TaskIds)
+				{
+					agentAssignment.add(in);
+				}
+				allAgentAssignments.add(agentAssignment);
 			}
-			allAgentAssignments.add(agentAssignment);
 		}
 		return allAgentAssignments;
 	}

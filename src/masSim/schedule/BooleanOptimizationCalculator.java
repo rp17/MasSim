@@ -42,11 +42,15 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 	@Override
 	public List<List<Integer>> GetBestAgent()
 	{
+		MeasureTime.Timer = new MeasureTime();
+		MeasureTime.Timer.Start();
+		
 		List<List<Integer>> selectedAgentsForTasks = new ArrayList<List<Integer>>();
 		Map<String, List<Integer>> variableNameMappingToAgentTaskCombination = new HashMap<String, List<Integer>>();
 		
 		String result = BuildOPBInput( this.agentScheduleQualities, variableNameMappingToAgentTaskCombination, this.numberOfTasksInNegotiation );
 		String filename = "E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb";
+		MeasureTime.Timer.Stop();
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
 	        new FileOutputStream(filename), "US-ASCII"))) {
 			writer.write(result);
@@ -55,6 +59,7 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 		{
 			System.out.print(ex);
 		}
+		MeasureTime.Timer.Resume();
 		int[] result2 = Solve("E:\\EclipseWorkspace\\RoverSim\\TaskRepository\\problemDynamic.opb");
 		List<Integer> resultList = new ArrayList<Integer>();
 		System.out.println(Arrays.toString(resultList.toArray()));
@@ -67,6 +72,8 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 				selectedAgentsForTasks.add(selectedAgent);
 			}
 		}
+		MeasureTime.Timer.Stop();
+		System.out.println("PB Calculation Took " + MeasureTime.Timer.GetTotal());
 		return selectedAgentsForTasks;
 	}
 	
@@ -96,25 +103,28 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			List<MultipleTaskScheduleQualities> qls = input.get(agent).TaskQualities;
 			for(int j=0;j<qls.size();j++)
 			{
-				List<Integer> mapping = new ArrayList<Integer>();
-				mapping.add(agentVariable);
-				mapping.addAll(qls.get(j).TaskIds);
-				String variableName = "x" + i++;
-				variableNameMappingToAgentTastCombination.put(variableName,mapping);
-				
-				//Calculate quality for this combination
-				MultipleTaskScheduleQualities t = qls.get(j);
-				int quality = t.diff();
-				if (quality>0)//- sign to convert min function to max
-				{	
-					opb.append(" -" + quality + " " + variableName);
+				if(!qls.get(j).TaskIds.isEmpty())
+				{
+					List<Integer> mapping = new ArrayList<Integer>();
+					mapping.add(agentVariable);
+					mapping.addAll(qls.get(j).TaskIds);
+					String variableName = "x" + i++;
+					variableNameMappingToAgentTastCombination.put(variableName,mapping);
+					
+					//Calculate quality for this combination
+					MultipleTaskScheduleQualities t = qls.get(j);
+					int quality = t.diff();
+					if (quality>0)//- sign to convert min function to max
+					{	
+						opb.append(" -" + quality + " " + variableName);
+					}
+					else if (quality<0)
+						opb.append(" " + Math.abs(quality) + " " + variableName);
+					else
+						opb.append(" " + quality + " " + variableName);
+					variableMappingCommentBlock += variableName + "=" + agentVariable + Arrays.toString(t.TaskIds.toArray()) + " ";
+					AddPBVariableToConstraintsList(constraintsPerTask, variableName, t.TaskIds);
 				}
-				else if (quality<0)
-					opb.append(" " + Math.abs(quality) + " " + variableName);
-				else
-					opb.append(" " + quality + " " + variableName);
-				variableMappingCommentBlock += variableName + "=" + agentVariable + Arrays.toString(t.TaskIds.toArray()) + " ";
-				AddPBVariableToConstraintsList(constraintsPerTask, variableName, t.TaskIds);
 			}
 		}
 		opb.append(";" + System.lineSeparator());
@@ -210,11 +220,11 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			PrintWriter out = new PrintWriter(System.out, true);
 			long beginTime = 0;
 			long nano = System.nanoTime();
-			MeasureTime.Timer2 = new MeasureTime();
-			MeasureTime.Timer2.Start();
+			//MeasureTime.Timer = new MeasureTime();
+			//MeasureTime.Timer.Start();
 			problem.isSatisfiable(new VecInt(), true);
 			//ILauncherMode.OPTIMIZATION.solve(problem, new OPBReader2012(solver), this, out, beginTime);
-			MeasureTime.Timer2.Stop();
+			//MeasureTime.Timer.Stop();
 			//System.out.println("Boolean Solver (direct) Took (microseconds) " + MeasureTime.Timer2.GetTotal() );
 			if (false) throw new TimeoutException();
 			return problem.model();
@@ -224,7 +234,6 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			e.printStackTrace();
 		}
 		return null;
-		
 	} 
 	
 	public int[] Solve(String problemName)//Convert to problem obp content string instead of file name
@@ -245,16 +254,16 @@ public class BooleanOptimizationCalculator extends BestAgentCalculatorBase imple
 			
 			PrintWriter out = new PrintWriter(System.out, true);
 			long beginTime = System.currentTimeMillis();
-			MeasureTime.Timer1 = new MeasureTime();
-			MeasureTime.Timer1.Start();
+			//MeasureTime.Timer = new MeasureTime();
+			//MeasureTime.Timer.Start();
 			ILauncherMode.OPTIMIZATION.solve(problem, reader, this, out, beginTime);
 			//problem.isSatisfiable(new VecInt(),true);
-			MeasureTime.Timer1.Stop();
-			System.out.println("Boolean Solver Took (microseconds) " + MeasureTime.Timer1.GetTotal());
+			//MeasureTime.Timer.Stop();
+			//System.out.println("Boolean Solver Took (microseconds) " + MeasureTime.Timer.GetTotal());
 			if (!optproblem.hasNoObjectiveFunction()) {
 				String objvalue;
 				objvalue = optproblem.getObjectiveValue().toString();
-				if (true) System.out.println("FinaL" + objvalue);
+				//if (true) System.out.println("FinaL" + objvalue);
 			}
 			result = optproblem.model();
 		} catch (ParseFormatException | IOException | ContradictionException e) {// | TimeoutException

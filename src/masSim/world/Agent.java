@@ -231,6 +231,7 @@ public class Agent extends BaseElement implements IAgent, IScheduleUpdateEventLi
 				if (!pl.equals(pb))
 				{
 					System.out.println("ERROR: Calculator best agent results are not equal");
+					System.exit(0);
 				}
 				
 				for(List<Integer> agentTasks : bestAgentsForTasks )

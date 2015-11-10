@@ -122,7 +122,7 @@ public class Scheduler implements Runnable {
 		
 		//Create a Graph of these methods and run Dijkstra Algorithm on it
 		Graph graph = new Graph(nodes, edges);
-		graph.Print();
+		if (debugFlag) graph.Print();
 	    DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(graph);
 	    dijkstra.execute(initialMethod);
 	    dijkstra.getGraph().Print();

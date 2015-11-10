@@ -1,23 +1,15 @@
-<Taems><!-- x=right, y=down-->
-	<Task id="T1" name="PickAndDrop" qaf="SeqSum" >
-		<Method id="A1M1T1" name="PickFromHouse" Quality="500" Duration="10" XCoord="250" YCoord="400"></Method>
-		<Method id="A1M2T1" name="DropToHospital" Quality="500" Duration="10" XCoord="500" YCoord="350"></Method>
+<Taems>
+	<Task id="Ambulance" name="PickAndDrop" qaf="SeqSum" >
+		<Method id="M1" name="PickFromHouse" Quality="500" Duration="10" XCoord="250" YCoord="400"></Method>
+		<Method id="M2" name="DropToHospital" Quality="500" Duration="10" XCoord="500" YCoord="350"></Method>
 	</Task>
-	<Task id="T2" name="Visit1" qaf="ExactlyOne" >
-		<Method id="A1M1T2" name="VisitPlace1" Quality="500" Duration="10" XCoord="600" YCoord="250"></Method>
-        <Method id="A1M2T2" name="VisitPlace2" Quality="500" Duration="10" XCoord="800" YCoord="300"></Method>
-        <Method id="A1M3T2" name="VisitPlace3" Quality="500" Duration="10" XCoord="800" YCoord="450"></Method>
+	<Task id="FireTruck" name="FillGas" qaf="ExactlyOne" >
+		<Method id="M3" name="FillFromStation1" Quality="500" Duration="10" XCoord="600" YCoord="250"></Method>
+        <Method id="M4" name="FillFromStation2" Quality="500" Duration="10" XCoord="800" YCoord="300"></Method>
+        <Method id="M5" name="FillFromStation3" Quality="500" Duration="10" XCoord="800" YCoord="450"></Method>
 	</Task>
-    <Task id="T3" name="Patrol" qaf="SumAll" >
-		<Method id="A1M1T3" name="PatrolPointA" Quality="500" Duration="10" XCoord="300" YCoord="250"></Method>
+    <Task id="Police" name="Patrol" qaf="SumAll" >
+		<Method id="M6" name="PatrolBusinessDistrict" Quality="500" Duration="10" XCoord="300" YCoord="250"></Method>
+		<Method id="M7" name="PatrolResidences" Quality="500" Duration="10" XCoord="300" YCoord="250"></Method>
     </Task>
-	<!--<Task id="T3" name="Patrol" qaf="SumAll" recurring="true" >
-		<Method id="A2M1T3" name="PatrolPointA" Quality="500" Duration="10" XCoord="100" YCoord="300"></Method>
-		<Method id="A2M2T3" name="PatrolPointB" Quality="500" Duration="10" XCoord="400" YCoord="300"></Method>
-		<Method id="A2M3T3" name="PatrolPointC" Quality="500" Duration="10" XCoord="400" YCoord="350"></Method>
-		<Method id="A2M4T3" name="PatrolPointD" Quality="500" Duration="10" XCoord="100" YCoord="350"></Method>
-	</Task>
-	<Task id="T4" name="RespondToAccident" qaf="SumAll" >
-		<Method id="A1M1T3" name="VisitAccidentLocation" Quality="500" Duration="10" XCoord="425" YCoord="125"></Method>
-	</Task>-->
 </Taems>

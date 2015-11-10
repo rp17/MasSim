@@ -38,14 +38,15 @@ public class BestAgentCalculatorBase {
 		String str = "";
 		for(List<Integer> assignment : allAgentAssignments)
 		{
-			str += " A" + assignment.get(0) + "[";
-			for(int i=1;i<assignment.size();i++)
+			//if (assignment.size()!=1)
 			{
-				str += assignment.get(i) + ",";
+				for(int i=1;i<assignment.size();i++)
+				{
+					str += " A" + assignment.get(0) + "[" + assignment.get(i) + ",]";
+				}
 			}
-			str += "] ";
 		}
-		return str;
+		return str.trim();
 	}
 	
 	public void AddCostData(AgentScheduleQualities aql)
